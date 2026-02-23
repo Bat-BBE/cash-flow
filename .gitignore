@@ -1,0 +1,4 @@
+node_modules
+cashflow/node_modules
+.next
+.env

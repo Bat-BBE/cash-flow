@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CashFlow Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "brand-bg": "#203040",
+                        "brand-card": "#2b3550",
+                        "brand-sidebar": "#202030",
+                        "brand-primary": "#7060F0",
+                        "brand-secondary": "#8B7DFF",
+                        "brand-text": "#E2E8F0",
+                        "brand-muted": "#94A3B8",
+                        "brand-border": "#3f4a6d",
+                        "drawer-bg": "#0B1220",
+                        "drawer-surface": "#121F33",
+                        "discord-surface": "#121F33",
+                        "discord-text": "#E9ECF5",
+                        "discord-accent": "#6D5BFF"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "2xl": "16px",
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-brand-bg text-brand-text font-display antialiased;
+            }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #3f4a6d;
+            border-radius: 10px;
+        }
+        .purple-gradient {
+            background: linear-gradient(135deg, #7060F0 0%, #8B7DFF 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .banner-gradient {
+            background: linear-gradient(to bottom right, #121F33, #1e293b);
+        }
+        .banner-glow {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(112, 96, 240, 0.3) 0%, transparent 70%);
+            filter: blur(20px);
+        }
+        .premium-close-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+        }
+        .premium-close-btn:hover {
+            background: rgba(255, 255, 255, 0.10);
+        }
+        .avatar-glow {
+            box-shadow: 0 0 20px rgba(109, 91, 255, 0.3);
+        }#profile-drawer-toggle:checked ~ #profile-drawer {
+            transform: translateX(0);
+        }
+        #profile-drawer-toggle:checked ~ #drawer-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex overflow-hidden">
+<input class="hidden" id="profile-drawer-toggle" type="checkbox"/>
+<aside class="w-64 h-screen bg-brand-sidebar flex flex-col shrink-0 border-r border-white/5 z-[60] relative">
+<div class="p-8 flex items-center gap-3">
+<div class="purple-gradient rounded-xl p-2 flex items-center justify-center shadow-lg shadow-brand-primary/20">
+<span class="material-symbols-outlined text-white font-bold">account_balance_wallet</span>
+</div>
+<div>
+<h1 class="text-white text-xl font-bold tracking-tight">CashFlow</h1>
+<p class="text-brand-muted text-[10px] uppercase tracking-widest font-bold">Wealth Pro</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+<a class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-brand-primary/10 text-brand-primary group transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-semibold">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-muted hover:bg-white/5 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-sm font-medium">Accounts</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-muted hover:bg-white/5 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">savings</span>
+<span class="text-sm font-medium">Budgets</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-muted hover:bg-white/5 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="text-sm font-medium">Investments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-muted hover:bg-white/5 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+<div class="pt-8 px-4 pb-2">
+<span class="text-[10px] font-bold text-brand-muted/50 uppercase tracking-widest">System</span>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-muted hover:bg-white/5 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-muted hover:bg-white/5 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">help_center</span>
+<span class="text-sm font-medium">Support</span>
+</a>
+</nav>
+<div class="p-4 border-t border-white/5">
+<label class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-all block" for="profile-drawer-toggle">
+<div class="h-10 w-10 rounded-xl overflow-hidden ring-2 ring-brand-primary/20">
+<img alt="User profile" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_NkUFRqXrA0LDQpNYPirATqy8sASNNeUgcMjsCLguANo487bhy2XHGYfjf1KtglTlgHkk6KTyDFRzP0iQELNjUoel_KDNoLkMHMbHlsU0BplmQMGXyGczxXkqVpooRexNzHx-LbHCfWgvMS3IlNX_h7J39AohTbAfaM--pa95aFvwNMykNSYMCwgRXXkGC1R8rXGEsWkcq6jVfIOB4Ci42D8iWyl5mNMImoekfXx8jyUsb0r6VUFrsujeLBLUziJFXSeeZENsgg"/>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-sm font-semibold text-white truncate">Tserenchimed</p>
+<p class="text-[10px] text-brand-primary font-bold uppercase">Active Now</p>
+</div>
+</label>
+</div>
+</aside>
+<label class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[40] opacity-0 pointer-events-none transition-opacity duration-300 ml-64" for="profile-drawer-toggle" id="drawer-backdrop"></label>
+<div class="fixed top-0 left-64 w-[400px] h-screen bg-drawer-bg border-r border-white/5 z-[50] flex flex-col shadow-2xl transition-transform duration-300 -translate-x-full overflow-visible" id="profile-drawer">
+<div class="relative w-full shrink-0">
+<div class="h-28 w-full banner-gradient sticky top-0 z-[5] overflow-hidden">
+<div class="banner-glow"></div>
+<div class="absolute top-4 right-4 z-[20]">
+<label class="premium-close-btn w-[40px] h-[40px] rounded-full flex items-center justify-center cursor-pointer transition-all group/close" for="profile-drawer-toggle">
+<span class="material-symbols-outlined text-brand-muted group-hover/close:text-white transition-colors text-[20px]">close</span>
+</label>
+</div>
+</div>
+<div class="absolute -bottom-10 left-5 z-[15]">
+<div class="h-20 w-20 rounded-full border-[4px] border-drawer-bg relative bg-drawer-bg avatar-glow">
+<img alt="User profile" class="h-full w-full object-cover rounded-full ring-2 ring-discord-accent/50 ring-offset-1 ring-offset-drawer-bg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_NkUFRqXrA0LDQpNYPirATqy8sASNNeUgcMjsCLguANo487bhy2XHGYfjf1KtglTlgHkk6KTyDFRzP0iQELNjUoel_KDNoLkMHMbHlsU0BplmQMGXyGczxXkqVpooRexNzHx-LbHCfWgvMS3IlNX_h7J39AohTbAfaM--pa95aFvwNMykNSYMCwgRXXkGC1R8rXGEsWkcq6jVfIOB4Ci42D8iWyl5mNMImoekfXx8jyUsb0r6VUFrsujeLBLUziJFXSeeZENsgg"/>
+<div class="absolute bottom-0 right-0 h-5 w-5 bg-emerald-500 rounded-full border-[3.5px] border-drawer-bg z-[16]"></div>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<div class="px-5 pb-4">
+<div class="pt-12 pb-4">
+<div class="flex items-center justify-between mb-1">
+<h2 class="text-xl font-bold text-white leading-tight">Tserenchimed</h2>
+<span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-md border border-emerald-500/20">ACTIVE</span>
+</div>
+<p class="text-brand-muted text-sm font-medium">tserenchim17</p>
+<div class="flex items-center gap-2 mt-3 text-xs text-brand-muted font-medium border-t border-white/5 pt-3">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span>Joined October 2022</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-xs font-bold transition-all">
+                        Edit Profile
+                    </button>
+<button class="px-3 py-1.5 text-brand-muted hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+                        Copy ID
+                    </button>
+</div>
+</div>
+<div class="px-5 border-b border-white/5 flex gap-4">
+<button class="pb-2 text-xs font-bold text-brand-muted hover:text-white transition-all relative">Overview</button>
+<button class="pb-2 text-xs font-bold text-white transition-all relative">
+                    Stats
+                    <div class="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary"></div>
+</button>
+<button class="pb-2 text-xs font-bold text-brand-muted hover:text-white transition-all relative">Activity</button>
+<button class="pb-2 text-xs font-bold text-brand-muted hover:text-white transition-all relative">Badges</button>
+</div>
+<div class="p-5 space-y-4">
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-drawer-surface p-4 rounded-xl border border-white/5 flex flex-col gap-1">
+<span class="text-[10px] font-bold text-brand-muted uppercase tracking-wider">Score</span>
+<span class="text-lg font-bold text-white">782</span>
+<div class="h-1 w-full bg-emerald-500/20 rounded-full mt-1">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 78%"></div>
+</div>
+</div>
+<div class="bg-drawer-surface p-4 rounded-xl border border-white/5 flex flex-col gap-1">
+<span class="text-[10px] font-bold text-brand-muted uppercase tracking-wider">Savings</span>
+<span class="text-lg font-bold text-white">$14.2k</span>
+<span class="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">trending_up</span> 12%
+                        </span>
+</div>
+<div class="bg-drawer-surface p-4 rounded-xl border border-white/5 flex flex-col gap-1">
+<span class="text-[10px] font-bold text-brand-muted uppercase tracking-wider">Goals</span>
+<span class="text-lg font-bold text-white">4/6</span>
+<div class="h-1 w-full bg-brand-primary/20 rounded-full mt-1">
+<div class="h-full bg-brand-primary rounded-full" style="width: 66%"></div>
+</div>
+</div>
+<div class="bg-drawer-surface p-4 rounded-xl border border-white/5 flex flex-col gap-1">
+<span class="text-[10px] font-bold text-brand-muted uppercase tracking-wider">Wealth</span>
+<span class="text-lg font-bold text-white">Tier 2</span>
+<span class="text-[10px] text-brand-primary font-bold">Premium</span>
+</div>
+</div>
+<div class="bg-drawer-surface p-4 rounded-xl border border-white/5">
+<h4 class="text-[10px] font-bold text-brand-muted uppercase tracking-wider mb-3">About Me</h4>
+<p class="text-xs text-brand-text leading-relaxed">
+                        Strategic investor focused on long-term growth and portfolio diversification. Building generational wealth through automation.
+                    </p>
+</div>
+<div class="bg-drawer-surface p-4 rounded-xl border border-white/5">
+<h4 class="text-[10px] font-bold text-brand-muted uppercase tracking-wider mb-3">Member Since</h4>
+<p class="text-xs text-brand-text">Oct 14, 2022</p>
+</div>
+</div>
+</div>
+</div>
+<main class="flex-1 h-screen overflow-y-auto bg-brand-bg custom-scrollbar flex flex-col relative">
+<header class="h-20 bg-brand-bg/80 backdrop-blur-xl px-8 flex items-center justify-between sticky top-0 z-40 border-b border-white/5">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-brand-muted text-xl">search</span>
+<input class="w-full bg-brand-card/50 border-brand-border/30 border rounded-2xl pl-12 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary outline-none text-white placeholder:text-brand-muted/50 transition-all" placeholder="Search wealth insights..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 bg-brand-card/80 p-1.5 rounded-2xl border border-brand-border/30">
+<button class="px-4 py-1.5 text-xs font-bold rounded-xl bg-brand-primary text-white shadow-lg shadow-brand-primary/20">USD</button>
+<button class="px-4 py-1.5 text-xs font-bold rounded-xl text-brand-muted hover:text-white transition-all">EUR</button>
+</div>
+<button class="flex items-center gap-2 px-6 py-2.5 purple-gradient text-white font-bold rounded-2xl text-sm hover:opacity-90 transition-all shadow-lg shadow-brand-primary/25">
+<span class="material-symbols-outlined font-bold">add</span>
+<span>Add Transaction</span>
+</button>
+</div>
+</header>
+<div class="p-8 space-y-8 max-w-[1400px] mx-auto w-full">
+<section class="grid grid-cols-1 gap-8">
+<div class="bg-brand-card card-shadow border border-brand-border/20 p-8 rounded-2xl flex flex-col relative overflow-hidden group">
+<div class="absolute right-0 bottom-0 w-96 h-96 bg-brand-primary/10 rounded-full blur-[100px] -mr-32 -mb-32"></div>
+<div class="flex flex-col md:flex-row justify-between items-start relative z-10">
+<div class="space-y-2">
+<div class="flex items-center gap-2">
+<p class="text-brand-muted text-sm font-semibold uppercase tracking-wider">Total Net Worth</p>
+<span class="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">+2.4% vs last month</span>
+</div>
+<h2 class="text-5xl font-bold text-white tracking-tight">$248,500.00</h2>
+</div>
+</div>
+<div class="mt-8 h-40 w-full relative">
+<svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+<defs>
+<linearGradient id="purpleGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#7060F0" stop-opacity="0.4"></stop>
+<stop offset="100%" stop-color="#7060F0" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<path d="M0,100 L0,60 C150,55 250,85 400,65 C550,45 650,25 800,35 C900,45 1000,15 1000,15 L1000,100 Z" fill="url(#purpleGradient)"></path>
+<path d="M0,60 C150,55 250,85 400,65 C550,45 650,25 800,35 C900,45 1000,15 1000,15" fill="none" stroke="#7060F0" stroke-width="3"></path>
+</svg>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-brand-card card-shadow border border-brand-border/20 p-6 rounded-2xl group transition-all">
+<p class="text-brand-muted text-xs uppercase tracking-wider font-bold mb-1">Monthly Income</p>
+<h3 class="text-2xl font-bold text-white">$12,400.00</h3>
+</div>
+<div class="bg-brand-card card-shadow border border-brand-border/20 p-6 rounded-2xl group transition-all">
+<p class="text-brand-muted text-xs uppercase tracking-wider font-bold mb-1">Monthly Expenses</p>
+<h3 class="text-2xl font-bold text-white">$8,200.00</h3>
+</div>
+<div class="bg-brand-card card-shadow border border-brand-border/20 p-6 rounded-2xl group transition-all">
+<p class="text-brand-muted text-xs uppercase tracking-wider font-bold mb-1">Savings Rate</p>
+<h3 class="text-2xl font-bold text-white">34.0%</h3>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>
