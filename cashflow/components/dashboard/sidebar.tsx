@@ -118,7 +118,7 @@ export function Sidebar() {
   };
 
   const handleLogout = () => {
-    router.push('/login');
+    router.push('/');
   };
 
   const handleProfileClick = () => {

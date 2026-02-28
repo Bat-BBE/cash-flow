@@ -9,11 +9,11 @@ const SignupRoute = () => {
 
   const handleComplete = (data: { form: any; onboarding: any }) => {
     console.log("All steps completed:", data);    
-    router.push("/");
+    router.push("/home");
   };
 
   const handleLogin = () => {
-    router.push("/login");
+    router.push("/");
   };
 
   return (
