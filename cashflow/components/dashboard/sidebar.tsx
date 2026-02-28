@@ -1,4 +1,3 @@
-// components/dashboard/sidebar.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -231,7 +230,6 @@ export function Sidebar() {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
 
-        {/* Header */}
         <div className={cn(
           "p-6 flex items-center border-b border-white/5 relative",
           effectiveCollapsed && !isHovered ? 'justify-center' : 'justify-between'

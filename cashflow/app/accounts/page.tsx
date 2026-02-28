@@ -1,4 +1,3 @@
-// app/accounts/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -28,7 +27,6 @@ export default function AccountsPage() {
 
   const handleTransfer = () => {
     console.log('Transfer initiated');
-    // Open transfer modal
   };
 
   const handleAddTransaction = () => {
@@ -60,7 +58,6 @@ export default function AccountsPage() {
         <Header />
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Accounts Sidebar */}
           <AccountsSidebar
             accountGroups={accountGroups}
             selectedAccount={selectedAccount}
@@ -70,7 +67,6 @@ export default function AccountsPage() {
             onSelectAccount={selectAccount}
           />
 
-          {/* Account Details */}
           <AccountDetails
             account={selectedAccount}
             onTransfer={handleTransfer}

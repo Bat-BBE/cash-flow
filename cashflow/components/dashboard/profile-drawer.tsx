@@ -1,4 +1,3 @@
-// components/dashboard/profile-drawer.tsx
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -38,7 +37,6 @@ export function ProfileDrawer({
   const drawerRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
-  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (drawerRef.current && !drawerRef.current.contains(event.target as Node) && 
@@ -58,7 +56,6 @@ export function ProfileDrawer({
     };
   }, [isOpen, onClose]);
 
-  // ESC key to close
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
@@ -70,7 +67,6 @@ export function ProfileDrawer({
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
-  // Default values
   const defaultUser = {
     name: user?.name || 'Tserenchimed',
     username: user?.username || 'tserenchim17',
@@ -94,15 +90,11 @@ export function ProfileDrawer({
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(defaultUser.username);
-    // Optional: Add toast notification
   };
-
-  // Sidebar width calculation
   const sidebarWidth = sidebarCollapsed ? 80 : 256;
 
   return (
     <>
-      {/* Backdrop */}
       <div
         ref={backdropRef}
         className={cn(
@@ -112,7 +104,6 @@ export function ProfileDrawer({
         style={{ marginLeft: `${sidebarWidth}px` }}
       />
 
-      {/* Drawer */}
       <div
         ref={drawerRef}
         className={cn(
@@ -121,12 +112,10 @@ export function ProfileDrawer({
         )}
         style={{ left: `${sidebarWidth}px` }}
       >
-        {/* Banner Section */}
         <div className="relative w-full shrink-0">
           <div className="h-28 w-full bg-gradient-to-br from-[#121F33] to-[#1e293b] sticky top-0 z-[5] overflow-hidden">
             <div className="absolute top-0 right-0 w-[100px] h-[100px] bg-[radial-gradient(circle,rgba(112,96,240,0.3)_0%,transparent_70%)] blur-2xl" />
-            
-            {/* Close Button */}
+
             <div className="absolute top-4 right-4 z-[20]">
               <button
                 onClick={onClose}
@@ -139,7 +128,6 @@ export function ProfileDrawer({
             </div>
           </div>
 
-          {/* Avatar */}
           <div className="absolute -bottom-10 left-5 z-[15]">
             <div className="h-20 w-20 rounded-full border-[4px] border-[#0B1220] relative bg-[#0B1220] shadow-[0_0_20px_rgba(109,91,255,0.3)]">
               <Avatar className="h-full w-full">
@@ -157,9 +145,7 @@ export function ProfileDrawer({
           </div>
         </div>
 
-        {/* Content Section */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {/* User Info */}
           <div className="px-5 pb-4">
             <div className="pt-12 pb-4">
               <div className="flex items-center justify-between mb-1">
@@ -179,7 +165,6 @@ export function ProfileDrawer({
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-2">
               <Button
                 onClick={handleEditProfile}
@@ -199,7 +184,6 @@ export function ProfileDrawer({
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="px-5 border-b border-white/5 flex gap-4">
             {['Overview', 'Stats', 'Activity', 'Badges'].map((tab, index) => (
               <button
@@ -219,10 +203,8 @@ export function ProfileDrawer({
             ))}
           </div>
 
-          {/* Stats Grid */}
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              {/* Score Card */}
               <div className="bg-[#121F33] p-4 rounded-xl border border-white/5 flex flex-col gap-1">
                 <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider">
                   Score
@@ -238,7 +220,6 @@ export function ProfileDrawer({
                 </div>
               </div>
 
-              {/* Savings Card */}
               <div className="bg-[#121F33] p-4 rounded-xl border border-white/5 flex flex-col gap-1">
                 <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider">
                   Savings
@@ -252,7 +233,6 @@ export function ProfileDrawer({
                 </span>
               </div>
 
-              {/* Goals Card */}
               <div className="bg-[#121F33] p-4 rounded-xl border border-white/5 flex flex-col gap-1">
                 <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider">
                   Goals
@@ -268,7 +248,6 @@ export function ProfileDrawer({
                 </div>
               </div>
 
-              {/* Wealth Tier Card */}
               <div className="bg-[#121F33] p-4 rounded-xl border border-white/5 flex flex-col gap-1">
                 <span className="text-[10px] font-bold text-brand-muted uppercase tracking-wider">
                   Wealth
@@ -282,7 +261,6 @@ export function ProfileDrawer({
               </div>
             </div>
 
-            {/* About Me */}
             <div className="bg-[#121F33] p-4 rounded-xl border border-white/5">
               <h4 className="text-[10px] font-bold text-brand-muted uppercase tracking-wider mb-3">
                 About Me
@@ -292,13 +270,12 @@ export function ProfileDrawer({
               </p>
             </div>
 
-            {/* Member Since */}
             <div className="bg-[#121F33] p-4 rounded-xl border border-white/5">
               <h4 className="text-[10px] font-bold text-brand-muted uppercase tracking-wider mb-3">
                 Member Since
               </h4>
               <p className="text-xs text-brand-text">
-                Oct 14, 2022
+                Feb 25, 2026
               </p>
             </div>
           </div>

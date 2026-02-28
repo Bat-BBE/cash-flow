@@ -64,7 +64,6 @@ export default function AnalyticsPage() {
         
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
 
-          {/* Header */}
           <AnalyticsHeader
             period={period}
             onPeriodChange={setPeriod}
@@ -72,7 +71,6 @@ export default function AnalyticsPage() {
             totalMonths={totals.monthsCount}
           />
 
-          {/* Stats Cards */}
           <AnalyticsStats
             totalIncome={totals.totalIncome}
             totalExpense={totals.totalExpense}
@@ -82,12 +80,9 @@ export default function AnalyticsPage() {
             expenseChange={totals.expenseChange}
           />
 
-          {/* Main Grid */}
           <div className="grid grid-cols-12 gap-8">
-            {/* Left Column - 8 cols */}
             <div className="col-span-12 lg:col-span-8 space-y-8">
-              
-              {/* Chart */}
+
               <AnalyticsChart
                 data={data}
                 totalIncome={totals.totalIncome}
