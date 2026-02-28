@@ -2,30 +2,26 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import CashFlowLogin from "@/components/auth/CashFlowLogin";
+import SignupPage from "@/components/auth/SignupPage";
 
-const LoginPage = () => {
+const SignupRoute = () => {
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login submitted");
-    
+  const handleComplete = (data: { form: any; onboarding: any }) => {
+    console.log("All steps completed:", data);    
     router.push("/");
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Google login clicked");
-    
-    router.push("/");
+  const handleLogin = () => {
+    router.push("/login");
   };
 
   return (
-    <CashFlowLogin
+    <SignupPage
+      onComplete={handleComplete}
       onLogin={handleLogin}
-      onGoogleLogin={handleGoogleLogin}
     />
   );
 };
 
-export default LoginPage;
+export default SignupRoute;
