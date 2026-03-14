@@ -31,7 +31,7 @@ export function TrendChart() {
   const getMetricColor = (metric: string) => {
     switch (metric) {
       case 'income': return 'text-emerald-400';
-      case 'expenses': return 'text-orange-400';
+      case 'expenses': return 'text-red-400';
       case 'savings': return 'text-blue-400';
       default: return 'text-white';
     }
@@ -40,7 +40,7 @@ export function TrendChart() {
   const getMetricBarColor = (metric: string) => {
     switch (metric) {
       case 'income': return 'bg-emerald-500';
-      case 'expenses': return 'bg-orange-500';
+      case 'expenses': return 'bg-red-500';
       case 'savings': return 'bg-blue-500';
       default: return 'bg-brand-primary';
     }
@@ -49,7 +49,7 @@ export function TrendChart() {
   return (
     <div className="bg-brand-card rounded-2xl border border-white/5 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-white">6-Month Trend</h3>
+        <h3 className="text-base font-bold text-white">6-Month Trend</h3>
         
         <div className="flex bg-brand-bg p-1 rounded-lg">
           {(['income', 'expenses', 'savings'] as const).map((metric) => (
@@ -69,7 +69,6 @@ export function TrendChart() {
         </div>
       </div>
 
-      {/* Chart */}
       <div className="h-40 flex items-end justify-between gap-2 mb-6">
         {trendData.map((data, index) => {
           const value = data[selectedMetric];
@@ -85,8 +84,6 @@ export function TrendChart() {
                   )}
                   style={{ height: `${height}%`, minHeight: '4px' }}
                 />
-                
-                {/* Tooltip */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <div className="bg-white text-[#151b2b] px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap">
                     {formatCurrency(value, 'MNT')}
@@ -101,8 +98,6 @@ export function TrendChart() {
           );
         })}
       </div>
-
-      {/* Legend */}
       <div className="flex items-center justify-between pt-4 border-t border-white/5">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -110,7 +105,7 @@ export function TrendChart() {
             <span className="text-[10px] text-brand-muted">Income</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+            <div className="w-2 h-2 rounded-full bg-red-500"></div>
             <span className="text-[10px] text-brand-muted">Expenses</span>
           </div>
           <div className="flex items-center gap-2">

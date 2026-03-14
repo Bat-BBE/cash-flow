@@ -1,4 +1,3 @@
-// components/dashboard/net-worth-card.tsx
 'use client';
 
 import React from 'react';
@@ -16,7 +15,6 @@ export function NetWorthCard() {
       {/* Background Glow */}
       <div className="absolute right-0 bottom-0 w-96 h-96 bg-brand-primary/10 rounded-full blur-[100px] -mr-32 -mb-32" />
 
-      {/* Content */}
       <div className="flex flex-col md:flex-row justify-between items-start relative z-10">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -45,7 +43,6 @@ export function NetWorthCard() {
         </div>
       </div>
 
-      {/* Chart */}
       <div className="mt-8 h-40 w-full relative">
         <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
           <defs>
@@ -76,6 +73,8 @@ export function NetWorthCard() {
           <span>{t('august')}</span>
           <span>{t('september')}</span>
           <span>{t('october')}</span>
+          <span>{t('november')}</span>
+          <span>{t('december')}</span>
         </div>
       </div>
     </div>

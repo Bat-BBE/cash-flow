@@ -93,7 +93,6 @@ export default function AnalyticsPage() {
                 activeMonth={data[data.length - 1]?.month}
               />
 
-              {/* Gallery */}
               <AnalyticsGallery
                 totalSavings={totals.totalSavings}
                 savingsRate={totals.savingsRate}
@@ -102,7 +101,6 @@ export default function AnalyticsPage() {
               
             </div>
 
-            {/* Right Column - 4 cols */}
             <div className="col-span-12 lg:col-span-4">
               <AnalyticsInsights
                 insights={insights}
@@ -110,8 +108,7 @@ export default function AnalyticsPage() {
               />
             </div>
           </div>
-
-          {/* Footer */}
+          
           <AnalyticsFooter
             lastUpdated={lastUpdated}
             onRefresh={handleRefresh}

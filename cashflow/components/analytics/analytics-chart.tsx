@@ -27,7 +27,6 @@ function ChartBar({ month, income, expense, savings, maxValue, isActive }: Chart
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      {/* Tooltip */}
       {showTooltip && (
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 bg-white text-[#151b2b] p-3 rounded-xl text-xs font-bold whitespace-nowrap shadow-2xl z-20">
           <div className="flex flex-col gap-1.5">
@@ -53,7 +52,6 @@ function ChartBar({ month, income, expense, savings, maxValue, isActive }: Chart
         </div>
       )}
 
-      {/* Bars */}
       <div className="w-full flex items-end justify-center gap-1 h-[200px]">
         <div 
           className="w-5 bg-success/30 rounded-t-lg transition-all group-hover:bg-success/50 cursor-pointer"
@@ -74,15 +72,13 @@ function ChartBar({ month, income, expense, savings, maxValue, isActive }: Chart
         />
       </div>
       
-      {/* Month Label */}
       <span className={cn(
         "text-[10px] font-bold mt-3",
         isActive ? 'text-white' : 'text-white/60'
       )}>
         {month}
       </span>
-      
-      {/* Active Indicator */}
+
       {isActive && (
         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
           <span className="size-1.5 rounded-full bg-success"></span>
@@ -116,8 +112,7 @@ export function AnalyticsChart({
   return (
     <div className="bg-[#2b3550] border border-white/5 rounded-2xl p-8 relative overflow-hidden shadow-2xl">
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
-      
-      {/* Header Stats */}
+
       <div className="flex items-center justify-between mb-10 relative z-10">
         <div className="flex gap-8">
           <div className="flex items-center gap-3">
@@ -164,8 +159,7 @@ export function AnalyticsChart({
         </div>
       </div>
 
-      {/* Chart Bars */}
-      <div className="w-full relative flex items-end justify-between gap-2 px-2 min-h-[240px]">
+      <div className="w-full relative flex items-end justify-between gap-2 px-2 min-h-[100px]">
         {data.map((item) => (
           <ChartBar
             key={item.id}
@@ -179,7 +173,6 @@ export function AnalyticsChart({
         ))}
       </div>
 
-      {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-white/5">
         <div className="flex items-center gap-2">
           <div className="size-2.5 rounded-sm bg-success/50"></div>

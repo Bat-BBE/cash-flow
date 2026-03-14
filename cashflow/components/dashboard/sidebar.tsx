@@ -27,7 +27,7 @@ const mainNavItems: NavItem[] = [
     label: 'Dashboard', 
     translationKey: 'dashboard', 
     icon: 'dashboard', 
-    href: '/',
+    href: '/home',
     badge: { color: 'emerald' }
   },
   { 
@@ -123,6 +123,14 @@ export function Sidebar() {
 
   const handleProfileClick = () => {
     setIsProfileDrawerOpen(true);
+  };
+
+  const handleSystemClick = () => {
+    router.push('/settings');
+  };
+
+  const handleSupportClick = () => {
+    router.push('/support');;
   };
 
   const handleProfileDrawerClose = () => {
@@ -294,14 +302,14 @@ export function Sidebar() {
               {mainNavItems.map(item => renderNavItem(item))}
             </div>
 
-            <div className="space-y-1">
+            {/* <div className="space-y-1">
               {(!effectiveCollapsed || isHovered) && (
                 <p className="px-4 pb-2 text-[10px] font-bold text-brand-muted/50 uppercase tracking-widest">
                   {t('system')}
                 </p>
               )}
               {systemNavItems.map(item => renderNavItem(item))}
-            </div>
+            </div> */}
           </div>
         </nav>
 
@@ -319,6 +327,22 @@ export function Sidebar() {
               >
                 <span className="material-symbols-outlined text-brand-muted">person</span>
                 Profile
+              </button>
+
+              <button
+                onClick={handleSystemClick}
+                className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
+              >
+                <span className="material-symbols-outlined text-brand-muted">settings</span>
+                Settings
+              </button>
+
+              <button
+                onClick={handleSupportClick}
+                className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
+              >
+                <span className="material-symbols-outlined text-brand-muted">help</span>
+                Support
               </button>
 
               <button

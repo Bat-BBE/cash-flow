@@ -7,7 +7,7 @@ import { mockDashboardData, mockUser } from '@/lib/mock-data';
 interface DashboardContextType {
   data: DashboardData;
   user: User;
-  username: string; // ✅ User['name'] биш, шууд string
+  username: string;
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   language: Language;
@@ -36,7 +36,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       value={{
         data,
         user,
-        username: user.name, // ✅ энэ нь зөв, гэхдээ profile-drawer-т username хэрэгтэй
+        username: user.name,
         currency,
         setCurrency,
         language,

@@ -1,4 +1,3 @@
-// components/dashboard/transactions-table.tsx
 'use client';
 
 import { useState } from 'react';
@@ -116,9 +115,9 @@ export function TransactionsTable() {
                 <div className="text-right">
                   <p className={cn(
                     "text-sm font-bold",
-                    tx.type === 'income' ? 'text-emerald-400' : 'text-white'
+                    tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'
                   )}>
-                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, 'MNT')}
+                    {tx.type === 'income' ? '+ ' : '- ' }{formatCurrency(tx.amount, 'MNT')}
                   </p>
                   <p className="text-xs text-brand-muted">
                     {formatDate(tx.date)}

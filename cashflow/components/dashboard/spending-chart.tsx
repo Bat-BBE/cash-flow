@@ -34,7 +34,7 @@ export function SpendingChart() {
   return (
     <div className="bg-brand-card rounded-2xl border border-white/5 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-white">Spending Breakdown</h3>
+        <h3 className="text-base font-bold text-white">Spending Breakdown</h3>
         <span className="text-xs text-brand-muted">
           {formatCurrency(totalSpent, 'MNT')} total
         </span>
@@ -60,7 +60,8 @@ export function SpendingChart() {
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="flex-1 text-xs font-medium text-brand-muted group-hover:text-white transition-colors">
+                <span className="flex-1 text-xs font-medium text-brand-muted group-hover:text-white
+                 transition-colors">
                   {item.category}
                 </span>
                 <span className="text-xs font-bold text-white">
@@ -73,7 +74,7 @@ export function SpendingChart() {
 
               <div className="relative h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div
-                  className="absolute left-0 top-0 h-full rounded-full transition-all duration-300 group-hover:opacity-80"
+                  className="absolute left-0 top-0 h-full rounded-full transition-all duration-500 group-hover:opacity-80"
                   style={{
                     width: `${percentage}%`,
                     backgroundColor: item.color
@@ -85,7 +86,6 @@ export function SpendingChart() {
         })}
       </div>
 
-      {/* Donut Chart Preview */}
       <div className="mt-6 pt-4 border-t border-white/5">
         <div className="flex items-center justify-center">
           <div className="relative w-32 h-32">
@@ -116,7 +116,7 @@ export function SpendingChart() {
                   />
                 );
               })}
-              <circle cx="50" cy="50" r="25" fill="#1a1f2e" />
+              <circle cx="50" cy="50" r="0" fill="#ffffff" />
             </svg>
           </div>
         </div>
