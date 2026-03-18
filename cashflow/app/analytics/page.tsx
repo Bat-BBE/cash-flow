@@ -40,11 +40,11 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex overflow-hidden bg-[#1a1f2e]">
+      <div className="min-h-screen flex bg-[#1a1f2e]">
         <Sidebar />
-        <main className="flex-1 h-screen flex flex-col bg-[#1a1f2e]">
+        <main className="flex-1 min-h-screen flex flex-col bg-[#1a1f2e]">
           <Header />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center px-4">
             <div className="text-center">
               <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
               <p className="text-slate-400 font-medium">Loading analytics...</p>
@@ -56,13 +56,13 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen flex overflow-hidden bg-[#1a1f2e]">
+    <div className="min-h-screen flex bg-[#1a1f2e]">
       <Sidebar />
       
-      <main className="flex-1 h-screen overflow-y-auto custom-scrollbar flex flex-col bg-[#1a1f2e]">
+      <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-[#1a1f2e]">
         <Header />
         
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div className="flex-1 p-4 sm:p-6 md:p-8 custom-scrollbar space-y-8">
 
           <AnalyticsHeader
             period={period}
@@ -80,8 +80,8 @@ export default function AnalyticsPage() {
             expenseChange={totals.expenseChange}
           />
 
-          <div className="grid grid-cols-12 gap-8">
-            <div className="col-span-12 lg:col-span-8 space-y-8">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 items-start">
+            <div className="xl:col-span-8 space-y-6 md:space-y-8">
 
               <AnalyticsChart
                 data={data}
@@ -101,7 +101,7 @@ export default function AnalyticsPage() {
               
             </div>
 
-            <div className="col-span-12 lg:col-span-4">
+            <div className="xl:col-span-4">
               <AnalyticsInsights
                 insights={insights}
                 portfolioVelocity={parseFloat(totals.portfolioVelocity.toFixed(2))}

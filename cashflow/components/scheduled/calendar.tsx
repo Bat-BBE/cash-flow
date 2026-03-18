@@ -30,9 +30,9 @@ export function Calendar({
   ];
 
   return (
-    <div className="lg:col-span-7 bg-navy-dark/40 rounded-2xl border border-white/5 p-6 shadow-2xl backdrop-blur-sm">
+    <div className="lg:col-span-7 bg-navy-dark/40 rounded-2xl border border-white/5 p-4 sm:p-6 shadow-2xl backdrop-blur-sm">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
         <div className="flex items-center gap-3">
           <button 
             onClick={onMonthPickerToggle}

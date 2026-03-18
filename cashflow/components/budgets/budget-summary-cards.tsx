@@ -74,7 +74,7 @@ interface BudgetSummaryCardsProps {
 export function BudgetSummaryCards({ summary, loading }: BudgetSummaryCardsProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
         {[1, 2, 3].map(i => (
           <div key={i} className="bg-[#2b3550] border border-slate-700/50 p-6 rounded-xl">
             <div className="animate-pulse">
@@ -111,7 +111,7 @@ export function BudgetSummaryCards({ summary, loading }: BudgetSummaryCardsProps
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
       {cards.map((card, index) => (
         <SummaryCard key={index} {...card} />
       ))}

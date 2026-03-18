@@ -101,7 +101,7 @@ export function AnalyticsGallery({ totalSavings, savingsRate, onCardClick }: Ana
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-6">
         <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">
           Key Metrics & Reports
         </h3>
@@ -110,7 +110,7 @@ export function AnalyticsGallery({ totalSavings, savingsRate, onCardClick }: Ana
         </span>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         {cards.map((card) => (
           <GalleryCard
             key={card.id}
