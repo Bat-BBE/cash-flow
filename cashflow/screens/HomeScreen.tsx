@@ -14,25 +14,25 @@ import { DashboardProvider } from '@/components/providers/dashboard-provider';
 export default function DashboardPage() {
   return (
     <DashboardProvider>
-      <div className="min-h-screen flex overflow-hidden bg-brand-bg">
+      <div className="min-h-screen flex bg-brand-bg">
         <Sidebar />
 
-        <main className="flex-1 h-screen overflow-y-auto custom-scrollbar flex flex-col bg-brand-bg">
+        <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-brand-bg">
           <Header />
 
-          <div className="p-4 md:p-8 space-y-8 max-w-[1400px] mx-auto w-full">
-            <section className="grid grid-cols-1 gap-8">
+          <div className="p-3 sm:p-4 md:p-8 space-y-6 md:space-y-8 max-w-[1400px] mx-auto w-full">
+            <section className="grid grid-cols-1 gap-4 md:gap-8">
               <NetWorthCard />
               <StatsCards />
             </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8 items-start">
+              <div className="xl:col-span-2 space-y-4 md:space-y-6">
                 <TransactionsTable />
                 <BudgetCards />
               </div>
 
-              <aside className="space-y-8">
+              <aside className="space-y-4 md:space-y-8">
                 <SpendingChart />
                 <SmartInsight />
                 <TrendChart />

@@ -105,7 +105,7 @@ interface AnalyticsInsightsProps {
 
 export function AnalyticsInsights({ insights, portfolioVelocity }: AnalyticsInsightsProps) {
   return (
-    <div className="bg-gradient-to-br from-[#2b3550]/10 via-[#1a1f2e] to-[#1a1f2e] border border-white/5 rounded-2xl p-8 h-full flex flex-col relative overflow-hidden shadow-2xl">
+    <div className="bg-gradient-to-br from-[#2b3550]/10 via-[#1a1f2e] to-[#1a1f2e] border border-white/5 rounded-2xl p-6 md:p-8 h-full flex flex-col relative overflow-hidden shadow-2xl">
       <div className="absolute -top-10 -right-10 size-48 bg-primary/10 blur-[80px] rounded-full"></div>
       
       {/* Header */}

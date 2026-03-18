@@ -35,11 +35,11 @@ export default function AccountsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex overflow-hidden bg-brand-bg">
+      <div className="min-h-screen flex bg-brand-bg">
         <Sidebar />
-        <main className="flex-1 h-screen flex flex-col bg-brand-bg">
+        <main className="flex-1 min-h-screen flex flex-col bg-brand-bg">
           <Header />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center px-4">
             <div className="text-center">
               <div className="size-12 border-4 border-brand-primary/30 border-t-brand-primary rounded-full animate-spin mb-4"></div>
               <p className="text-brand-muted font-medium">Loading accounts...</p>
@@ -51,29 +51,33 @@ export default function AccountsPage() {
   }
 
   return (
-    <div className="min-h-screen flex overflow-hidden bg-brand-bg">
+    <div className="min-h-screen flex bg-brand-bg">
       <Sidebar />
 
-      <main className="flex-1 h-screen overflow-y-auto bg-brand-bg custom-scrollbar flex flex-col">
+      <main className="flex-1 min-h-screen overflow-y-auto bg-brand-bg custom-scrollbar flex flex-col">
         <Header />
 
-        <div className="flex flex-1 overflow-hidden">
-          <AccountsSidebar
-            accountGroups={accountGroups}
-            selectedAccount={selectedAccount}
-            totalBalance={stats?.totalBalance || 0}
-            totalChange={stats?.totalChange || 0}
-            changePercentage={stats?.changePercentage || 0}
-            onSelectAccount={selectAccount}
-          />
+        <div className="flex flex-1 flex-col lg:flex-row gap-4 lg:gap-6 p-4 md:p-6 lg:p-8">
+          <div className="lg:w-[320px] xl:w-[360px] shrink-0">
+            <AccountsSidebar
+              accountGroups={accountGroups}
+              selectedAccount={selectedAccount}
+              totalBalance={stats?.totalBalance || 0}
+              totalChange={stats?.totalChange || 0}
+              changePercentage={stats?.changePercentage || 0}
+              onSelectAccount={selectAccount}
+            />
+          </div>
 
-          <AccountDetails
-            account={selectedAccount}
-            onTransfer={handleTransfer}
-            onAddTransaction={handleAddTransaction}
-            onPeriodChange={setSelectedPeriod}
-            selectedPeriod={selectedPeriod}
-          />
+          <div className="flex-1 min-w-0">
+            <AccountDetails
+              account={selectedAccount}
+              onTransfer={handleTransfer}
+              onAddTransaction={handleAddTransaction}
+              onPeriodChange={setSelectedPeriod}
+              selectedPeriod={selectedPeriod}
+            />
+          </div>
         </div>
       </main>
 

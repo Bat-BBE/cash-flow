@@ -1,4 +1,3 @@
-// components/accounts/accounts-sidebar.tsx
 'use client';
 
 import { Account, AccountGroup } from './types';
@@ -102,7 +101,7 @@ export function AccountsSidebar({
 }: AccountsSidebarProps) {
   if (isLoading) {
     return (
-      <div className="w-80 border-r border-white/5 overflow-y-auto custom-scrollbar bg-brand-sidebar/30">
+      <div className="w-full sm:w-72 lg:w-80 border-r border-white/5 overflow-y-auto custom-scrollbar bg-brand-sidebar/30 rounded-2xl sm:rounded-none sm:border-r">
         <div className="p-6">
           <div className="animate-pulse">
             <div className="h-4 bg-white/5 rounded w-24 mb-2"></div>
@@ -121,8 +120,8 @@ export function AccountsSidebar({
   }
 
   return (
-    <div className="w-80 border-r border-white/5 overflow-y-auto custom-scrollbar bg-brand-sidebar/30">
-      <div className="p-6">
+    <div className="w-full sm:w-72 lg:w-80 border-r border-white/5 overflow-y-auto custom-scrollbar bg-brand-sidebar/30 rounded-2xl sm:rounded-none sm:border-r">
+      <div className="p-4 sm:p-6">
         {/* Total Overview */}
         <div className="mb-6">
           <p className="text-xs font-bold text-brand-muted uppercase mb-1">

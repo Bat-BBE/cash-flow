@@ -113,8 +113,8 @@ export function AnalyticsChart({
     <div className="bg-[#2b3550] border border-white/5 rounded-2xl p-8 relative overflow-hidden shadow-2xl">
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
 
-      <div className="flex items-center justify-between mb-10 relative z-10">
-        <div className="flex gap-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 lg:mb-10 relative z-10">
+        <div className="flex flex-wrap gap-4 sm:gap-6 lg:gap-8">
           <div className="flex items-center gap-3">
             <div className="size-3.5 rounded-full bg-success ring-4 ring-success/20"></div>
             <div>
@@ -149,7 +149,7 @@ export function AnalyticsChart({
             </div>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-left lg:text-right">
           <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">
             Avg. Savings Rate
           </p>

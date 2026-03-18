@@ -25,7 +25,7 @@ export function AccountDetails({
   if (!account) {
     return (
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="p-8 flex items-center justify-center h-full">
+        <div className="p-6 md:p-8 flex items-center justify-center min-h-[260px] md:h-full">
           <div className="text-center">
             <span className="material-symbols-outlined text-6xl text-brand-muted mb-4">
               account_balance
@@ -41,11 +41,11 @@ export function AccountDetails({
 
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar">
-      <div className="p-8">
+      <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+            <div className="min-w-0">
               <div className="flex items-center gap-3 mb-1">
                 <h1 className="text-2xl font-bold text-white">{account.name}</h1>
                 {account.active && (
@@ -67,7 +67,7 @@ export function AccountDetails({
           </div>
 
           {/* Balance and Period Selector */}
-          <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
             <div>
               <p className="text-xs font-bold text-brand-muted uppercase mb-1">
                 Available Balance
@@ -80,7 +80,7 @@ export function AccountDetails({
               </p>
             </div>
             
-            <div className="flex bg-brand-card p-1 rounded-xl border border-white/5">
+            <div className="flex bg-brand-card p-1 rounded-xl border border-white/5 self-start sm:self-auto">
               {periods.map((period) => (
                 <button
                   key={period}
