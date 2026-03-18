@@ -23,7 +23,8 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
   const t = useTranslation(language);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [date, setDate] = useState<Date>(new Date());
+  const [date] = useState<Date>(new Date());
+   const [showSearchBar, setShowSearchBar] = useState(false);
 
   const currencies: Currency[] = ['MNT', 'USD', 'EUR'];
 
@@ -52,9 +53,18 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
 
   return (
     <>
-      <header className="h-20 bg-brand-sidebar/50 backdrop-blur-xl px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-30 border-b border-white/5">
-        <div className="flex items-center gap-3 flex-1">
+      <header className="h-20 bg-brand-sidebar/50 backdrop-blur-xl px-3 sm:px-4 md:px-8 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30 border-b border-white/5">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           {/* Mobile Sidebar Toggle */}
+          {/* <div className="lg:hidden flex items-center gap-2 min-w-0">
+            <div className="relative h-12 w-10 overflow-hidden rounded-xl">
+              <img
+                src="/logo.png"
+                alt="CashFlow"
+                className="h-full w-full object-contain"
+              />
+            </div>
+          </div> */}
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden flex items-center justify-center h-10 w-10 rounded-xl bg-brand-card/50 border border-brand-border/30 text-brand-text hover:text-white hover:bg-brand-card transition-all"
@@ -62,37 +72,24 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
             <span className="material-symbols-outlined">menu</span>
           </button>
 
-          <div className="relative w-full max-w-md">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-brand-muted text-xl">
-              search
-            </span>
-            <Input
-              type="text"
-              placeholder={t('searchPlaceholder')}
-              value={searchQuery}
-              onChange={handleSearch}
-              className="w-full bg-brand-card/50 border-brand-border/30 pl-12 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary text-white placeholder:text-brand-muted/50"
-            />
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted hover:text-white"
-              >
-                <span className="material-symbols-outlined text-lg">close</span>
-              </button>
-            )}
-          </div>
+          {/* Search toggle icon */}
+          <button
+            onClick={() => setShowSearchBar((v) => !v)}
+            className="flex items-center justify-center h-10 w-10 rounded-xl bg-brand-card/50 border border-brand-border/30 text-brand-muted hover:text-white hover:bg-brand-card transition-all"
+          >
+            <span className="material-symbols-outlined">search</span>
+          </button>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
-          <div className="flex items-center gap-1 bg-brand-card/80 p-1.5 rounded-2xl border border-brand-border/30">
+        <div className="flex items-center justify-end gap-2 md:gap-4 flex-shrink-0">
+          <div className="flex items-center gap-1 bg-brand-card/80 p-1 rounded-2xl border border-brand-border/30">
             {(['MN', 'EN'] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
                 className={cn(
-                  'px-2 md:px-3 py-1.5 text-xs font-bold rounded-xl transition-all min-w-[50px]',
+                  'px-2 md:px-3 py-1.5 text-[11px] font-bold rounded-xl transition-all min-w-[44px]',
                   language === lang
                     ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20'
                     : 'text-brand-muted hover:text-white hover:bg-brand-card'
@@ -106,7 +103,7 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
           <Button
             onClick={handleCalendarClick}
             variant="outline"
-            className="hidden sm:flex items-center gap-2 px-3 py-2.5 bg-brand-card/80 border-brand-border/30 rounded-2xl text-brand-text text-sm hover:bg-brand-card hover:border-brand-primary/50 font-medium transition-all group"
+            className="hidden sm:flex items-center gap-2 px-3 py-2.5 bg-brand-card/80 border-brand-border/30 rounded-2xl text-brand-text text-xs md:text-sm hover:bg-brand-card hover:border-brand-primary/50 font-medium transition-all group"
           >
             <span className="material-symbols-outlined text-lg text-brand-primary group-hover:scale-110 transition-transform">
               calendar_month
@@ -118,13 +115,45 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
 
           <Button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1 px-3 md:px-4 py-2.5 bg-gradient-to-r from-brand-primary to-brand-primary/80 text-white font-bold rounded-2xl text-sm hover:brightness-110 transition-all shadow-lg shadow-brand-primary/25"
+            className="flex items-center gap-1 px-3 md:px-4 py-2.5 bg-gradient-to-r from-brand-primary to-brand-primary/80 text-white font-bold rounded-2xl text-xs md:text-sm hover:brightness-110 transition-all shadow-lg shadow-brand-primary/25"
           >
             <span className="material-symbols-outlined font-bold text-lg">add</span>
             <span className="hidden sm:inline">{t('addTransaction')}</span>
           </Button>
         </div>
       </header>
+
+      {/* Search bar below header when active */}
+      {showSearchBar && (
+        <div className="bg-brand-sidebar/70 backdrop-blur-xl border-b border-white/5 px-3 sm:px-4 md:px-8 py-2 sticky top-20 z-20">
+          <div className="relative max-w-[520px]">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-brand-muted text-xl">
+              search
+            </span>
+            <Input
+              type="text"
+              placeholder={t('searchPlaceholder')}
+              value={searchQuery}
+              onChange={handleSearch}
+              className="w-full bg-brand-card/60 border-brand-border/40 pl-12 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary text-white placeholder:text-brand-muted/50"
+            />
+            <button
+              onClick={() => {
+                if (searchQuery) {
+                  clearSearch();
+                } else {
+                  setShowSearchBar(false);
+                }
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted hover:text-white"
+            >
+              <span className="material-symbols-outlined text-lg">
+                {searchQuery ? 'close' : 'expand_less'}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <AddTransactionModal
         isOpen={showAddModal}

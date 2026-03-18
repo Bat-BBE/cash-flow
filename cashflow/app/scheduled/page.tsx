@@ -1,4 +1,3 @@
-// app/scheduled/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -55,11 +54,11 @@ export default function ScheduledPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex overflow-hidden bg-navy-deep">
+      <div className="min-h-screen flex bg-navy-deep">
         <Sidebar />
-        <main className="flex-1 h-screen flex flex-col bg-navy-deep">
+        <main className="flex-1 min-h-screen flex flex-col bg-navy-deep">
           <Header />
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center px-4">
             <div className="text-center">
               <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
               <p className="text-slate-400 font-medium">Loading scheduled data...</p>
@@ -71,13 +70,13 @@ export default function ScheduledPage() {
   }
 
   return (
-    <div className="min-h-screen flex overflow-hidden bg-navy-deep">
+    <div className="min-h-screen flex bg-navy-deep">
       <Sidebar />
 
-      <main className="flex-1 h-screen overflow-y-auto custom-scrollbar flex flex-col bg-navy-deep">
+      <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-navy-deep">
         <Header />
 
-        <div className="flex-1 overflow-y-auto p-6 max-w-[1440px] mx-auto w-full space-y-6">
+        <div className="flex-1 p-4 sm:p-6 max-w-[1440px] mx-auto w-full space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -116,7 +115,7 @@ export default function ScheduledPage() {
           </div>
 
           {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 relative">
             {/* Calendar Section */}
             <Calendar
               days={calendarDays}
