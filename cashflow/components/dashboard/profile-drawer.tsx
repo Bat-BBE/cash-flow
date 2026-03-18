@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 export interface ProfileDrawerUser {
-  name: string;
+  name?: string;
   username?: string;
   avatarUrl?: string;
   membershipType?: string;
@@ -22,7 +22,7 @@ export interface ProfileDrawerUser {
 interface ProfileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  user: ProfileDrawerUser;
+  user?: ProfileDrawerUser;
   sidebarCollapsed?: boolean;
 }
 
