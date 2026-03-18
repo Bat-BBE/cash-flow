@@ -246,7 +246,7 @@ export function NetWorthCard() {
       </div>
 
       {/* Bottom quick stats */}
-      <div className="mt-4 grid grid-cols-3 gap-3 text-[10px] sm:text-xs text-brand-muted">
+      {/* <div className="mt-4 grid grid-cols-3 gap-3 text-[10px] sm:text-xs text-brand-muted">
         <div className="flex flex-col gap-0.5">
           <span className="uppercase tracking-[0.16em]">Income</span>
           <span className="font-semibold text-emerald-400">
@@ -265,7 +265,7 @@ export function NetWorthCard() {
             {formatCurrency(data.savingsTotal ?? 0, 'MNT')}
           </span>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
