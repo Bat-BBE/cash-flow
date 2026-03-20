@@ -28,18 +28,6 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
 
   const currencies: Currency[] = ['MNT', 'USD', 'EUR'];
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    const searchEvent = new CustomEvent('globalSearch', { detail: e.target.value });
-    window.dispatchEvent(searchEvent);
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    const searchEvent = new CustomEvent('globalSearch', { detail: '' });
-    window.dispatchEvent(searchEvent);
-  };
-
   const handleAddTransaction = (transaction: any) => {
     if (onAddTransaction) {
       onAddTransaction(transaction);
@@ -72,13 +60,7 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
             <span className="material-symbols-outlined">menu</span>
           </button>
 
-          {/* Search toggle icon */}
-          <button
-            onClick={() => setShowSearchBar((v) => !v)}
-            className="flex items-center justify-center h-10 w-10 rounded-xl bg-brand-card/50 border border-brand-border/30 text-brand-muted hover:text-white hover:bg-brand-card transition-all"
-          >
-            <span className="material-symbols-outlined">search</span>
-          </button>
+         
         </div>
 
         {/* Actions */}
@@ -122,38 +104,6 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
           </Button>
         </div>
       </header>
-
-      {/* Search bar below header when active */}
-      {showSearchBar && (
-        <div className="bg-brand-sidebar/70 backdrop-blur-xl border-b border-white/5 px-3 sm:px-4 md:px-8 py-2 sticky top-20 z-20">
-          <div className="relative max-w-[520px]">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-brand-muted text-xl">
-              search
-            </span>
-            <Input
-              type="text"
-              placeholder={t('searchPlaceholder')}
-              value={searchQuery}
-              onChange={handleSearch}
-              className="w-full bg-brand-card/60 border-brand-border/40 pl-12 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary text-white placeholder:text-brand-muted/50"
-            />
-            <button
-              onClick={() => {
-                if (searchQuery) {
-                  clearSearch();
-                } else {
-                  setShowSearchBar(false);
-                }
-              }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted hover:text-white"
-            >
-              <span className="material-symbols-outlined text-lg">
-                {searchQuery ? 'close' : 'expand_less'}
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
 
       <AddTransactionModal
         isOpen={showAddModal}
