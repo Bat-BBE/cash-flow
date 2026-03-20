@@ -9,11 +9,12 @@ import { BudgetCards } from '@/components/dashboard/budget-cards';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { SmartInsight } from '@/components/dashboard/smart-insight';
 import { TrendChart } from '@/components/dashboard/trend-chart';
-import { DashboardProvider } from '@/components/providers/dashboard-provider';
+// import { DashboardProvider } from '@/components/providers/dashboard-provider';
+import { DashboardDataProvider } from '@/contexts/dashboard-data-context';
 
 export default function DashboardPage() {
   return (
-    <DashboardProvider>
+    <DashboardDataProvider>
       <div className="min-h-screen flex bg-brand-bg">
         <Sidebar />
 
@@ -41,6 +42,6 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
-    </DashboardProvider>
+    </DashboardDataProvider>
   );
 }
