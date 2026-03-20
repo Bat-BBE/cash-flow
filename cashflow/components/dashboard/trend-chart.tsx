@@ -3,9 +3,28 @@
 import { useState } from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation, TranslationKey } from '@/lib/translations';
+
+const MONTH_TO_KEY: Record<string, TranslationKey> = {
+  Jan: 'january',
+  Feb: 'february',
+  Mar: 'march',
+  Apr: 'april',
+  May: 'may',
+  Jun: 'june',
+  Jul: 'july',
+  Aug: 'august',
+  Sep: 'september',
+  Oct: 'october',
+  Nov: 'november',
+  Dec: 'december',
+};
 
 export function TrendChart() {
   const { trendData, loading } = useDashboardData();
+  const { language } = useDashboard();
+  const t = useTranslation(language);
   const [selectedMetric, setSelectedMetric] = useState<'income' | 'expenses' | 'savings'>('savings');
 
   if (loading) {
@@ -49,7 +68,7 @@ export function TrendChart() {
   return (
     <div className="bg-brand-card rounded-2xl border border-white/5 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-bold text-white">6-Month Trend</h3>
+        <h3 className="text-base font-bold text-white">{t('sixMonthTrend')}</h3>
         
         <div className="flex bg-brand-bg p-1 rounded-lg">
           {(['income', 'expenses', 'savings'] as const).map((metric) => (
@@ -63,7 +82,7 @@ export function TrendChart() {
                   : 'text-brand-muted hover:text-white'
               )}
             >
-              {metric}
+              {metric === 'income' ? t('income') : metric === 'expenses' ? t('tabExpenses') : t('tabSavings')}
             </button>
           ))}
         </div>
@@ -92,7 +111,7 @@ export function TrendChart() {
               </div>
               
               <span className="text-[10px] text-brand-muted mt-2 group-hover:text-white transition-colors">
-                {data.month}
+                {t(MONTH_TO_KEY[data.month] ?? 'january')}
               </span>
             </div>
           );
@@ -102,20 +121,20 @@ export function TrendChart() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-            <span className="text-[10px] text-brand-muted">Income</span>
+            <span className="text-[10px] text-brand-muted">{t('income')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-red-500"></div>
-            <span className="text-[10px] text-brand-muted">Expenses</span>
+            <span className="text-[10px] text-brand-muted">{t('tabExpenses')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-            <span className="text-[10px] text-brand-muted">Savings</span>
+            <span className="text-[10px] text-brand-muted">{t('tabSavings')}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-1">
-          <span className="text-[10px] text-brand-muted">Avg.</span>
+          <span className="text-[10px] text-brand-muted">{t('averageShort')}</span>
           <span className={cn(
             "text-xs font-bold",
             getMetricColor(selectedMetric)

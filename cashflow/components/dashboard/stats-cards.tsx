@@ -3,6 +3,8 @@
 
 import { cn, formatCurrency, formatPercentage } from '@/lib/utils';
 import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
 
 interface StatCardProps {
   title: string;
@@ -45,17 +47,19 @@ function StatCard({ title, value, change, changePercentage, icon, color, loading
       
       <p className="text-2xl font-black text-white mb-1">{value}</p>
       
-      {change && changePercentage && (
-        <div className="flex items-center gap-2">
-          <span className={cn(
-            "text-xs font-bold flex items-center gap-0.5",
-            isPositive ? 'text-emerald-400' : 'text-orange-400'
-          )}>
-            <span className="material-symbols-outlined text-sm">
-              {isPositive ? 'trending_up' : 'trending_down'}
+      {change && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {changePercentage !== undefined && (
+            <span className={cn(
+              "text-xs font-bold flex items-center gap-0.5",
+              isPositive ? 'text-emerald-400' : 'text-orange-400'
+            )}>
+              <span className="material-symbols-outlined text-sm">
+                {isPositive ? 'trending_up' : 'trending_down'}
+              </span>
+              {changePercentage > 0 ? '+' : ''}{changePercentage}%
             </span>
-            {changePercentage > 0 ? '+' : ''}{changePercentage}%
-          </span>
+          )}
           <span className="text-xs text-brand-muted">{change}</span>
         </div>
       )}
@@ -65,35 +69,37 @@ function StatCard({ title, value, change, changePercentage, icon, color, loading
 
 export function StatsCards() {
   const { stats, loading } = useDashboardData();
+  const { language } = useDashboard();
+  const t = useTranslation(language);
 
   const cards = [
     {
-      title: 'Total Income',
+      title: t('statTotalIncome'),
       value: stats ? formatCurrency(stats.income.total, 'MNT') : '₮0',
-      change: `vs last month`,
+      change: t('vsLastMonthCompare'),
       changePercentage: stats?.income.changePercentage,
       icon: 'trending_up',
       color: 'bg-emerald-500/10 text-emerald-400'
     },
     {
-      title: 'Total Expenses',
+      title: t('statTotalExpenses'),
       value: stats ? formatCurrency(stats.expenses.total, 'MNT') : '₮0',
-      change: `vs last month`,
+      change: t('vsLastMonthCompare'),
       changePercentage: stats?.expenses.changePercentage,
       icon: 'trending_down',
       color: 'bg-orange-500/10 text-orange-400'
     },
     {
-      title: 'Savings',
+      title: t('statSavings'),
       value: stats ? formatCurrency(stats.savings.total, 'MNT') : '₮0',
-      change: `${stats?.savings.rate ? formatPercentage(stats.savings.rate) : '0%'} rate`,
+      change: `${stats?.savings.rate ? formatPercentage(stats.savings.rate) : '0%'} ${t('savingsRateSuffix')}`,
       icon: 'savings',
       color: 'bg-blue-500/10 text-blue-400'
     },
     {
-      title: 'Investments',
+      title: t('statInvestments'),
       value: stats ? formatCurrency(stats.investments.total, 'MNT') : '₮0',
-      change: `${stats?.investments.returnPercentage ? formatPercentage(stats.investments.returnPercentage) : '0%'} return`,
+      change: `${stats?.investments.returnPercentage ? formatPercentage(stats.investments.returnPercentage) : '0%'} ${t('investmentReturnSuffix')}`,
       changePercentage: stats?.investments.returnPercentage,
       icon: 'show_chart',
       color: 'bg-purple-500/10 text-purple-400'
