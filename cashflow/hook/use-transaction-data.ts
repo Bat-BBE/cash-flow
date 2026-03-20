@@ -1,271 +1,149 @@
-// hooks/use-transaction-data.ts
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { ref, get } from 'firebase/database';
+import { db, BASE_PATH } from '@/lib/firebase';
 import { Transaction, TransactionFilter } from '@/components/transactions/types';
 
-// Mock өгөгдөл генератор
-const generateTransactions = (): Transaction[] => [
-  {
-    id: '1',
-    date: '2023-10-24',
-    category: 'Food & Drink',
-    account: 'Chase Checking',
-    description: 'Starbucks Coffee',
-    amount: 5.50,
-    type: 'expense',
-    status: 'completed',
-    merchant: 'Starbucks',
-  },
-  {
-    id: '2',
-    date: '2023-10-23',
-    category: 'Salary',
-    account: 'Savings',
-    description: 'Company XYZ Payroll',
-    amount: 4500.00,
-    type: 'income',
-    status: 'completed',
-    merchant: 'Company XYZ',
-  },
-  {
-    id: '3',
-    date: '2023-10-22',
-    category: 'Housing',
-    account: 'Chase Checking',
-    description: 'Monthly Rent Payment',
-    amount: 1200.00,
-    type: 'expense',
-    status: 'completed',
-    merchant: 'Property Management',
-  },
-  {
-    id: '4',
-    date: '2023-10-21',
-    category: 'Shopping',
-    account: 'Credit Card',
-    description: 'Amazon Marketplace',
-    amount: 45.20,
-    type: 'expense',
-    status: 'completed',
-    merchant: 'Amazon',
-  },
-  {
-    id: '5',
-    date: '2023-10-20',
-    category: 'Transfer',
-    account: 'Savings',
-    description: 'Internal Transfer',
-    amount: 200.00,
-    type: 'transfer',
-    status: 'completed',
-  },
-  {
-    id: '6',
-    date: '2023-10-19',
-    category: 'Transportation',
-    account: 'Credit Card',
-    description: 'Uber Ride',
-    amount: 25.50,
-    type: 'expense',
-    status: 'completed',
-    merchant: 'Uber',
-  },
-  {
-    id: '7',
-    date: '2023-10-18',
-    category: 'Entertainment',
-    account: 'Credit Card',
-    description: 'Netflix Subscription',
-    amount: 15.99,
-    type: 'expense',
-    status: 'pending',
-    merchant: 'Netflix',
-  },
-  {
-    id: '8',
-    date: '2023-10-17',
-    category: 'Utilities',
-    account: 'Chase Checking',
-    description: 'Electric Bill',
-    amount: 85.75,
-    type: 'expense',
-    status: 'completed',
-    merchant: 'Electric Company',
-  },
+/* ─── Raw Firebase tx ─────────────────────────────────────────────── */
+type RawTx = {
+  date:           string;
+  debit:          number;
+  credit:         number;
+  closingBalance: number | null;
+  description:    string;
+  category:       string;
+  merchant:       string | null;
+  counterAccount: string | null;
+  accountId:      string;
+  type:           'income' | 'expense';
+};
+
+/* ─── Constants ───────────────────────────────────────────────────── */
+export const ACCOUNTS   = ['Залуусын харилцах', 'Бэлэн мөнгөний хэтэвч', 'Хадгаламжийн данс', 'Кредит карт'];
+export const CATEGORIES = [
+  'Дэлгүүр','Хоол хүнс','Тоон үйлчилгээ','ATM авалт','Интернет',
+  'Цахилгаан/Дулаан','Гар утас','Цалин','Гэр бүлийн дэмжлэг',
+  'Үйлчилгээний хураамж','Шилжүүлэг','Эрүүл мэнд','Боловсрол','Бусад орлого',
 ];
 
-const accounts = [
-  'Chase Checking (...4291)',
-  'Savings (...8802)',
-  'Credit Card (...1103)',
-];
-
-const categories = [
-  'Food & Drink',
-  'Salary',
-  'Housing',
-  'Shopping',
-  'Transfer',
-  'Transportation',
-  'Entertainment',
-  'Healthcare',
-  'Utilities',
-  'Education',
-];
-
+/* ─── Hook ───────────────────────────────────────────────────────── */
 export function useTransactionData() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [allTxs,      setAllTxs]      = useState<Transaction[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [selected,    setSelected]    = useState<Transaction | null>(null);
+  const [showAddModal,     setShowAddModal]     = useState(false);
   const [showDetailsPanel, setShowDetailsPanel] = useState(false);
-  
-  // Filter state
-  const [dateRange, setDateRange] = useState('month');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchTransactions();
+  // Filters
+  const [dateRange,          setDateRange]          = useState('month');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedAccounts,   setSelectedAccounts]   = useState<string[]>([]);
+  const [searchQuery,        setSearchQuery]        = useState('');
+
+  /* ── Fetch ── */
+  const fetchTransactions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const snap = await get(ref(db, `${BASE_PATH}/transactions`));
+      if (!snap.exists()) { setLoading(false); return; }
+
+      const raw: Record<string, RawTx> = snap.val();
+      const list: Transaction[] = Object.entries(raw)
+        .filter(([, t]) => t.date && t.date !== 'Нийт дүн:')
+        .map(([id, t]) => ({
+          id,
+          date:        t.date.split(' ')[0],
+          category:    t.category || (t.debit !== 0 ? 'Бусад зарлага' : 'Бусад орлого'),
+          account:     'Залуусын харилцах',
+          description: t.description || '—',
+          amount:      Math.abs(t.debit !== 0 ? t.debit : t.credit),
+          type:        t.type ?? (t.debit !== 0 ? 'expense' : 'income'),
+          status:      'completed' as const,
+          merchant:    t.merchant ?? undefined,
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      setAllTxs(list);
+    } catch (err) {
+      console.error('[useTransactionData]', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [transactions, dateRange, selectedCategories, selectedAccounts, searchQuery]);
+  useEffect(() => { fetchTransactions(); }, [fetchTransactions]);
 
-  const fetchTransactions = async () => {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 600));
-    const data = generateTransactions();
-    setTransactions(data);
-    setFilteredTransactions(data);
-    setLoading(false);
-  };
+  /* ── Apply filters ── */
+  const filteredTransactions = (() => {
+    let list = [...allTxs];
 
-  const applyFilters = () => {
-    let filtered = [...transactions];
-
-    // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(t => 
-        t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.merchant?.toLowerCase().includes(searchQuery.toLowerCase())
+      const q = searchQuery.toLowerCase();
+      list = list.filter((t) =>
+        t.description.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q) ||
+        t.merchant?.toLowerCase().includes(q)
       );
     }
+    if (selectedCategories.length > 0) list = list.filter((t) => selectedCategories.includes(t.category));
+    if (selectedAccounts.length > 0)   list = list.filter((t) => selectedAccounts.includes(t.account));
 
-    // Category filter
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(t => selectedCategories.includes(t.category));
-    }
-
-    // Account filter
-    if (selectedAccounts.length > 0) {
-      filtered = filtered.filter(t => selectedAccounts.includes(t.account));
-    }
-
-    // Date range filter
-    const now = new Date();
+    const now   = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    switch (dateRange) {
-      case 'today':
-        filtered = filtered.filter(t => new Date(t.date) >= today);
-        break;
-      case 'week':
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        filtered = filtered.filter(t => new Date(t.date) >= weekAgo);
-        break;
-      case 'month':
-        const monthAgo = new Date(today);
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        filtered = filtered.filter(t => new Date(t.date) >= monthAgo);
-        break;
+    if (dateRange === 'today') {
+      list = list.filter((t) => new Date(t.date) >= today);
+    } else if (dateRange === 'week') {
+      const cut = new Date(today); cut.setDate(cut.getDate() - 7);
+      list = list.filter((t) => new Date(t.date) >= cut);
+    } else if (dateRange === 'month') {
+      const cut = new Date(today); cut.setMonth(cut.getMonth() - 1);
+      list = list.filter((t) => new Date(t.date) >= cut);
     }
 
-    setFilteredTransactions(filtered);
-  };
+    return list;
+  })();
 
+  /* ── Local add ── */
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: `tx-${Date.now()}`,
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
+    const newTx: Transaction = { ...transaction, id: `tx-${Date.now()}` };
+    setAllTxs((prev) => [newTx, ...prev]);
     setShowAddModal(false);
   };
 
-  const updateTransaction = (id: string, updates: Partial<Transaction>) => {
-    setTransactions(prev => 
-      prev.map(t => t.id === id ? { ...t, ...updates } : t)
-    );
-  };
+  const updateTransaction = (id: string, updates: Partial<Transaction>) =>
+    setAllTxs((prev) => prev.map((t) => t.id === id ? { ...t, ...updates } : t));
 
   const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
-    setSelectedTransaction(null);
+    setAllTxs((prev) => prev.filter((t) => t.id !== id));
+    setSelected(null);
     setShowDetailsPanel(false);
   };
 
-  const clearFilters = () => {
-    setDateRange('month');
-    setSelectedCategories([]);
-    setSelectedAccounts([]);
-    setSearchQuery('');
-  };
-
-  const totalIncome = filteredTransactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalExpenses = filteredTransactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const balance = totalIncome - totalExpenses;
+  const totalIncome   = filteredTransactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpenses = filteredTransactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
   return {
-    // Data
-    transactions: filteredTransactions,
-    allTransactions: transactions,
-    selectedTransaction,
-    setSelectedTransaction,
+    transactions:        filteredTransactions,
+    allTransactions:     allTxs,
+    selectedTransaction: selected,
+    setSelectedTransaction: setSelected,
     loading,
-    
-    // Modal states
-    showAddModal,
-    setShowAddModal,
-    showDetailsPanel,
-    setShowDetailsPanel,
-    
-    // Filter states
-    dateRange,
-    setDateRange,
-    selectedCategories,
-    setSelectedCategories,
-    selectedAccounts,
-    setSelectedAccounts,
-    searchQuery,
-    setSearchQuery,
-    clearFilters,
-    
-    // Stats
+    showAddModal,     setShowAddModal,
+    showDetailsPanel, setShowDetailsPanel,
+    dateRange,          setDateRange,
+    selectedCategories, setSelectedCategories,
+    selectedAccounts,   setSelectedAccounts,
+    searchQuery,        setSearchQuery,
+    clearFilters: () => { setDateRange('month'); setSelectedCategories([]); setSelectedAccounts([]); setSearchQuery(''); },
     totalIncome,
     totalExpenses,
-    balance,
-    
-    // Actions
+    balance: totalIncome - totalExpenses,
     addTransaction,
     updateTransaction,
     deleteTransaction,
     refreshTransactions: fetchTransactions,
-    
-    // Constants
-    accounts,
-    categories,
+    accounts:   ACCOUNTS,
+    categories: CATEGORIES,
   };
 }

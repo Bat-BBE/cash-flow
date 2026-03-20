@@ -10,6 +10,7 @@ import { useTranslation } from '@/lib/translations';
 import { cn } from '@/lib/utils';
 import { AddTransactionModal } from '@/components/transactions/add-transaction-modal';
 import { format } from 'date-fns';
+import { useDashboardData } from '@/contexts/dashboard-data-context';
 
 interface HeaderProps {
   onAddTransaction?: (transaction: any) => void;

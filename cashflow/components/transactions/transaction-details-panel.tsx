@@ -1,4 +1,3 @@
-// components/transactions/transaction-details-panel.tsx
 'use client';
 
 import { Transaction, CATEGORY_COLORS } from './types';
