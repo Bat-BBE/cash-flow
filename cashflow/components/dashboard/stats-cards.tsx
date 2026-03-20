@@ -1,8 +1,7 @@
-// components/dashboard/stats-cards.tsx
 'use client';
 
 import { cn, formatCurrency, formatPercentage } from '@/lib/utils';
-import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboardData } from '@/contexts/dashboard-data-context';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 
@@ -19,14 +18,14 @@ interface StatCardProps {
 function StatCard({ title, value, change, changePercentage, icon, color, loading }: StatCardProps) {
   if (loading) {
     return (
-      <div className="bg-brand-card rounded-2xl p-6 border border-white/5">
+      <div className="bg-brand-card rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/5">
         <div className="animate-pulse">
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-4 bg-white/5 rounded w-24"></div>
-            <div className="h-8 w-8 bg-white/5 rounded-xl"></div>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="h-3 sm:h-4 bg-white/5 rounded w-16 sm:w-24" />
+            <div className="h-6 w-6 sm:h-8 sm:w-8 bg-white/5 rounded-lg sm:rounded-xl" />
           </div>
-          <div className="h-8 bg-white/5 rounded w-32 mb-2"></div>
-          <div className="h-3 bg-white/5 rounded w-20"></div>
+          <div className="h-6 sm:h-8 bg-white/5 rounded w-24 sm:w-32 mb-1.5 sm:mb-2" />
+          <div className="h-2.5 sm:h-3 bg-white/5 rounded w-16 sm:w-20" />
         </div>
       </div>
     );
@@ -35,32 +34,32 @@ function StatCard({ title, value, change, changePercentage, icon, color, loading
   const isPositive = changePercentage ? changePercentage > 0 : null;
 
   return (
-    <div className="bg-brand-card rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-all group">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-bold text-brand-muted uppercase tracking-wider group-hover:text-white transition-colors">
+    <div className="bg-brand-card rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/5 hover:border-white/10 transition-all group">
+      <div className="flex items-center justify-between mb-2.5 sm:mb-4">
+        <p className="text-[10px] sm:text-xs font-bold text-brand-muted uppercase tracking-wider group-hover:text-white transition-colors leading-tight">
           {title}
         </p>
-        <span className={cn("material-symbols-outlined p-2 rounded-xl", color)}>
+        <span className={cn("material-symbols-outlined p-1.5 sm:p-2 rounded-lg sm:rounded-xl text-base sm:text-xl", color)}>
           {icon}
         </span>
       </div>
-      
-      <p className="text-2xl font-black text-white mb-1">{value}</p>
-      
+
+      <p className="text-lg sm:text-2xl font-black text-white mb-1 truncate">{value}</p>
+
       {change && (
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           {changePercentage !== undefined && (
             <span className={cn(
-              "text-xs font-bold flex items-center gap-0.5",
+              "text-[10px] sm:text-xs font-bold flex items-center gap-0.5",
               isPositive ? 'text-emerald-400' : 'text-orange-400'
             )}>
-              <span className="material-symbols-outlined text-sm">
+              <span className="material-symbols-outlined text-xs sm:text-sm">
                 {isPositive ? 'trending_up' : 'trending_down'}
               </span>
               {changePercentage > 0 ? '+' : ''}{changePercentage}%
             </span>
           )}
-          <span className="text-xs text-brand-muted">{change}</span>
+          <span className="text-[10px] sm:text-xs text-brand-muted leading-tight">{change}</span>
         </div>
       )}
     </div>
@@ -79,7 +78,7 @@ export function StatsCards() {
       change: t('vsLastMonthCompare'),
       changePercentage: stats?.income.changePercentage,
       icon: 'trending_up',
-      color: 'bg-emerald-500/10 text-emerald-400'
+      color: 'bg-emerald-500/10 text-emerald-400',
     },
     {
       title: t('statTotalExpenses'),
@@ -87,14 +86,14 @@ export function StatsCards() {
       change: t('vsLastMonthCompare'),
       changePercentage: stats?.expenses.changePercentage,
       icon: 'trending_down',
-      color: 'bg-orange-500/10 text-orange-400'
+      color: 'bg-orange-500/10 text-orange-400',
     },
     {
       title: t('statSavings'),
       value: stats ? formatCurrency(stats.savings.total, 'MNT') : '₮0',
       change: `${stats?.savings.rate ? formatPercentage(stats.savings.rate) : '0%'} ${t('savingsRateSuffix')}`,
       icon: 'savings',
-      color: 'bg-blue-500/10 text-blue-400'
+      color: 'bg-blue-500/10 text-blue-400',
     },
     {
       title: t('statInvestments'),
@@ -102,12 +101,12 @@ export function StatsCards() {
       change: `${stats?.investments.returnPercentage ? formatPercentage(stats.investments.returnPercentage) : '0%'} ${t('investmentReturnSuffix')}`,
       changePercentage: stats?.investments.returnPercentage,
       icon: 'show_chart',
-      color: 'bg-purple-500/10 text-purple-400'
-    }
+      color: 'bg-purple-500/10 text-purple-400',
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
       {cards.map((card, index) => (
         <StatCard key={index} {...card} loading={loading} />
       ))}

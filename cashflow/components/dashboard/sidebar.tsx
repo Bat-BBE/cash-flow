@@ -9,6 +9,7 @@ import { useTranslation } from '@/lib/translations';
 import { cn } from '@/lib/utils';
 import { ProfileDrawer } from './profile-drawer';
 import { set } from 'date-fns';
+import { useDashboardData } from '@/contexts/dashboard-data-context';
 
 interface NavItem {
   label: string;
