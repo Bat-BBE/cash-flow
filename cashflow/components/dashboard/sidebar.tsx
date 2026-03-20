@@ -51,6 +51,12 @@ const mainNavItems: NavItem[] = [
     icon: 'analytics', 
     href: '/analytics' 
   },
+  {
+    label: 'loan',
+    translationKey: 'loan',
+    icon: 'payments',
+    href: '/payments'
+  }
 ];
 
 const systemNavItems: NavItem[] = [
