@@ -90,6 +90,8 @@ export function Sidebar() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+
+  // return 'hello wrold';
   
   useEffect(() => {
     const checkScreenSize = () => {
@@ -234,8 +236,8 @@ export function Sidebar() {
             ? effectiveOpen ? 'translate-x-0' : '-translate-x-full'
             : 'translate-x-0'
         )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        // onMouseEnter={() => setIsHovered(true)}
+        // onMouseLeave={() => setIsHovered(false)}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
 
