@@ -3,9 +3,13 @@
 
 import { cn, formatCurrency, calculatePercentage } from '@/lib/utils';
 import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
 
 export function BudgetCards() {
   const { budgets, loading } = useDashboardData();
+  const { language } = useDashboard();
+  const t = useTranslation(language);
 
   const getProgressColor = (percentage: number) => {
     if (percentage >= 90) return 'bg-red-500';
@@ -35,9 +39,9 @@ export function BudgetCards() {
   return (
     <div className="bg-brand-card rounded-2xl border border-white/5 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-white">Monthly Budgets</h3>
+        <h3 className="text-lg font-bold text-white">{t('monthlyBudgetsTitle')}</h3>
         <button className="text-xs font-bold text-brand-primary hover:text-white transition-colors">
-          Adjust Budgets
+          {t('adjustBudgets')}
         </button>
       </div>
 
@@ -84,11 +88,11 @@ export function BudgetCards() {
 
               <div className="flex justify-between mt-1">
                 <span className="text-[10px] text-brand-muted">
-                  {percentage}% used
+                  {percentage}% {t('percentUsed')}
                 </span>
                 {isOverBudget && (
                   <span className="text-[10px] text-red-400 font-bold">
-                    Over budget!
+                    {t('overBudget')}
                   </span>
                 )}
               </div>
@@ -99,7 +103,7 @@ export function BudgetCards() {
 
       <div className="mt-6 pt-4 border-t border-white/5">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-brand-muted">Total Budget</span>
+          <span className="text-xs text-brand-muted">{t('totalBudgetLabel')}</span>
           <span className="text-sm font-bold text-white">
             {formatCurrency(budgets.reduce((sum, b) => sum + b.limit, 0), 'MNT')}
           </span>

@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { useDashboardOptional } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
 
 interface AddTransactionModalProps {
   isOpen: boolean;  // open -> isOpen болгох
@@ -35,6 +37,10 @@ export function AddTransactionModal({
   accounts,
   categories,
 }: AddTransactionModalProps) {
+  const dashboard = useDashboardOptional();
+  const language = dashboard?.language ?? 'MN';
+  const tr = useTranslation(language);
+
   const [type, setType] = useState<'expense' | 'income' | 'transfer'>('expense');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -76,7 +82,7 @@ export function AddTransactionModal({
               <span className="material-symbols-outlined text-base sm:text-lg text-primary bg-black/20 rounded-xl p-1.5 border border-white/10">
                 add_card
               </span>
-              <span>New Transaction</span>
+              <span>{tr('newTransactionTitle')}</span>
             </DialogTitle>
           </DialogHeader>
         </div>
@@ -84,18 +90,18 @@ export function AddTransactionModal({
         <div className="space-y-3 sm:space-y-5 px-3 sm:px-6 py-3 sm:py-4 max-h-[65vh] sm:max-h-[72vh] overflow-y-auto custom-scrollbar">
           {/* Transaction Type */}
           <div className="flex p-1 bg-black/20 rounded-xl border border-white/5 text-xs sm:text-sm">
-            {(['expense', 'income', 'transfer'] as const).map((t) => (
+            {(['expense', 'income', 'transfer'] as const).map((txType) => (
               <button
-                key={t}
-                onClick={() => setType(t)}
+                key={txType}
+                onClick={() => setType(txType)}
                 className={cn(
                   "flex-1 py-2 text-sm font-medium rounded-lg capitalize transition-all",
-                  type === t
+                  type === txType
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                 )}
               >
-                {t}
+                {txType === 'expense' ? tr('tabExpense') : txType === 'income' ? tr('tabIncome') : tr('tabTransfer')}
               </button>
             ))}
           </div>
@@ -103,7 +109,7 @@ export function AddTransactionModal({
           {/* Amount */}
           <div className="space-y-1.5 sm:space-y-2">
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-              Amount
+              {tr('amountLabel')}
             </label>
             <div className="relative group">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl sm:text-2xl font-semibold text-slate-500">
@@ -124,7 +130,7 @@ export function AddTransactionModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1.5 sm:space-y-2">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                Date
+                {tr('date')}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-lg">
@@ -141,7 +147,7 @@ export function AddTransactionModal({
 
             <div className="space-y-1.5 sm:space-y-2">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                Category
+                {tr('category')}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-lg">
@@ -149,7 +155,7 @@ export function AddTransactionModal({
                 </span>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger className="w-full bg-black/20 border border-white/10 rounded-2xl pl-10 py-2.5 text-sm text-white">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={tr('selectCategory')} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#020617] border-slate-700 text-white rounded-2xl">
                     {categories.map((cat) => (
@@ -166,7 +172,7 @@ export function AddTransactionModal({
           {/* Account */}
           <div className="space-y-1.5 sm:space-y-2">
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-              Account
+              {tr('accountLabel')}
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-lg">
@@ -174,7 +180,7 @@ export function AddTransactionModal({
               </span>
               <Select value={account} onValueChange={setAccount}>
                 <SelectTrigger className="w-full bg-black/20 border border-white/10 rounded-2xl pl-10 py-2.5 text-sm text-white">
-                  <SelectValue placeholder="Select account" />
+                  <SelectValue placeholder={tr('selectAccount')} />
                 </SelectTrigger>
                 <SelectContent className="bg-[#020617] border-slate-700 text-white rounded-2xl">
                   {accounts.map((acc) => (
@@ -190,12 +196,12 @@ export function AddTransactionModal({
           {/* Description */}
           <div className="space-y-1.5 sm:space-y-2">
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-              Description
+              {tr('descriptionLabel')}
             </label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What was this for?"
+              placeholder={tr('descriptionPlaceholder')}
               className="w-full bg-black/20 border border-white/10 rounded-2xl p-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent text-white resize-none"
               rows={2}
             />
@@ -208,14 +214,14 @@ export function AddTransactionModal({
             onClick={onClose}
             className="w-full sm:flex-1 py-3 bg-white/5 text-slate-300 border border-white/10 text-sm font-bold hover:bg-white/10"
           >
-            Cancel
+            {tr('cancelBtn')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!amount || !category || !account}
             className="w-full sm:flex-[2] py-3 bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-bold hover:brightness-110 shadow-lg shadow-primary/30"
           >
-            Save Transaction
+            {tr('saveTransactionBtn')}
           </Button>
         </div>
       </DialogContent>

@@ -260,7 +260,7 @@ export function Sidebar() {
               <div className="animate-slideIn">
                 <h1 className="text-white text-lg font-black tracking-tight">CashFlow</h1>
                 <p className="text-brand-muted text-[8px] uppercase tracking-widest font-bold">
-                  Wealth Management
+                  {t('wealthManagement')}
                 </p>
               </div>
             )}
@@ -326,7 +326,7 @@ export function Sidebar() {
                 className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
               >
                 <span className="material-symbols-outlined text-brand-muted">person</span>
-                Profile
+                {t('profileLabel')}
               </button>
 
               <button
@@ -334,7 +334,7 @@ export function Sidebar() {
                 className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
               >
                 <span className="material-symbols-outlined text-brand-muted">settings</span>
-                Settings
+                {t('settings')}
               </button>
 
               <button
@@ -342,7 +342,7 @@ export function Sidebar() {
                 className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
               >
                 <span className="material-symbols-outlined text-brand-muted">help</span>
-                Support
+                {t('support')}
               </button>
 
               <button
@@ -350,7 +350,7 @@ export function Sidebar() {
                 className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
               >
                 <span className="material-symbols-outlined">logout</span>
-                Logout
+                {t('logoutLabel')}
               </button>
 
             </div>
