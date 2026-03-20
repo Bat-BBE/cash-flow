@@ -22,7 +22,7 @@ export default function DashboardPage() {
 
           <div className="p-3 sm:p-4 md:p-8 space-y-6 md:space-y-8 max-w-[1400px] mx-auto w-full">
             <section className="grid grid-cols-1 gap-4 md:gap-8">
-              <NetWorthCard />
+              <NetWorthCard/>
               <StatsCards />
             </section>
 

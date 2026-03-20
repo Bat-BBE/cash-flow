@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
-import { useDashboardData } from '@/hook/use-dashboard-data';
+// import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboardData } from '@/contexts/dashboard-data-context';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 

@@ -1,225 +1,153 @@
-// hooks/use-budget-data.ts
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { ref, get, set, remove, update } from 'firebase/database';
+import { db, BASE_PATH } from '@/lib/firebase';
 import { Budget, BudgetSummary, TransferData } from '@/components/budgets/types';
 
-// Mock өгөгдөл генератор
-const generateBudgets = (): Budget[] => [
-  {
-    id: '1',
-    category: 'Housing',
-    icon: 'home',
-    spent: 1200,
-    limit: 1200,
-    status: 'healthy',
-    paidDate: 'Oct 1',
-    remaining: 0,
-    color: '#7060F0'
-  },
-  {
-    id: '2',
-    category: 'Groceries',
-    icon: 'shopping_cart',
-    spent: 450,
-    limit: 600,
-    status: 'warning',
-    remaining: 150,
-    color: '#7060F0'
-  },
-  {
-    id: '3',
-    category: 'Leisure',
-    icon: 'movie',
-    spent: 120,
-    limit: 300,
-    status: 'safe',
-    remaining: 180,
-    color: '#7060F0'
-  },
-  {
-    id: '4',
-    category: 'Transport',
-    icon: 'directions_car',
-    spent: 275,
-    limit: 250,
-    status: 'alert',
-    remaining: -25,
-    color: '#E04B5A'
-  },
-  {
-    id: '5',
-    category: 'Utilities',
-    icon: 'bolt',
-    spent: 210,
-    limit: 350,
-    status: 'healthy',
-    paidDate: 'Oct 12',
-    remaining: 140,
-    color: '#7060F0'
-  },
-  {
-    id: '6',
-    category: 'Shopping',
-    icon: 'shopping_bag',
-    spent: 380,
-    limit: 500,
-    status: 'warning',
-    remaining: 120,
-    color: '#7060F0'
-  },
-  {
-    id: '7',
-    category: 'Healthcare',
-    icon: 'local_hospital',
-    spent: 150,
-    limit: 400,
-    status: 'safe',
-    remaining: 250,
-    color: '#7060F0'
-  },
-  {
-    id: '8',
-    category: 'Dining',
-    icon: 'restaurant',
-    spent: 320,
-    limit: 400,
-    status: 'warning',
-    remaining: 80,
-    color: '#7060F0'
-  }
-];
+/* ─── Raw Firebase budget type ───────────────────────────────────── */
+type RawBudget = {
+  id:        string;
+  category:  string;
+  icon:      string;
+  spent:     number;
+  limit:     number;
+  remaining: number;
+  status:    Budget['status'];
+  color:     string;
+  period:    string;
+  paidDate?: string;
+};
 
-const calculateSummary = (budgets: Budget[]): BudgetSummary => {
-  const totalBudgeted = budgets.reduce((sum, b) => sum + b.limit, 0);
-  const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
-  const totalRemaining = budgets.reduce((sum, b) => sum + b.remaining, 0);
-  const percentageUsed = (totalSpent / totalBudgeted) * 100;
+/* ─── Helpers ────────────────────────────────────────────────────── */
+function calcStatus(spent: number, limit: number): Budget['status'] {
+  const p = limit > 0 ? (spent / limit) * 100 : 0;
+  if (p >= 100) return 'alert';
+  if (p >= 85)  return 'warning';
+  if (p >= 50)  return 'healthy';
+  return 'safe';
+}
 
+function calcSummary(budgets: Budget[]): BudgetSummary {
+  const totalBudgeted  = budgets.reduce((s, b) => s + b.limit,      0);
+  const totalSpent     = budgets.reduce((s, b) => s + b.spent,      0);
+  const totalRemaining = budgets.reduce((s, b) => s + b.remaining,  0);
   return {
     totalBudgeted,
     totalSpent,
     totalRemaining,
-    percentageUsed,
-    categories: budgets.length
+    percentageUsed: totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0,
+    categories: budgets.length,
   };
-};
+}
 
+/* ─── Hook ───────────────────────────────────────────────────────── */
 export function useBudgetData() {
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [summary, setSummary] = useState<BudgetSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('October 2023');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [budgets,        setBudgets]        = useState<Budget[]>([]);
+  const [summary,        setSummary]        = useState<BudgetSummary | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [searchQuery,  setSearchQuery]  = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  useEffect(() => {
-    fetchBudgets();
-  }, []);
-
-  const fetchBudgets = async () => {
+  /* ── Fetch from Firebase ── */
+  const fetchBudgets = useCallback(async () => {
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    const generatedBudgets = generateBudgets();
-    setBudgets(generatedBudgets);
-    setSummary(calculateSummary(generatedBudgets));
-    setLoading(false);
-  };
+    try {
+      const snap = await get(ref(db, `${BASE_PATH}/budgets`));
+      if (!snap.exists()) { setLoading(false); return; }
 
-  // Шүүлтүүр
-  const filteredBudgets = budgets.filter(budget => {
-    // Search filter
-    if (searchQuery && !budget.category.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+      const raw: Record<string, RawBudget> = snap.val();
+      const list: Budget[] = Object.values(raw)
+        .filter((b) => !selectedPeriod || b.period === selectedPeriod)
+        .map((b) => ({
+          id:        b.id,
+          category:  b.category,
+          icon:      b.icon,
+          spent:     b.spent,
+          limit:     b.limit,
+          remaining: b.remaining,
+          status:    b.status,
+          color:     b.color,
+          paidDate:  b.paidDate,
+        }));
+
+      setBudgets(list);
+      setSummary(calcSummary(list));
+    } catch (err) {
+      console.error('[useBudgetData]', err);
+    } finally {
+      setLoading(false);
     }
-    // Status filter
-    if (statusFilter !== 'all' && budget.status !== statusFilter) {
-      return false;
-    }
+  }, [selectedPeriod]);
+
+  useEffect(() => { fetchBudgets(); }, [fetchBudgets]);
+
+  /* ── Filtered list ── */
+  const filteredBudgets = budgets.filter((b) => {
+    if (searchQuery && !b.category.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (statusFilter !== 'all' && b.status !== statusFilter) return false;
     return true;
   });
 
-  // Мөнгө шилжүүлэх
-  const transferMoney = (data: TransferData) => {
-    setBudgets(prev => prev.map(budget => {
-      if (budget.id === data.fromBudgetId) {
-        const newSpent = Math.max(0, budget.spent - data.amount);
-        return {
-          ...budget,
-          spent: newSpent,
-          remaining: budget.limit - newSpent,
-          status: updateStatus(newSpent, budget.limit)
-        };
+  /* ── Transfer money ── */
+  const transferMoney = async (data: TransferData) => {
+    const updated = budgets.map((b) => {
+      if (b.id === data.fromBudgetId) {
+        const spent = Math.max(0, b.spent - data.amount);
+        return { ...b, spent, remaining: b.limit - spent, status: calcStatus(spent, b.limit) };
       }
-      if (budget.id === data.toBudgetId) {
-        const newSpent = budget.spent + data.amount;
-        return {
-          ...budget,
-          spent: newSpent,
-          remaining: budget.limit - newSpent,
-          status: updateStatus(newSpent, budget.limit)
-        };
+      if (b.id === data.toBudgetId) {
+        const spent = b.spent + data.amount;
+        return { ...b, spent, remaining: b.limit - spent, status: calcStatus(spent, b.limit) };
       }
-      return budget;
-    }));
-
-    // Summary шинэчлэх
-    setSummary(prev => {
-      if (!prev) return null;
-      return calculateSummary(budgets);
+      return b;
     });
+    setBudgets(updated);
+    setSummary(calcSummary(updated));
+
+    // Firebase-д шинэчлэнэ
+    const fromB = updated.find((b) => b.id === data.fromBudgetId);
+    const toB   = updated.find((b) => b.id === data.toBudgetId);
+    if (fromB) await update(ref(db, `${BASE_PATH}/budgets/budget_${fromB.category}`), { spent: fromB.spent, remaining: fromB.remaining, status: fromB.status });
+    if (toB)   await update(ref(db, `${BASE_PATH}/budgets/budget_${toB.category}`),   { spent: toB.spent,   remaining: toB.remaining,   status: toB.status   });
   };
 
-  // Төсвийн статус шинэчлэх
-  const updateStatus = (spent: number, limit: number): Budget['status'] => {
-    const percentage = (spent / limit) * 100;
-    if (percentage >= 100) return 'alert';
-    if (percentage >= 85) return 'warning';
-    if (percentage >= 50) return 'healthy';
-    return 'safe';
-  };
-
-  // Шинэ категори нэмэх
-  const addBudget = (budget: Omit<Budget, 'id' | 'remaining' | 'status'>) => {
+  /* ── Add budget ── */
+  const addBudget = async (budget: Omit<Budget, 'id' | 'remaining' | 'status'>) => {
     const newBudget: Budget = {
       ...budget,
-      id: `budget-${Date.now()}`,
+      id:        `budget_${budget.category}_${Date.now()}`,
       remaining: budget.limit - budget.spent,
-      status: updateStatus(budget.spent, budget.limit)
+      status:    calcStatus(budget.spent, budget.limit),
     };
-    
-    setBudgets(prev => [...prev, newBudget]);
-    setSummary(calculateSummary([...budgets, newBudget]));
+    await set(ref(db, `${BASE_PATH}/budgets/${newBudget.id}`), { ...newBudget, period: selectedPeriod });
+    setBudgets((prev) => [...prev, newBudget]);
+    setSummary(calcSummary([...budgets, newBudget]));
   };
 
-  // Төсөв устгах
-  const deleteBudget = (id: string) => {
-    setBudgets(prev => prev.filter(b => b.id !== id));
-    setSummary(calculateSummary(budgets.filter(b => b.id !== id)));
+  /* ── Delete budget ── */
+  const deleteBudget = async (id: string) => {
+    await remove(ref(db, `${BASE_PATH}/budgets/${id}`));
+    const updated = budgets.filter((b) => b.id !== id);
+    setBudgets(updated);
+    setSummary(calcSummary(updated));
   };
 
-  // Төсөв шинэчлэх
-  const updateBudget = (id: string, updates: Partial<Budget>) => {
-    setBudgets(prev => prev.map(budget => {
-      if (budget.id === id) {
-        const updated = { ...budget, ...updates };
-        return {
-          ...updated,
-          remaining: updated.limit - updated.spent,
-          status: updateStatus(updated.spent, updated.limit)
-        };
-      }
-      return budget;
-    }));
-    
-    setSummary(calculateSummary(budgets));
-  };
-
-  // Refresh функц
-  const refreshBudgets = async () => {
-    await fetchBudgets();
+  /* ── Update budget ── */
+  const updateBudget = async (id: string, updates: Partial<Budget>) => {
+    const updated = budgets.map((b) => {
+      if (b.id !== id) return b;
+      const merged = { ...b, ...updates };
+      return { ...merged, remaining: merged.limit - merged.spent, status: calcStatus(merged.spent, merged.limit) };
+    });
+    setBudgets(updated);
+    setSummary(calcSummary(updated));
+    const changed = updated.find((b) => b.id === id);
+    if (changed) await update(ref(db, `${BASE_PATH}/budgets/${id}`), changed);
   };
 
   return {
@@ -237,6 +165,6 @@ export function useBudgetData() {
     addBudget,
     deleteBudget,
     updateBudget,
-    refreshBudgets
+    refreshBudgets: fetchBudgets,
   };
 }

@@ -1,100 +1,112 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Transaction, Insight, PeriodOption } from '@/components/analytics/type';
+import { useState, useEffect, useCallback } from 'react';
+import { ref, get } from 'firebase/database';
+import { db, BASE_PATH } from '@/lib/firebase';
+import { Transaction, Insight } from '@/components/analytics/type';
 
-const PERIODS = {
-  '1M': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-  '3M': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-  '6M': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-  'YTD': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+/* ─── Raw Firebase types ─────────────────────────────────────────── */
+type RawMonthly = {
+  month:          string;
+  year:           number;
+  monthKey:       string;
+  income:         number;
+  expense:        number;
+  savings:        number;
+  closingBalance: number;
 };
 
-const generateChartData = (months: string[]): Transaction[] => {
-  return months.map((month, index) => {
-    const income = Math.floor(Math.random() * 15000) + 5000;
-    const expense = Math.floor(Math.random() * 8000) + 2000;
-    return {
-      id: `month-${index}`,
-      month,
-      income,
-      expense,
-      savings: income - expense,
-    };
-  });
+type RawInsight = {
+  id:      string;
+  type:    string;
+  title:   string;
+  time:    string;
+  message: string;
+  icon?:   string;
+  action?: string;
+  metric?: { label: string; value: string; trend: 'up' | 'down' };
 };
 
-const generateInsights = (data: Transaction[]): Insight[] => {
-  const totalIncome = data.reduce((acc, curr) => acc + curr.income, 0);
-  const totalExpense = data.reduce((acc, curr) => acc + curr.expense, 0);
-  const savingRate = ((totalIncome - totalExpense) / totalIncome * 100).toFixed(1);
-  
-  return [
-    {
-      id: '1',
-      type: 'strategy',
-      title: 'Strategy',
-      time: 'Now',
-      message: `Current saving rate is ${savingRate}%. Maintaining this for 12 months will increase your investment liquidity by $${((totalIncome - totalExpense) * 12 / 1000).toFixed(1)}K.`,
-      action: 'Adjust Projections'
-    },
-    {
-      id: '2',
-      type: 'volatility',
-      title: 'Volatility Alert',
-      time: '2h ago',
-      message: 'Market fluctuations in your crypto holdings detected. Diversification recommended.',
-      metric: {
-        label: 'Unrealized P/L',
-        value: `+$${(Math.random() * 5000 + 1000).toFixed(2)}`,
-        trend: 'up'
-      }
-    },
-    {
-      id: '3',
-      type: 'opportunity',
-      title: 'Investment Opportunity',
-      time: '1d ago',
-      message: 'High-yield savings accounts are currently offering 4.5% APY. Consider moving your emergency fund.',
-      action: 'Learn More'
-    }
-  ];
-};
+/* ─── Period → months ────────────────────────────────────────────── */
+function getMonthKeys(period: string): string[] {
+  const now   = new Date();
+  const keys: string[] = [];
 
+  if (period === '1M') {
+    const k = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return [k];
+  }
+  const count = period === '3M' ? 3 : period === '6M' ? 6 : period === 'YTD' ? now.getMonth() + 1 : 12;
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return keys;
+}
+
+/* ─── Hook ───────────────────────────────────────────────────────── */
 export function useAnalyticsData(period: string) {
-  const [data, setData] = useState<Transaction[]>([]);
+  const [data,     setData]     = useState<Transaction[]>([]);
   const [insights, setInsights] = useState<Insight[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading,  setLoading]  = useState(true);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
-    
-    const timer = setTimeout(() => {
-      const months = PERIODS[period as keyof typeof PERIODS] || PERIODS['6M'];
-      const newData = generateChartData(months);
-      const newInsights = generateInsights(newData);
-      
-      setData(newData);
-      setInsights(newInsights);
-      setLoading(false);
-    }, 500);
+    try {
+      // Analytics monthly pre-computed
+      const [analyticsSnap, insightsSnap] = await Promise.all([
+        get(ref(db, `${BASE_PATH}/analytics/monthly`)),
+        get(ref(db, `${BASE_PATH}/insights`)),
+      ]);
 
-    return () => clearTimeout(timer);
+      if (analyticsSnap.exists()) {
+        const rawMonthly: Record<string, RawMonthly> = analyticsSnap.val();
+        const keys   = getMonthKeys(period);
+        const result: Transaction[] = keys
+          .map((k) => rawMonthly[k])
+          .filter(Boolean)
+          .map((m, i) => ({
+            id:      `month-${i}`,
+            month:   m.month,
+            income:  m.income,
+            expense: m.expense,
+            savings: m.savings,
+          }));
+        setData(result);
+      }
+
+      if (insightsSnap.exists()) {
+        const rawInsights: Record<string, RawInsight> = insightsSnap.val();
+        setInsights(
+          Object.values(rawInsights).map((ins) => ({
+            id:      ins.id,
+            type:    ins.type as Insight['type'],
+            title:   ins.title,
+            time:    ins.time,
+            message: ins.message,
+            action:  ins.action,
+            metric:  ins.metric ? { ...ins.metric, trend: ins.metric.trend as 'up' | 'down' } : undefined,
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('[useAnalyticsData]', err);
+    } finally {
+      setLoading(false);
+    }
   }, [period]);
 
-  const totalIncome = data.reduce((acc, curr) => acc + curr.income, 0);
-  const totalExpense = data.reduce((acc, curr) => acc + curr.expense, 0);
-  const totalSavings = data.reduce((acc, curr) => acc + curr.savings, 0);
-  const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome * 100) : 0;
-  const maxValue = Math.max(...data.flatMap(d => [d.income, d.expense, Math.abs(d.savings)]));
-  const portfolioVelocity = ((totalSavings / (totalExpense || 1) * 0.5) + 0.8);
-  
-  const incomeChange = data.length >= 2 
-    ? ((data[data.length - 1].income / data[0].income - 1) * 100) 
-    : 0;
-  const expenseChange = data.length >= 2 
-    ? ((data[data.length - 1].expense / data[0].expense - 1) * 100) 
-    : 0;
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  /* ── Derived totals ── */
+  const totalIncome   = data.reduce((s, d) => s + d.income,  0);
+  const totalExpense  = data.reduce((s, d) => s + d.expense, 0);
+  const totalSavings  = data.reduce((s, d) => s + d.savings, 0);
+  const savingsRate   = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+  const maxValue      = Math.max(...data.flatMap((d) => [d.income, d.expense, Math.abs(d.savings)]), 1);
+  const portfolioVelocity = (totalSavings / (totalExpense || 1)) * 0.5 + 0.8;
+  const incomeChange  = data.length >= 2 ? ((data[data.length - 1].income / data[0].income  - 1) * 100) : 0;
+  const expenseChange = data.length >= 2 ? ((data[data.length - 1].expense / data[0].expense - 1) * 100) : 0;
 
   return {
     data,
@@ -109,7 +121,7 @@ export function useAnalyticsData(period: string) {
       portfolioVelocity,
       incomeChange,
       expenseChange,
-      monthsCount: data.length
-    }
+      monthsCount: data.length,
+    },
   };
 }
