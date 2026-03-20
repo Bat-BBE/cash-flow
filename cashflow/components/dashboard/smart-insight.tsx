@@ -4,9 +4,24 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation, TranslationKey } from '@/lib/translations';
 
 export function SmartInsight() {
   const { insights, loading } = useDashboardData();
+  const { language } = useDashboard();
+  const t = useTranslation(language);
+
+  const insightTypeLabel = (type: string): string => {
+    const map: Record<string, TranslationKey> = {
+      warning: 'typeWarning',
+      success: 'typeSuccess',
+      info: 'typeInfo',
+      tip: 'typeTip',
+    };
+    const key = map[type];
+    return key ? t(key) : type;
+  };
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const getTypeStyles = (type: string) => {
@@ -52,14 +67,14 @@ export function SmartInsight() {
             )}>
               {currentInsight.icon}
             </span>
-            <h3 className="text-sm font-bold text-white">AI Insight</h3>
+            <h3 className="text-sm font-bold text-white">{t('aiInsightTitle')}</h3>
           </div>
           
           <span className={cn(
             "text-[8px] px-2 py-1 rounded-full uppercase font-black border",
             getTypeStyles(currentInsight.type)
           )}>
-            {currentInsight.type}
+            {insightTypeLabel(currentInsight.type)}
           </span>
         </div>
 
@@ -102,7 +117,7 @@ export function SmartInsight() {
               onClick={nextInsight}
               className="text-xs text-brand-muted hover:text-white transition-colors flex items-center gap-1"
             >
-              Next tip
+              {t('nextTip')}
               <span className="material-symbols-outlined text-sm">chevron_right</span>
             </button>
           </div>

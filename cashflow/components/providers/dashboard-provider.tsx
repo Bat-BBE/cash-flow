@@ -61,3 +61,8 @@ export function useDashboard() {
   }
   return context;
 }
+
+/** Provider байхгүй үед null (жишээ нь зарим modal) */
+export function useDashboardOptional() {
+  return useContext(DashboardContext);
+}

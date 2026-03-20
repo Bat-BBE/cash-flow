@@ -3,9 +3,13 @@
 import { useState } from 'react';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
 
 export function TransactionsTable() {
   const { transactions, loading } = useDashboardData();
+  const { language } = useDashboard();
+  const t = useTranslation(language);
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
 
   const filteredTransactions = transactions.filter(tx => {
@@ -48,7 +52,7 @@ export function TransactionsTable() {
     <div className="bg-brand-card rounded-2xl border border-white/5 overflow-hidden">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-white">Recent Transactions</h3>
+          <h3 className="text-lg font-bold text-white">{t('recentTransactions')}</h3>
           
           <div className="flex bg-brand-bg p-1 rounded-lg">
             {(['all', 'income', 'expense'] as const).map((type) => (
@@ -62,7 +66,7 @@ export function TransactionsTable() {
                     : 'text-brand-muted hover:text-white'
                 )}
               >
-                {type}
+                {type === 'all' ? t('all') : type === 'income' ? t('income') : t('expensesFilter')}
               </button>
             ))}
           </div>
@@ -74,7 +78,7 @@ export function TransactionsTable() {
               <span className="material-symbols-outlined text-4xl text-brand-muted mb-2">
                 receipt_long
               </span>
-              <p className="text-sm text-brand-muted">No transactions found</p>
+              <p className="text-sm text-brand-muted">{t('noTransactionsFound')}</p>
             </div>
           ) : (
             filteredTransactions.map((tx) => (
@@ -130,7 +134,7 @@ export function TransactionsTable() {
 
         {filteredTransactions.length > 0 && (
           <button className="w-full mt-4 py-2 text-xs font-bold text-brand-primary hover:text-white transition-colors">
-            View All Transactions
+            {t('viewAllTransactions')}
           </button>
         )}
       </div>

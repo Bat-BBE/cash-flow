@@ -1,21 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  NetWorth, 
-  Stats, 
-  Transaction, 
-  Budget, 
-  SpendingData, 
-  Insight, 
-  TrendData 
+import {
+  NetWorth,
+  Stats,
+  Transaction,
+  Budget,
+  SpendingData,
+  Insight,
+  TrendData
 } from '@/components/dashboard/types';
 
 const generateNetWorth = (): NetWorth => {
   const total = 124592000;
   const change = 1240000;
   const changePercentage = 2.4;
-  
+
   const history = Array.from({ length: 12 }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() - (11 - i));
@@ -60,8 +60,8 @@ const generateTransactions = (): Transaction[] => {
       date: '2024-02-12',
       amount: 125000,
       type: 'expense',
-      category: 'Shopping',
-      account: 'Main Checking',
+      category: 'Дэлгүүр худалдаа',
+      account: 'Үндсэн данс',
       avatar: 'AMZ',
       status: 'completed'
     },
@@ -71,19 +71,19 @@ const generateTransactions = (): Transaction[] => {
       date: '2024-02-11',
       amount: 18500,
       type: 'expense',
-      category: 'Entertainment',
-      account: 'Premium Credit',
+      category: 'Зугаа цэнгэл',
+      account: 'Кредит карт',
       avatar: 'NFLX',
       status: 'completed'
     },
     {
       id: '3',
-      name: 'Salary Deposit',
+      name: 'Цалингийн орлого',
       date: '2024-02-10',
       amount: 5200000,
       type: 'income',
-      category: 'Income',
-      account: 'Main Checking',
+      category: 'Цалин',
+      account: 'Үндсэн данс',
       avatar: 'SAL',
       status: 'completed'
     },
@@ -93,19 +93,19 @@ const generateTransactions = (): Transaction[] => {
       date: '2024-02-09',
       amount: 24500,
       type: 'expense',
-      category: 'Food & Drink',
-      account: 'Premium Credit',
+      category: 'Хоол унд',
+      account: 'Кредит карт',
       avatar: 'SBUX',
       status: 'pending'
     },
     {
       id: '5',
-      name: 'Dividend Payment',
+      name: 'Ногдол ашгийн төлбөр',
       date: '2024-02-08',
       amount: 384000,
       type: 'income',
-      category: 'Investment',
-      account: 'Index Fund',
+      category: 'Хөрөнгө оруулалт',
+      account: 'Индекс сан',
       avatar: 'DIV',
       status: 'completed'
     }
@@ -116,7 +116,7 @@ const generateBudgets = (): Budget[] => {
   return [
     {
       id: '1',
-      category: 'Housing',
+      category: 'Орон сууц',
       spent: 1250000,
       limit: 1500000,
       color: 'bg-blue-500',
@@ -124,7 +124,7 @@ const generateBudgets = (): Budget[] => {
     },
     {
       id: '2',
-      category: 'Transportation',
+      category: 'Тээвэр',
       spent: 380000,
       limit: 500000,
       color: 'bg-green-500',
@@ -132,7 +132,7 @@ const generateBudgets = (): Budget[] => {
     },
     {
       id: '3',
-      category: 'Food & Dining',
+      category: 'Хоол хүнс',
       spent: 820000,
       limit: 900000,
       color: 'bg-yellow-500',
@@ -140,7 +140,7 @@ const generateBudgets = (): Budget[] => {
     },
     {
       id: '4',
-      category: 'Shopping',
+      category: 'Дэлгүүр',
       spent: 450000,
       limit: 600000,
       color: 'bg-purple-500',
@@ -148,7 +148,7 @@ const generateBudgets = (): Budget[] => {
     },
     {
       id: '5',
-      category: 'Entertainment',
+      category: 'Зугаа цэнгэл',
       spent: 180000,
       limit: 300000,
       color: 'bg-pink-500',
@@ -159,12 +159,12 @@ const generateBudgets = (): Budget[] => {
 
 const generateSpendingData = (): SpendingData[] => {
   return [
-    { category: 'Housing', amount: 1250000, percentage: 35, color: '#3B82F6' },
-    { category: 'Food & Dining', amount: 820000, percentage: 23, color: '#10B981' },
-    { category: 'Shopping', amount: 450000, percentage: 13, color: '#8B5CF6' },
-    { category: 'Transportation', amount: 380000, percentage: 11, color: '#F59E0B' },
-    { category: 'Entertainment', amount: 180000, percentage: 5, color: '#EC4899' },
-    { category: 'Others', amount: 450000, percentage: 13, color: '#6B7280' }
+    { category: 'Орон сууц', amount: 1250000, percentage: 35, color: '#3B82F6' },
+    { category: 'Хоол хүнс', amount: 820000, percentage: 23, color: '#10B981' },
+    { category: 'Дэлгүүр', amount: 450000, percentage: 13, color: '#8B5CF6' },
+    { category: 'Тээвэр', amount: 380000, percentage: 11, color: '#F59E0B' },
+    { category: 'Зугаа цэнгэл', amount: 180000, percentage: 5, color: '#EC4899' },
+    { category: 'Бусад', amount: 450000, percentage: 13, color: '#6B7280' }
   ];
 };
 
@@ -173,25 +173,28 @@ const generateInsights = (): Insight[] => {
     {
       id: '1',
       type: 'warning',
-      title: 'Budget Alert',
-      message: 'You\'ve used 85% of your Shopping budget with 15 days left this month.',
-      action: 'Review Budget',
+      title: 'Төсвийн анхааруулга',
+      message:
+        'Энэ сард «Дэлгүүр» ангиллын төсвийнхөө 85%-ийг ашигласан байна. Сарын үлдсэн хугацаа 15 хоног.',
+      action: 'Төсвийг шалгах',
       icon: 'warning'
     },
     {
       id: '2',
       type: 'success',
-      title: 'Savings Goal',
-      message: 'You\'re on track to reach your annual savings goal of ₮15,000,000!',
-      action: 'View Progress',
+      title: 'Хадгаламжийн зорилго',
+      message:
+        'Жилийн эцсийн хадгаламжийн зорилгоо (₮15,000,000) хүрэхэд төлөвлөгөөний дагуу явж байна.',
+      action: 'Явцыг харах',
       icon: 'savings'
     },
     {
       id: '3',
       type: 'tip',
-      title: 'Investment Opportunity',
-      message: 'Consider increasing your monthly investment by 10% to maximize returns.',
-      action: 'Learn More',
+      title: 'Хөрөнгө оруулалтын санал',
+      message:
+        'Сарын хөрөнгө оруулалтаа 10%-аар нэмбэл урт хугацааны өгөөжийг илүү ашигтай авах боломжтой.',
+      action: 'Дэлгэрэнгүй',
       icon: 'lightbulb'
     }
   ];
@@ -222,7 +225,7 @@ export function useDashboardData() {
     setLoading(true);
 
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     setNetWorth(generateNetWorth());
     setStats(generateStats());
     setTransactions(generateTransactions());
@@ -230,7 +233,7 @@ export function useDashboardData() {
     setSpendingData(generateSpendingData());
     setInsights(generateInsights());
     setTrendData(generateTrendData());
-    
+
     setLoading(false);
   };
 
@@ -297,8 +300,8 @@ export function useDashboardData() {
   };
 
   const updateBudgetSpent = (category: string, amount: number) => {
-    setBudgets(prev => 
-      prev.map(budget => 
+    setBudgets(prev =>
+      prev.map(budget =>
         budget.category === category
           ? { ...budget, spent: budget.spent + amount }
           : budget
@@ -315,16 +318,16 @@ export function useDashboardData() {
     insights,
     trendData,
     loading,
-    
+
     totalIncome: getTotalIncome(),
     totalExpenses: getTotalSpent(),
-    
+
     getTransactionsByType,
     getTransactionsByCategory,
     getBudgetProgress,
     addTransaction,
     updateBudgetSpent,
-    refreshData, 
-    fetchData  
+    refreshData,
+    fetchData
   };
 }

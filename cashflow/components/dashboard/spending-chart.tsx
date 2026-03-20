@@ -3,9 +3,13 @@
 import { useState } from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useDashboardData } from '@/hook/use-dashboard-data';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
 
 export function SpendingChart() {
   const { spendingData, loading } = useDashboardData();
+  const { language } = useDashboard();
+  const t = useTranslation(language);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   if (loading) {
@@ -34,9 +38,9 @@ export function SpendingChart() {
   return (
     <div className="bg-brand-card rounded-2xl border border-white/5 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-bold text-white">Spending Breakdown</h3>
+        <h3 className="text-base font-bold text-white">{t('spendingBreakdownTitle')}</h3>
         <span className="text-xs text-brand-muted">
-          {formatCurrency(totalSpent, 'MNT')} total
+          {formatCurrency(totalSpent, 'MNT')} {t('totalSpentSuffix')}
         </span>
       </div>
 
