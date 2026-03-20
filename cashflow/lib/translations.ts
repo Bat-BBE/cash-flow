@@ -18,6 +18,7 @@ export const translations = {
     profileLabel: 'Профайл',
     logoutLabel: 'Гарах',
     wealthManagement: 'Хөрөнгийн удирдлага',
+    loan: 'Зээл',
 
     // Net Worth Card
     totalNetWorth: 'Нийт цэвэр хөрөнгө',
@@ -165,6 +166,7 @@ export const translations = {
     profileLabel: 'Profile',
     logoutLabel: 'Logout',
     wealthManagement: 'Wealth Management',
+    loan: 'Loan',
 
     // Net Worth Card
     totalNetWorth: 'Total Net Worth',

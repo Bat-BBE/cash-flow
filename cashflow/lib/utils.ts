@@ -7,19 +7,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** MNT/Globe-safe: Node SSR and browsers disagree on MNT vs ₮ from Intl — use fixed output for hydration. */
+function formatMnt(amount: number): string {
+  const n = Math.round(amount);
+  const grouped = n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `₮ ${grouped}`;
+}
+
 export function formatCurrency(amount: number, currency: string = 'MNT'): string {
   if (currency === 'MNT') {
-    return new Intl.NumberFormat('mn-MN', {
-      style: 'currency',
-      currency: 'MNT',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return formatMnt(amount);
   }
-  
+
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency,
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
