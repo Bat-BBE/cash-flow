@@ -67,18 +67,14 @@ export default function ScheduledPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex bg-navy-deep">
-        <Sidebar />
-        <main className="flex-1 min-h-screen flex flex-col bg-navy-deep">
-          <Header />
-          <div className="flex-1 flex items-center justify-center px-4">
-            <div className="text-center">
-              <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-              <p className="text-slate-400 font-medium">Loading scheduled data...</p>
-            </div>
+      <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
+        <div className="flex flex-1 items-center justify-center px-4 py-16">
+          <div className="text-center">
+            <div className="mb-4 size-12 animate-spin rounded-full border-4 border-primary/30 border-t-primary"></div>
+            <p className="font-medium text-slate-400">Loading scheduled data...</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </DashboardShell>
     );
   }
 
@@ -151,7 +147,7 @@ export default function ScheduledPage() {
             </Button>
           </div>
         </div>
-      </main>
+    </DashboardShell>
 
       <AddItemModal
         open={showAddModal}
@@ -172,6 +168,6 @@ export default function ScheduledPage() {
         onAddBill={() => openAddFromSelectedDay('bill')}
         onAddIncome={() => openAddFromSelectedDay('income')}
       />
-    </div>
+    </>
   );
 }
