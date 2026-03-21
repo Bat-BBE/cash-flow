@@ -1,20 +1,14 @@
 'use client';
 
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 
 export default function SettingsPage() {
   const { user } = useDashboard();
 
   return (
-    <div className="min-h-screen flex overflow-hidden bg-brand-bg">
-      <Sidebar />
-
-      <main className="flex-1 h-screen overflow-y-auto bg-brand-bg custom-scrollbar flex flex-col">
-        <Header />
-
-        <div className="p-4 md:p-8 max-w-[1100px] mx-auto w-full space-y-8">
+    <DashboardShell>
+        <div className="mx-auto w-full max-w-[1100px] space-y-8 p-4 md:p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
@@ -228,8 +222,7 @@ export default function SettingsPage() {
             </div>
           </section>
         </div>
-      </main>
-    </div>
+    </DashboardShell>
   );
 }
 

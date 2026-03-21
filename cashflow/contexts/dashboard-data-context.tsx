@@ -56,7 +56,7 @@ const INCOME_RULES: CategoryRule[] = [
   { keywords: ['ногдол','dividend','invest','хөрөнгө'],                              category: 'Хөрөнгө оруулалт',   icon: 'show_chart',      color: 'bg-violet-500'  },
   { keywords: ['буцаалт','refund','return'],                                          category: 'Буцаалт',             icon: 'undo',            color: 'bg-yellow-500'  },
 ];
-function categorize(desc: string, isExp: boolean): CategoryRule {
+export function categorize(desc: string, isExp: boolean): CategoryRule {
   const lower = desc.toLowerCase();
   const rules = isExp ? EXPENSE_RULES : INCOME_RULES;
   return rules.find((r) => r.keywords.some((k) => lower.includes(k.toLowerCase()))) ??
@@ -286,6 +286,8 @@ type DashboardDataCtx = {
   getBudgetProgress:         (id: string) => number;
   addTransaction:    (t: Omit<Transaction,'id'>) => void;
   updateBudgetSpent: (cat: string, amount: number) => void;
+  /** Сарын лимит (MNT) — үр дүн нь сонгосон сарын тоогоор үржигдэнэ */
+  setBudgetLimit:    (category: string, monthlyLimit: number) => void;
   refreshData:       () => void;
   fetchData:         () => void;
 };
@@ -357,6 +359,12 @@ export function DashboardDataProvider({ children, userId = DEFAULT_USER_ID }: { 
     setBudgets((prev) => prev.map((b) => b.category===category ? {...b, spent:b.spent+amount} : b));
   }, []);
 
+  const setBudgetLimit = useCallback((category: string, monthlyLimit: number) => {
+    const total = monthlyLimit * Math.max(months, 1);
+    setBudgets((prev) => prev.map((b) =>
+      b.category === category ? { ...b, limit: total } : b));
+  }, [months]);
+
   const chartData = buildChartData(rawTxs, months);
   const totalIncome   = transactions.filter((t)=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const totalExpenses = transactions.filter((t)=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
@@ -369,7 +377,7 @@ export function DashboardDataProvider({ children, userId = DEFAULT_USER_ID }: { 
       getTransactionsByType:     (type) => transactions.filter((t)=>t.type===type),
       getTransactionsByCategory: (cat)  => transactions.filter((t)=>t.category===cat),
       getBudgetProgress:         (id)   => { const b=budgets.find((b)=>b.id===id); return b?Math.min(Math.round((b.spent/b.limit)*100),100):0; },
-      addTransaction, updateBudgetSpent,
+      addTransaction, updateBudgetSpent, setBudgetLimit,
       refreshData: fetchData, fetchData,
     }}>
       {children}
