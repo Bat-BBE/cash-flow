@@ -1,7 +1,8 @@
 /**
  * Income-based loan payment suggestions tied to loan.json:
- * - minimal: bank minimum `lowestPayAmount` (if set) else `monthlyPayment`, + overdues — "as long as possible"
- * - normal/aggressive: floor = max(monthlyPayment, lowestPayAmount ?? monthlyPayment) + overdues, then extra by rate
+ * - minimal ("Бүх зээлийг ижил үзэх"): same multiplier on each loan's paydown floor (equal % vs baseline)
+ * - normal: floor + extra all to shortest termMonths first (least time left)
+ * - aggressive: floor + extra all to highest effective monthly rate first
  */
 
 export type InterestRange = 'yearly' | 'monthly';
@@ -73,8 +74,10 @@ export interface StrategyResult {
   budgetCap: number;
   totalSuggested: number;
   perLoan: PerLoanSuggestion[];
-  /** PMT/амортизаци ашиглан минимал төлөвлөгөөтэй харьцуулсан нийт хүүгийн хэмнэлт */
+  /** PMT/амортизаци ашиглан минимал төлөвлөгөөтэй харьцуулсан нийт хүүгийн хэмнэлт (бүх зээлийн нийлбэр) */
   interestSavingsTotal?: number | null;
+  /** Хүү хэмнэлт тооцоонд орсон зээлийн тоо */
+  interestSavingsLoanCount?: number;
   warnings: string[];
 }
 
@@ -127,36 +130,87 @@ export function minimumPaymentFromJson(loan: LoanForSuggestion): number {
   return paydownFloorTotal(loan);
 }
 
-function sumMinimalFloors(loans: LoanForSuggestion[]): number {
-  return loans.reduce((s, l) => s + minimalFloorTotal(l), 0);
-}
-
 function sumPaydownFloors(loans: LoanForSuggestion[]): number {
   return loans.reduce((s, l) => s + paydownFloorTotal(l), 0);
 }
 
-/** Distribute extra across loans proportional to monthly interest + small weight (avalanche). */
+/**
+ * Scale each loan's paydown floor by the same factor so total matches budgetCap
+ * (equal % increase/decrease vs the shared baseline). Mutates perLoanBase rows.
+ */
+function applyUniformScaleToFloors(
+  perLoanBase: PerLoanSuggestion[],
+  budgetCap: number,
+  paydownTotal: number,
+): number {
+  const scale = paydownTotal > 0 ? budgetCap / paydownTotal : 0;
+  const scaled = perLoanBase.map((row) => ({
+    loanId: row.loanId,
+    floor: Math.floor(row.suggestedPayment * scale),
+    remainder: row.suggestedPayment * scale - Math.floor(row.suggestedPayment * scale),
+  }));
+  const sumFloors = scaled.reduce((s, x) => s + x.floor, 0);
+  let diff = Math.round(budgetCap) - sumFloors;
+
+  perLoanBase.forEach((row) => {
+    const item = scaled.find((s) => s.loanId === row.loanId);
+    if (!item) return;
+    row.suggestedPayment = item.floor;
+  });
+
+  if (diff > 0) {
+    const order = [...scaled].sort((a, b) => b.remainder - a.remainder);
+    let i = 0;
+    while (diff > 0 && i < order.length) {
+      const it = order[i];
+      const row = perLoanBase.find((r) => r.loanId === it.loanId);
+      if (row) {
+        row.suggestedPayment += 1;
+        diff -= 1;
+      }
+      i += 1;
+      if (i >= order.length) i = 0;
+    }
+  }
+
+  return perLoanBase.reduce((s, r) => s + r.suggestedPayment, 0);
+}
+
+/** Effective monthly rate for ordering (yearly vs monthly interestRange comparable). */
+function effectiveMonthlyRate(l: LoanForSuggestion): number {
+  return monthlyRateFraction(l.interestRate, l.interestRange);
+}
+
+/** Distribute extra: normal = avalanche to shortest-term loan; aggressive = avalanche to highest-rate loan. */
 function distributeExtra(
   loans: LoanForSuggestion[],
   extra: number,
   basePerLoan: Map<string, number>,
+  strategy: SuggestionStrategyId,
 ): Map<string, number> {
   const out = new Map(basePerLoan);
   if (extra <= 0) return out;
 
-  const weights = loans.map((l) => ({
-    id: l.id,
-    w:
-      estimatedMonthlyInterest(l) +
-      paydownBaselineMonthly(l) * 0.01 +
-      1,
-  }));
-  const sumW = weights.reduce((s, x) => s + x.w, 0);
-  if (sumW <= 0) return out;
-
-  for (const { id, w } of weights) {
-    out.set(id, (out.get(id) || 0) + (extra * w) / sumW);
+  // Aggressive (хүүгээр чухалчлах): бүх илүү төлбөрийг хамгийн өндөр хүүтэй зээл рүү (нэг сарын snapshot).
+  // `loans` must already be sorted by rate desc (see orderedLoans for aggressive).
+  if (strategy === 'aggressive') {
+    const top = loans[0];
+    if (top) {
+      out.set(top.id, (out.get(top.id) || 0) + extra);
+    }
+    return out;
   }
+
+  // Normal (хугацаанд суурилсан): бүх илүүг хамгийн богино хугацаа үлдсэн зээл рүү.
+  // `loans` must already be sorted by termMonths asc (see orderedLoans for normal).
+  if (strategy === 'normal') {
+    const top = loans[0];
+    if (top) {
+      out.set(top.id, (out.get(top.id) || 0) + extra);
+    }
+    return out;
+  }
+
   return out;
 }
 
@@ -165,7 +219,32 @@ export function computeStrategy(
   user: UserProfile | undefined,
   config: Partial<SuggestionConfig> | undefined,
   strategy: SuggestionStrategyId,
+  budgetCapOverrideTotal?: number,
 ): StrategyResult {
+  const loanById = new Map(loans.map((l) => [l.id, l]));
+
+  // Ordering for UI + priority distribution.
+  const orderedLoans = [...loans].sort((a, b) => {
+    if (strategy === 'normal') {
+      // Least time left first (proxy: termMonths asc), then higher rate, then larger balance.
+      const td = a.termMonths - b.termMonths;
+      if (td !== 0) return td;
+      const ra = effectiveMonthlyRate(a);
+      const rb = effectiveMonthlyRate(b);
+      if (rb !== ra) return rb - ra;
+      return b.balance - a.balance;
+    }
+    if (strategy === 'aggressive') {
+      // Highest effective interest rate first (yearly/monthly normalized), then larger balance.
+      const ra = effectiveMonthlyRate(a);
+      const rb = effectiveMonthlyRate(b);
+      if (rb !== ra) return rb - ra;
+      return b.balance - a.balance;
+    }
+    // Minimal (equal %): stable order — бүх зээл ижил тэгшитгэл.
+    return a.id.localeCompare(b.id);
+  });
+
   const cfg = { ...DEFAULT_CONFIG, ...config };
   const warnings: string[] = [];
 
@@ -174,20 +253,26 @@ export function computeStrategy(
   // "Total amount that can be used as a pay-loan" = income * 0.9 * 0.885 * 0.6
   const essentials = income * 0.4;
   const disposableBase = Math.max(0, income - essentials); // = income * 0.6
-  const disposable = disposableBase * 0.9 * 0.885; // salary-payable cap
-  const minimalTotal = sumMinimalFloors(loans);
+  const disposable = disposableBase * 0.9 * 0.885; // salary-payable cap (same as UI max loan payment)
+  /** Hard ceiling: suggested plan must not exceed this when income is known */
+  const salaryPayCeiling = disposable > 0 ? Math.round(disposable) : null;
   const paydownTotal = sumPaydownFloors(loans);
+
+  const clampToSalaryPayBudget = (budget: number): number => {
+    if (salaryPayCeiling == null) return budget;
+    return Math.min(budget, salaryPayCeiling);
+  };
 
   // Normal little bit higher, aggressive at max salary-payable cap.
   const effectiveNormalFraction = Math.max(cfg.normalDisposableFraction, 0.95);
   const effectiveAggressiveFraction = 1;
 
   const paydownBaseMap = new Map<string, number>();
-  loans.forEach((l) => {
+  orderedLoans.forEach((l) => {
     paydownBaseMap.set(l.id, paydownFloorTotal(l));
   });
 
-  const perLoanBase: PerLoanSuggestion[] = loans.map((l) => {
+  const perLoanBase: PerLoanSuggestion[] = orderedLoans.map((l) => {
     const bankMin = bankMinimumMonthly(l);
     const od = overdueExtra(l);
     return {
@@ -197,7 +282,14 @@ export function computeStrategy(
       scheduledMonthly: l.monthlyPayment,
       overdueExtraThisMonth: od,
       suggestedPayment: paydownFloorTotal(l),
-      sortWeight: estimatedMonthlyInterest(l),
+      sortWeight:
+        strategy === 'aggressive'
+          ? effectiveMonthlyRate(l)
+          : strategy === 'normal'
+            ? l.termMonths
+            : strategy === 'minimal'
+              ? 1
+              : estimatedMonthlyInterest(l),
     };
   });
 
@@ -213,61 +305,103 @@ export function computeStrategy(
 
   switch (strategy) {
     case 'minimal': {
-      label = 'Хамгийн бага (урт хугацаа)';
+      label = 'Бүх зээлийг ижил үзэх';
       description =
-        'loan.json дахь lowestPayAmount (байхгүй бол monthlyPayment) + overdue. Хамгийн бага сарын дарамт.';
-      jsonBaselineTotal = minimalTotal;
-      budgetCap = minimalTotal;
-      totalSuggested = minimalTotal;
-      perLoanBase.forEach((row, idx) => {
-        row.suggestedPayment = Math.round(minimalFloorTotal(loans[idx]));
-      });
+        budgetCapOverrideTotal != null
+          ? 'Сонгосон төлбөрийн горимын дээд дүнгээр: бүх зээлийн суурь төлбөрт ижил хувиар өсгөнө (тэгш %-ийн multiplier).'
+          : 'Бүх зээлийг ижил гэж үзнэ: суурь төлбөр бүрт ижил хувиар нэмэгдүүлж, нийт нь төлөвлөгөөний дээд хэмжээнд хүрнэ.';
+      jsonBaselineTotal = paydownTotal;
+      budgetCap =
+        budgetCapOverrideTotal != null
+          ? Math.round(budgetCapOverrideTotal)
+          : disposable > 0
+            ? Math.round(disposable * effectiveNormalFraction)
+            : paydownTotal;
+      budgetCap = clampToSalaryPayBudget(budgetCap);
+      if (disposable > 0 && budgetCap < paydownTotal) {
+        warnings.push(
+          `Төлөвлөгөөний дээд хэмжээ (${budgetCap.toLocaleString()}) суурь нийт төлбөрөөс (${paydownTotal.toLocaleString()}) бага байна.`,
+        );
+      }
+      totalSuggested = applyUniformScaleToFloors(perLoanBase, budgetCap, paydownTotal);
       break;
     }
     case 'normal': {
-      label = 'Хэвийн';
-      description = `Үлдэгдэл орлогын ~${Math.round(
-        effectiveNormalFraction * 100,
-      )}%-ийг зээл төлөлтөд. Суурь: max(гэрээний төлбөр, lowestPayAmount) + overdue, илүүг хүүнд өндөр зээлд.`;
+      label = 'Хугацаанд суурилсан';
+      description =
+        budgetCapOverrideTotal != null
+          ? 'Сонгосон төлбөрийн горимын дээд дүнгээр: суурь төлбөрүүдээс илүүг хамгийн богино хугацаа үлдсэн зээл рүү чиглүүлнэ.'
+          : `Үлдэгдэл орлогын ~${Math.round(
+              effectiveNormalFraction * 100,
+            )}%-ийг зээл төлөлтөд. Суурь: max(гэрээний төлбөр, lowestPayAmount) + overdue, илүүг хамгийн богино хугацаа үлдсэн зээл рүү.`;
       jsonBaselineTotal = paydownTotal;
       budgetCap =
-        disposable > 0 ? Math.round(disposable * effectiveNormalFraction) : paydownTotal;
+        budgetCapOverrideTotal != null
+          ? Math.round(budgetCapOverrideTotal)
+          : disposable > 0
+            ? Math.round(disposable * effectiveNormalFraction)
+            : paydownTotal;
+      budgetCap = clampToSalaryPayBudget(budgetCap);
       if (disposable > 0 && budgetCap < paydownTotal) {
         warnings.push(
           `Таны тохируулсан "хэвийн" төлбөрийн дээд хэмжээ (${budgetCap.toLocaleString()}) суурь нийт төлбөрөөс (${paydownTotal.toLocaleString()}) бага байна.`,
         );
       }
-      const extra = Math.max(0, budgetCap - paydownTotal);
-      const distributed = distributeExtra(loans, extra, paydownBaseMap);
-      totalSuggested = 0;
-      perLoanBase.forEach((row) => {
-        row.suggestedPayment = Math.round(distributed.get(row.loanId) || row.suggestedPayment);
-        totalSuggested += row.suggestedPayment;
-      });
+      if (budgetCap <= paydownTotal) {
+        totalSuggested = applyUniformScaleToFloors(perLoanBase, budgetCap, paydownTotal);
+      } else {
+        const extra = Math.max(0, budgetCap - paydownTotal);
+        const distributed = distributeExtra(
+          orderedLoans,
+          extra,
+          paydownBaseMap,
+          strategy,
+        );
+        totalSuggested = 0;
+        perLoanBase.forEach((row) => {
+          row.suggestedPayment = Math.round(distributed.get(row.loanId) || row.suggestedPayment);
+          totalSuggested += row.suggestedPayment;
+        });
+      }
       break;
     }
     case 'aggressive': {
-      label = 'Боломжит төлбөрийн дээд';
-      description = `Үлдэгдэл орлогын ~${Math.round(
-        effectiveAggressiveFraction * 100,
-      )}%-ийг зээлд чиглүүлэх — хамгийн хурдан өр тэглэх чиглэлтэй.`;
+      label = 'Хүүгээр чухалчлах';
+      description =
+        budgetCapOverrideTotal != null
+          ? 'Сонгосон төлбөрийн горим (одоогийн / +2% / +4%)-ийн дээд дүнгээр: суурь төлбөрүүдээс илүүг хамгийн өндөр хүүтэй зээл рүү чиглүүлнэ.'
+          : `Үлдэгдэл орлогын ~${Math.round(
+              effectiveAggressiveFraction * 100,
+            )}%-ийг зээлд — илүүг хамгийн өндөр хүүтэй зээл рүү.`;
       jsonBaselineTotal = paydownTotal;
       budgetCap =
-        disposable > 0
-          ? Math.round(disposable * effectiveAggressiveFraction)
-          : paydownTotal;
+        budgetCapOverrideTotal != null
+          ? Math.round(budgetCapOverrideTotal)
+          : disposable > 0
+            ? Math.round(disposable * effectiveAggressiveFraction)
+            : paydownTotal;
+      budgetCap = clampToSalaryPayBudget(budgetCap);
       if (disposable > 0 && budgetCap < paydownTotal) {
         warnings.push(
           `Идэвхжүүлсэн төлөвлөгөөний дээд хэмжээ суурь төлбөрөөс бага — орлого / зардал тохируулгаа JSON-д шалгана уу.`,
         );
       }
-      const extra = Math.max(0, budgetCap - paydownTotal);
-      const distributed = distributeExtra(loans, extra, paydownBaseMap);
-      totalSuggested = 0;
-      perLoanBase.forEach((row) => {
-        row.suggestedPayment = Math.round(distributed.get(row.loanId) || row.suggestedPayment);
-        totalSuggested += row.suggestedPayment;
-      });
+      if (budgetCap <= paydownTotal) {
+        totalSuggested = applyUniformScaleToFloors(perLoanBase, budgetCap, paydownTotal);
+      } else {
+        const extra = Math.max(0, budgetCap - paydownTotal);
+        const distributed = distributeExtra(
+          orderedLoans,
+          extra,
+          paydownBaseMap,
+          strategy,
+        );
+        totalSuggested = 0;
+        perLoanBase.forEach((row) => {
+          row.suggestedPayment = Math.round(distributed.get(row.loanId) || row.suggestedPayment);
+          totalSuggested += row.suggestedPayment;
+        });
+      }
       break;
     }
   }
@@ -280,41 +414,92 @@ export function computeStrategy(
     warnings.push('Санал болгож буй нийт төлбөр (зардал хассан) үлдэгдэл орлогоос давсан байна.');
   }
 
-  // PMT-style amortization approximation:
-  // given balance (P), monthly rate (r) and fixed monthly payment (A), payoff months:
-  // n = -ln(1 - rP/A) / ln(1+r)
-  // total interest = A*n - P
-  const loanById = new Map(loans.map((l) => [l.id, l]));
-
+  // Discrete amortization simulation:
+  // Each month:
+  // - interest = balance * r
+  // - principal paid = payment - interest
+  // When the balance reaches 0 (or would be paid off in the current month),
+  // we stop immediately. This matches "once the loan ends, stop calculating it".
   function monthlyRate(loan: LoanForSuggestion): number {
     return monthlyRateFraction(loan.interestRate, loan.interestRange);
   }
 
+  /**
+   * Upper bound on months needed for fixed payment A to amortize balance P at monthly rate r.
+   * Epotek-style loans (урт хугацаа, төлбөр хүүнд ойролцоо) need far more than `termMonths * 2` iterations.
+   */
+  function maxMonthsForAmortization(balance: number, r: number, A: number, termMonths: number): number {
+    if (r <= 0) return Math.max(1, Math.ceil(termMonths * 2));
+    if (A <= balance * r) return 0; // caller will reject
+    const inside = 1 - (r * balance) / A;
+    if (inside <= 0 || inside >= 1) {
+      return Math.min(2_000_000, Math.max(1, Math.ceil(termMonths * 2), 1200));
+    }
+    const nEst = Math.ceil(-Math.log(inside) / Math.log(1 + r));
+    return Math.min(
+      2_000_000,
+      Math.max(nEst + 48, Math.ceil(termMonths * 2), 120),
+    );
+  }
+
   function interestForPayment(loan: LoanForSuggestion, payment: number): { months: number | null; totalInterest: number | null } {
-    const P = loan.balance;
+    let balance = loan.balance;
     const r = monthlyRate(loan);
     const A = payment;
-    if (!Number.isFinite(P) || !Number.isFinite(A) || A <= 0) return { months: null, totalInterest: null };
+
+    if (!Number.isFinite(balance) || !Number.isFinite(A) || A <= 0) {
+      return { months: null, totalInterest: null };
+    }
+
+    // If monthly rate is 0, there is no interest; last month payment can be smaller.
     if (r === 0) {
-      const months = P / A;
+      const months = Math.ceil(balance / A);
       return { months, totalInterest: 0 };
     }
-    // If payment is too small, payoff is not achievable (infinite months).
-    if (A <= P * r) return { months: null, totalInterest: null };
 
-    const inside = 1 - (r * P) / A;
-    if (inside <= 0) return { months: null, totalInterest: null };
+    // Payment must exceed first month's interest or balance never decreases.
+    if (A <= balance * r) {
+      return { months: null, totalInterest: null };
+    }
 
-    const months = -Math.log(inside) / Math.log(1 + r);
-    if (!Number.isFinite(months) || months <= 0) return { months: null, totalInterest: null };
-    const totalInterest = A * months - P;
+    const maxMonths = maxMonthsForAmortization(balance, r, A, loan.termMonths);
+    if (maxMonths <= 0) {
+      return { months: null, totalInterest: null };
+    }
+
+    let months = 0;
+    let totalInterest = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (balance > 1e-6 && months < maxMonths) {
+      const interest = balance * r;
+      const principalPaid = A - interest;
+
+      // Payment doesn't cover monthly interest => balance never decreases.
+      if (principalPaid <= 0) return { months: null, totalInterest: null };
+
+      // If this month's payment clears the loan, we still only charge this month's interest.
+      if (principalPaid >= balance) {
+        totalInterest += interest;
+        balance = 0;
+        months += 1;
+        break;
+      }
+
+      totalInterest += interest;
+      balance -= principalPaid;
+      if (balance < 0.01) balance = 0;
+      months += 1;
+    }
+
+    if (balance > 1e-4) {
+      return { months: null, totalInterest: null };
+    }
+
     return { months, totalInterest: Number.isFinite(totalInterest) ? totalInterest : null };
   }
 
   let interestSavingsTotal: number | null = null;
-  let interestMinimalTotalAcc = 0;
-  let interestSuggestedTotalAcc = 0;
-  let hasAnyFinite = false;
+  let interestSavingsLoanCount = 0;
 
   perLoanBase.forEach((row) => {
     const loan = loanById.get(row.loanId);
@@ -342,14 +527,17 @@ export function computeStrategy(
       return;
     }
 
+    // Зээл бүрт тусад нь: (хамгийн бага төлбөрийн нийт хүү) − (сонгосон төлбөрийн нийт хүү)
     row.interestSavings = minInterest - curInterest;
-    interestMinimalTotalAcc += minInterest;
-    interestSuggestedTotalAcc += curInterest;
-    hasAnyFinite = true;
+    interestSavingsLoanCount += 1;
   });
 
-  if (hasAnyFinite) {
-    interestSavingsTotal = interestMinimalTotalAcc - interestSuggestedTotalAcc;
+  // Нийт хэмнэлт = бүх зээл дээрх interestSavings-ийн нийлбэр (нэг эх сурвалж)
+  if (interestSavingsLoanCount > 0) {
+    interestSavingsTotal = perLoanBase.reduce(
+      (sum, r) => sum + (r.interestSavings ?? 0),
+      0,
+    );
   }
 
   return {
@@ -362,6 +550,7 @@ export function computeStrategy(
     totalSuggested,
     perLoan: perLoanBase,
     interestSavingsTotal,
+    interestSavingsLoanCount,
     warnings,
   };
 }
