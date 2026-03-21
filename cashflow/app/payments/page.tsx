@@ -8,7 +8,7 @@ import type {
   UserProfile,
 } from '@/lib/loan-suggestions';
 import { paydownFloorTotal } from '@/lib/loan-suggestions';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, rollMonthlyStartDateIfPast } from '@/lib/utils';
 
 type LoanStatus = 'active' | 'overdue' | 'paid';
 
@@ -67,11 +67,18 @@ export default function LoansPage() {
   );
   // Total amount that can be used to pay loans from salary:
   // income * 0.9 * 0.885 * 0.6
+  const monthlyIncome = userProfile?.monthlyIncome ?? 0;
   const possiblePayFromSalary = Math.max(
     0,
     (userProfile?.monthlyIncome ?? 0) * 0.9 * 0.885 * 0.6,
   );
-  const overdueCount = loans.filter((l) => l.status === 'overdue').length;
+  // Default UI ordering: "normal" strategy = shortest period left first.
+  const prioritizedLoans = [...loans].sort((a, b) => {
+    if (a.termMonths !== b.termMonths) return a.termMonths - b.termMonths;
+    // Tie-breakers: higher rate first, then bigger balance.
+    if (a.interestRate !== b.interestRate) return b.interestRate - a.interestRate;
+    return b.balance - a.balance;
+  });
 
   const statusPill = (status: LoanStatus) => {
     const base =
@@ -108,79 +115,55 @@ export default function LoansPage() {
             </div>
           </div>
 
-          {/* Summary cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-brand-card/60 rounded-3xl border border-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-white inline-flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">account_balance</span>
-                  Нийт зээлийн үлдэгдэл
-                </p>
+          {/* Summary metrics — light tiles, icon + text (no cramped dividers) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-transparent p-5 md:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
+                  <span className="material-symbols-outlined text-[22px]">account_balance</span>
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium text-slate-400">Нийт үлдэгдэл</p>
+                  <p className="text-2xl font-bold tracking-tight text-white tabular-nums md:text-[1.65rem]">
+                    {formatCurrency(totalBalance, currency)}
+                  </p>
+                </div>
               </div>
-              <p className="mt-3 text-2xl font-black text-white">
-                {formatCurrency(totalBalance, currency)}
-              </p>
             </div>
 
-            <div className="bg-brand-card/60 rounded-3xl border border-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-white inline-flex items-center gap-2">
-                  <span className="material-symbols-outlined text-emerald-400">
-                    payments
-                  </span>
-                  Сарын төлөлт
-                </p>
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-transparent p-5 md:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-400 ring-1 ring-emerald-500/25">
+                  <span className="material-symbols-outlined text-[22px]">payments</span>
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium text-slate-400">Сарын суурь төлөлт</p>
+                  <p className="text-2xl font-bold tracking-tight text-emerald-400 tabular-nums md:text-[1.65rem]">
+                    {formatCurrency(totalMonthlyPayment, currency)}
+                  </p>
+                </div>
               </div>
-              <p className="mt-3 text-2xl font-black text-emerald-400">
-                {formatCurrency(totalMonthlyPayment, currency)}
-              </p>
             </div>
 
-            <div className="bg-brand-card/60 rounded-3xl border border-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-white inline-flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">
-                    account_balance_wallet
-                  </span>
-                  Салариас боломжтой төлбөр
-                </p>
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-transparent p-5 md:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500/12 text-sky-300 ring-1 ring-sky-400/20">
+                  <span className="material-symbols-outlined text-[22px]">savings</span>
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium text-slate-400">Одоогоор төлж байгаа</p>
+                  <p className="text-2xl font-bold tracking-tight text-sky-200 tabular-nums md:text-[1.65rem]">
+                    {formatCurrency(possiblePayFromSalary, currency)}
+                  </p>
+                  {monthlyIncome > 0 && (
+                    <p className="pt-1 text-xs text-slate-500 tabular-nums">
+                      Үндсэн цалин {formatCurrency(monthlyIncome, currency)}
+                    </p>
+                  )}
+                </div>
               </div>
-              <p className="mt-3 text-2xl font-black text-primary">
-                {formatCurrency(possiblePayFromSalary, currency)}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                income * 0.9 * 0.885 * 0.6
-              </p>
-            </div>
-
-            <div className="bg-brand-card/60 rounded-3xl border border-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-white inline-flex items-center gap-2">
-                  <span className="material-symbols-outlined text-yellow-400">
-                    warning
-                  </span>
-                  Overdue
-                </p>
-                <span className="text-xs text-slate-400">Needs attention</span>
-              </div>
-              <p
-                className={cn(
-                  'mt-3 text-2xl font-black',
-                  overdueCount > 0 ? 'text-yellow-400' : 'text-emerald-400',
-                )}
-              >
-                {overdueCount}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">Loans marked overdue</p>
             </div>
           </div>
-
-          <LoanSuggestionsPanel
-            loans={loansForSuggestions}
-            currency={currency}
-            userProfile={userProfile}
-            suggestionConfig={suggestionConfig}
-          />
 
           {/* Lists */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
@@ -188,7 +171,7 @@ export default function LoansPage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-white font-bold inline-flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">account_tree</span>
-                  Loan list
+                  Зээлүүд
                 </h2>
                 <span className="text-xs text-slate-500">{loans.length}</span>
               </div>
@@ -197,14 +180,7 @@ export default function LoansPage() {
                 {loans.length === 0 ? (
                   <p className="text-slate-400 text-sm">No loans found.</p>
                 ) : (
-                  loans
-                    .slice()
-                    .sort(
-                      (a, b) =>
-                        new Date(a.startDate).getTime() -
-                        new Date(b.startDate).getTime(),
-                    )
-                    .map((l) => (
+                  prioritizedLoans.map((l) => (
                       <div
                         key={l.id}
                         className="flex items-start justify-between gap-4 bg-brand-card/50 rounded-2xl border border-white/5 p-4 hover:bg-white/5 transition-colors"
@@ -222,19 +198,21 @@ export default function LoansPage() {
                           <div className="min-w-0">
                             <p className="text-white font-bold text-sm truncate">{l.name}</p>
                             <p className="text-xs text-slate-500 truncate">
-                              {l.lender} • Төлөлт хийх огноо: {formatDate(l.startDate)}
+                              
                             </p>
                             <p className="text-[11px] text-slate-500 truncate mt-1">
-                              Үлдэгдэл: {formatCurrency(l.balance, currency)} • Хүү:{' '}
+                            {l.lender} • Үлдэгдэл: {formatCurrency(l.balance, currency)} • Хүү:{' '}
                               {l.interestRate.toFixed(2)}%
                             </p>
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <div className={statusPill(l.status)}>{l.status}</div>
+                          <div className={statusPill("overdue")}>
+                            {formatDate(rollMonthlyStartDateIfPast(l.startDate))}
+                          </div>
                           <p className="mt-2 text-sm font-black text-emerald-400">
-                            {formatCurrency(l.monthlyPayment, currency)}/mo
+                            {formatCurrency(l.monthlyPayment, currency)}/сар
                           </p>
                         </div>
                       </div>
@@ -243,6 +221,14 @@ export default function LoansPage() {
               </div>
             </section>
           </div>
+
+          <LoanSuggestionsPanel
+            loans={loansForSuggestions}
+            currency={currency}
+            userProfile={userProfile}
+            suggestionConfig={suggestionConfig}
+            referenceDateISO={loanFile.generatedAt ?? new Date().toISOString()}
+          />
         </div>
       </main>
     </div>

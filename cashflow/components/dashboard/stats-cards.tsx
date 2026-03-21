@@ -74,7 +74,7 @@ export function StatsCards() {
   const cards = [
     {
       title: t('statTotalIncome'),
-      value: stats ? formatCurrency(stats.income.total, 'MNT') : '₮0',
+      value: stats ? formatCurrency(stats.income.total, 'MNT') : '0 ₮',
       change: t('vsLastMonthCompare'),
       changePercentage: stats?.income.changePercentage,
       icon: 'trending_up',
@@ -82,7 +82,7 @@ export function StatsCards() {
     },
     {
       title: t('statTotalExpenses'),
-      value: stats ? formatCurrency(stats.expenses.total, 'MNT') : '₮0',
+      value: stats ? formatCurrency(stats.expenses.total, 'MNT') : '0 ₮',
       change: t('vsLastMonthCompare'),
       changePercentage: stats?.expenses.changePercentage,
       icon: 'trending_down',
@@ -90,14 +90,14 @@ export function StatsCards() {
     },
     {
       title: t('statSavings'),
-      value: stats ? formatCurrency(stats.savings.total, 'MNT') : '₮0',
+      value: stats ? formatCurrency(stats.savings.total, 'MNT') : '0 ₮',
       change: `${stats?.savings.rate ? formatPercentage(stats.savings.rate) : '0%'} ${t('savingsRateSuffix')}`,
       icon: 'savings',
       color: 'bg-blue-500/10 text-blue-400',
     },
     {
       title: t('statInvestments'),
-      value: stats ? formatCurrency(stats.investments.total, 'MNT') : '₮0',
+      value: stats ? formatCurrency(stats.investments.total, 'MNT') : '0 ₮',
       change: `${stats?.investments.returnPercentage ? formatPercentage(stats.investments.returnPercentage) : '0%'} ${t('investmentReturnSuffix')}`,
       changePercentage: stats?.investments.returnPercentage,
       icon: 'show_chart',
