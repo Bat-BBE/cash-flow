@@ -1,6 +1,12 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
 import { LoanSuggestionsPanel } from '@/components/payments/loan-suggestions-panel';
+import { LoanDetailPanel } from '@/components/payments/loan-detail-panel';
 import loanFile from '@/loan.json';
 import type {
   LoanForSuggestion,
@@ -8,7 +14,13 @@ import type {
   UserProfile,
 } from '@/lib/loan-suggestions';
 import { paydownFloorTotal } from '@/lib/loan-suggestions';
-import { formatCurrency, formatDate, rollMonthlyStartDateIfPast } from '@/lib/utils';
+import {
+  formatCurrency,
+  formatDate,
+  formatDateUTC,
+  rollMonthlyStartDateIfPast,
+} from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 type LoanStatus = 'active' | 'overdue' | 'paid';
 
@@ -44,7 +56,10 @@ interface LoansFile {
 }
 
 export default function LoansPage() {
+  const { language } = useDashboard();
+  const t = useTranslation(language);
   const { currency, loans, userProfile, suggestionConfig } = loanFile as LoansFile;
+  const [selectedLoanId, setSelectedLoanId] = useState<string | null>(null);
 
   const loansForSuggestions: LoanForSuggestion[] = loans.map((l) => ({
     id: l.id,
@@ -60,40 +75,34 @@ export default function LoansPage() {
   }));
 
   const totalBalance = loans.reduce((sum, l) => sum + l.balance, 0);
-  // Match suggestion baseline (normal/aggressive): floor = max(monthlyPayment, lowestPayAmount) + overdue extra.
   const totalMonthlyPayment = loansForSuggestions.reduce(
     (sum, l) => sum + paydownFloorTotal(l),
     0,
   );
-  // Total amount that can be used to pay loans from salary:
-  // income * 0.9 * 0.885 * 0.6
   const monthlyIncome = userProfile?.monthlyIncome ?? 0;
   const possiblePayFromSalary = Math.max(
     0,
     (userProfile?.monthlyIncome ?? 0) * 0.9 * 0.885 * 0.6,
   );
-  // Default UI ordering: "normal" strategy = shortest period left first.
-  const prioritizedLoans = [...loans].sort((a, b) => {
-    if (a.termMonths !== b.termMonths) return a.termMonths - b.termMonths;
-    // Tie-breakers: higher rate first, then bigger balance.
-    if (a.interestRate !== b.interestRate) return b.interestRate - a.interestRate;
-    return b.balance - a.balance;
-  });
+
+  const prioritizedLoans = useMemo(() => {
+    return [...loans].sort((a, b) => {
+      if (a.termMonths !== b.termMonths) return a.termMonths - b.termMonths;
+      if (a.interestRate !== b.interestRate) return b.interestRate - a.interestRate;
+      return b.balance - a.balance;
+    });
+  }, [loans]);
+
+  const selectedLoan = useMemo(
+    () => prioritizedLoans.find((l) => l.id === selectedLoanId) ?? null,
+    [prioritizedLoans, selectedLoanId],
+  );
 
   const statusPill = (status: LoanStatus) => {
     const base =
       'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border';
 
-    switch (status) {
-      case 'active':
-        return `${base} bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
-      case 'overdue':
-        return `${base} bg-yellow-500/10 text-yellow-400 border-yellow-500/20`;
-      case 'paid':
-        return `${base} bg-blue-500/10 text-blue-400 border-blue-500/20`;
-      default:
-        return `${base} bg-white/5 text-brand-muted border-white/10`;
-    }
+      return `${base} bg-yellow-500/10 text-yellow-400 border-yellow-500/20`;
   };
 
   return (
@@ -115,7 +124,6 @@ export default function LoansPage() {
             </div>
           </div>
 
-          {/* Summary metrics — light tiles, icon + text (no cramped dividers) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
             <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-transparent p-5 md:p-6">
               <div className="flex items-start gap-4">
@@ -165,9 +173,16 @@ export default function LoansPage() {
             </div>
           </div>
 
-          {/* Lists */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-            <section className="bg-brand-card/60 rounded-3xl border border-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-lg lg:col-span-2">
+          <LoanSuggestionsPanel
+            loans={loansForSuggestions}
+            currency={currency}
+            userProfile={userProfile}
+            suggestionConfig={suggestionConfig}
+            referenceDateISO={loanFile.generatedAt}
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+            <section className="bg-brand-card/60 rounded-3xl border border-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur-lg">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-white font-bold inline-flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">account_tree</span>
@@ -176,62 +191,88 @@ export default function LoansPage() {
                 <span className="text-xs text-slate-500">{loans.length}</span>
               </div>
 
-              <div className="space-y-3 overflow-y-auto max-h-[520px] pr-1">
+              <div className="space-y-3 overflow-y-auto max-h-[min(520px,70vh)] pr-1">
                 {loans.length === 0 ? (
-                  <p className="text-slate-400 text-sm">No loans found.</p>
+                  <p className="text-slate-400 text-sm">{t('noLoansFound')}</p>
                 ) : (
-                  prioritizedLoans.map((l) => (
-                      <div
+                  prioritizedLoans.map((l) => {
+                    const isSelected = selectedLoanId === l.id;
+                    return (
+                      <button
+                        type="button"
                         key={l.id}
-                        className="flex items-start justify-between gap-4 bg-brand-card/50 rounded-2xl border border-white/5 p-4 hover:bg-white/5 transition-colors"
+                        onClick={() => setSelectedLoanId(l.id)}
+                        className={cn(
+                          'w-full text-left flex items-start justify-between gap-4 bg-brand-card/50 rounded-2xl border p-4 transition-colors',
+                          isSelected
+                            ? 'border-primary/50 bg-primary/10 ring-1 ring-primary/30'
+                            : 'border-white/5 hover:bg-white/5',
+                        )}
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           <div
                             className="size-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0"
                             style={l.color ? { color: l.color } : undefined}
                           >
-                            <span className="material-symbols-outlined text-sm">
-                              {l.icon}
-                            </span>
+                            <span className="material-symbols-outlined text-sm">{l.icon}</span>
                           </div>
 
                           <div className="min-w-0">
                             <p className="text-white font-bold text-sm truncate">{l.name}</p>
-                            <p className="text-xs text-slate-500 truncate">
-                              
-                            </p>
                             <p className="text-[11px] text-slate-500 truncate mt-1">
-                            {l.lender} • Үлдэгдэл: {formatCurrency(l.balance, currency)} • Хүү:{' '}
+                              {l.lender} • Үлдэгдэл: {formatCurrency(l.balance, currency)} • Хүү:{' '}
                               {l.interestRate.toFixed(2)}%
                             </p>
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <div className={statusPill("overdue")}>
-                            {formatDate(rollMonthlyStartDateIfPast(l.startDate))}
+                        <div className="text-right shrink-0">
+                          <div className={statusPill(l.status)}>
+                            {formatDateUTC(
+                              rollMonthlyStartDateIfPast(
+                                l.startDate,
+                                loanFile.generatedAt ?? '2000-01-01',
+                              ),
+                            )}
                           </div>
-                          <p className="mt-2 text-sm font-black text-emerald-400">
+                          <p className="mt-2 text-sm font-black text-emerald-400 tabular-nums">
                             {formatCurrency(l.monthlyPayment, currency)}/сар
                           </p>
                         </div>
-                      </div>
-                    ))
+                      </button>
+                    );
+                  })
                 )}
               </div>
             </section>
-          </div>
 
-          <LoanSuggestionsPanel
-            loans={loansForSuggestions}
-            currency={currency}
-            userProfile={userProfile}
-            suggestionConfig={suggestionConfig}
-            referenceDateISO={loanFile.generatedAt ?? new Date().toISOString()}
-          />
+            <section className="min-w-0">
+              {selectedLoan ? (
+                <LoanDetailPanel
+                  loanId={selectedLoan.id}
+                  currency={currency}
+                  name={selectedLoan.name}
+                  lender={selectedLoan.lender}
+                  status={selectedLoan.status}
+                  monthlyPayment={selectedLoan.monthlyPayment}
+                  balance={selectedLoan.balance}
+                  interestRate={selectedLoan.interestRate}
+                  onClose={() => setSelectedLoanId(null)}
+                />
+              ) : (
+                <div className="rounded-3xl border border-dashed border-white/15 bg-brand-card/30 p-8 md:p-12 text-center">
+                  <span className="material-symbols-outlined text-5xl text-slate-600 mb-3">
+                    touch_app
+                  </span>
+                  <p className="text-slate-400 text-sm font-medium">
+                    Зээл сонгоно уу — хүү vs зээл график, төлбөрийн түүх харагдана.
+                  </p>
+                </div>
+              )}
+            </section>
+          </div>
         </div>
       </main>
     </div>
   );
 }
-

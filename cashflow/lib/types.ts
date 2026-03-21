@@ -76,6 +76,9 @@ export interface User {
 
 export type Currency = 'MNT' | 'USD' | 'EUR';
 
+/** Mongolian is the primary locale; English is secondary. */
 export type Language = 'MN' | 'EN';
+
+export const DEFAULT_LANGUAGE: Language = 'MN';
 
 export type TransactionFilter = 'all' | 'income' | 'expenses';
