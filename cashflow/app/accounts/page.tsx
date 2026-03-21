@@ -1,10 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useDashboard } from '@/components/providers/dashboard-provider';
-import { useTranslation } from '@/lib/translations';
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { AccountsSidebar } from '@/components/accounts/accounts-sidebar';
 import { AccountDetails } from '@/components/accounts/account-details';
 import { useAccountData } from '@/hook/use-account-data';
@@ -47,8 +44,8 @@ export default function AccountsPage() {
               <p className="text-brand-muted font-medium">{t('loadingAccounts')}</p>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </DashboardShell>
     );
   }
 
@@ -83,7 +80,17 @@ export default function AccountsPage() {
             />
           </div>
         </div>
-      </main>
+
+        <div className="min-w-0 flex-1">
+          <AccountDetails
+            account={selectedAccount}
+            onTransfer={handleTransfer}
+            onAddTransaction={handleAddTransaction}
+            onPeriodChange={setSelectedPeriod}
+            selectedPeriod={selectedPeriod}
+          />
+        </div>
+      </div>
 
       {/* Modals */}
       {/* <AddTransactionModal
@@ -91,6 +98,6 @@ export default function AccountsPage() {
         onClose={() => setShowAddModal(false)}
         account={selectedAccount}
       /> */}
-    </div>
+    </DashboardShell>
   );
 }
