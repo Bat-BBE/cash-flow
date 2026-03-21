@@ -3,6 +3,8 @@
 import { Account, AccountGroup } from './types';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/utils';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation, type TranslationKey } from '@/lib/translations';
 
 interface AccountsSidebarProps {
   accountGroups: AccountGroup[];
@@ -23,8 +25,12 @@ function AccountCard({
   isSelected: boolean; 
   onClick: () => void;
 }) {
+  const isLoan = account.type === 'LOAN';
   const isNegative = account.balance < 0;
-  
+  const displayAmount = isLoan ? Math.abs(account.balance) : account.balance;
+  const balanceClass =
+    isLoan ? 'text-white' : isNegative ? 'text-red-400' : 'text-white';
+
   return (
     <div
       onClick={onClick}
@@ -37,17 +43,9 @@ function AccountCard({
     >
       <div className="flex items-center justify-between mb-1">
         <p className="text-xs text-brand-muted">{account.name}</p>
-        {account.active && (
-          <span className="text-[8px] bg-success/20 text-success px-1.5 py-0.5 rounded-full uppercase font-bold">
-            Active
-          </span>
-        )}
       </div>
-      <p className={cn(
-        "text-base font-bold",
-        isNegative ? 'text-red-400' : 'text-white'
-      )}>
-        {formatCurrency(account.balance, account.currency || 'MNT')}
+      <p className={cn('text-base font-bold', balanceClass)}>
+        {formatCurrency(displayAmount, account.currency || 'MNT')}
       </p>
       {account.accountNumber && (
         <p className="text-[8px] text-brand-muted mt-1">
@@ -58,14 +56,35 @@ function AccountCard({
   );
 }
 
+function groupHeading(group: AccountGroup, t: (key: TranslationKey) => string) {
+  switch (group.type) {
+    case 'BANK':
+      return t('bank');
+    case 'LOAN':
+      return t('loan');
+    case 'CASH':
+      return t('cash');
+    case 'CARDS':
+      return t('cards');
+    case 'SAVINGS':
+      return t('savingsInvestments');
+    case 'INVESTMENT':
+      return t('investments');
+    default:
+      return t('accountsOverview');
+  }
+}
+
 function AccountGroupSection({ 
   group, 
   selectedAccount, 
-  onSelectAccount 
+  onSelectAccount,
+  groupLabel,
 }: { 
   group: AccountGroup; 
   selectedAccount: Account | null; 
   onSelectAccount: (account: Account) => void;
+  groupLabel: string;
 }) {
   if (group.accounts.length === 0) return null;
 
@@ -73,7 +92,7 @@ function AccountGroupSection({
     <div className="mb-6">
       <h3 className="text-xs font-bold text-brand-muted flex items-center gap-2 mb-3">
         <span className="material-symbols-outlined text-sm">{group.icon}</span>
-        {group.title}
+        {groupLabel}
         <span className="text-[8px] bg-white/5 px-1.5 py-0.5 rounded-full">
           {group.accounts.length}
         </span>
@@ -99,6 +118,9 @@ export function AccountsSidebar({
   onSelectAccount,
   isLoading = false
 }: AccountsSidebarProps) {
+  const { language } = useDashboard();
+  const t = useTranslation(language);
+
   if (isLoading) {
     return (
       <div className="w-full sm:w-72 lg:w-80 border-r border-white/5 overflow-y-auto custom-scrollbar bg-brand-sidebar/30 rounded-2xl sm:rounded-none sm:border-r">
@@ -124,8 +146,8 @@ export function AccountsSidebar({
       <div className="p-4 sm:p-6">
         {/* Total Overview */}
         <div className="mb-6">
-          <p className="text-xs font-bold text-brand-muted uppercase mb-1">
-            Total Balance
+          <p className="text-xs font-bold text-brand-muted mb-1">
+            {t('accountsSidebarTotalBalance')}
           </p>
           <div className="flex items-end gap-2">
             <span className="text-2xl font-bold text-white">
@@ -139,7 +161,7 @@ export function AccountsSidebar({
             </span>
           </div>
           <p className="text-[8px] text-brand-muted mt-1">
-            Change: {formatCurrency(totalChange, 'MNT')}
+            {t('accountsSidebarChange')}: {formatCurrency(totalChange, 'MNT')}
           </p>
         </div>
 
@@ -150,6 +172,7 @@ export function AccountsSidebar({
             group={group}
             selectedAccount={selectedAccount}
             onSelectAccount={onSelectAccount}
+            groupLabel={groupHeading(group, t)}
           />
         ))}
       </div>

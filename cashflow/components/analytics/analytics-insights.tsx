@@ -166,9 +166,7 @@ export function AnalyticsInsights({ insights, portfolioVelocity }: AnalyticsInsi
           AI Engine
         </p>
         <div className="flex items-center gap-2">
-          <span className="size-2 bg-success rounded-full animate-pulse"></span>
-          <span className="text-[10px] text-slate-400 font-bold">ACTIVE</span>
-          <span className="text-[10px] text-slate-600 ml-2">v2.4.1</span>
+          <span className="text-[10px] text-slate-600">v2.4.1</span>
         </div>
       </div>
     </div>

@@ -1,13 +1,21 @@
 // components/accounts/account-activity.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Transaction } from './types';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
-import { useAccountData } from '@/hook/use-account-data';
+import { DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
+import { isTransactionInAccountPeriod } from '@/lib/account-period';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
 
 interface AccountActivityProps {
   accountId: string;
+  transactions: Transaction[];
+  loading?: boolean;
+  currency?: string;
+  /** Must match AccountDetails period keys: 1W | 1M | 3M | 1Y */
+  selectedPeriod?: string;
   limit?: number;
   showFilters?: boolean;
 }
@@ -17,88 +25,54 @@ type SortType = 'newest' | 'oldest' | 'highest' | 'lowest';
 
 export function AccountActivity({ 
   accountId, 
-  limit = 10,
+  transactions: allTransactions,
+  loading = false,
+  currency = 'MNT',
+  selectedPeriod = '1M',
+  limit = 100,
   showFilters = true 
 }: AccountActivityProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { language } = useDashboard();
+  const t = useTranslation(language);
+
   const [filter, setFilter] = useState<FilterType>('all');
   const [sort, setSort] = useState<SortType>('newest');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    
-    // Simulate API call
-    const timer = setTimeout(() => {
-      // Mock transactions
-      const mockTransactions: Transaction[] = [
-        {
-          id: '1',
-          name: 'Interest Payment',
-          date: '2024-02-12',
-          amount: 152400,
-          type: 'income',
-          icon: 'trending_up',
-          category: 'INVESTMENT',
-          description: 'Monthly interest accrued',
-          accountId
-        },
-        {
-          id: '2',
-          name: 'Transfer from Checking',
-          date: '2024-02-10',
-          amount: 1000000,
-          type: 'income',
-          icon: 'sync_alt',
-          category: 'TRANSFER',
-          description: 'Automatic savings transfer',
-          accountId
-        },
-        {
-          id: '3',
-          name: 'Wealth Settlement',
-          date: '2024-02-08',
-          amount: 2500000,
-          type: 'expense',
-          icon: 'account_balance_wallet',
-          category: 'SAVINGS',
-          description: 'Quarterly investment',
-          accountId
-        },
-        {
-          id: '4',
-          name: 'Groceries',
-          date: '2024-02-07',
-          amount: 245000,
-          type: 'expense',
-          icon: 'shopping_cart',
-          category: 'SHOPPING',
-          description: 'Weekly groceries',
-          accountId
-        },
-        {
-          id: '5',
-          name: 'Salary Deposit',
-          date: '2024-02-05',
-          amount: 5200000,
-          type: 'income',
-          icon: 'payments',
-          category: 'INCOME',
-          description: 'Monthly salary',
-          accountId
-        }
-      ];
+  const transactions = useMemo(
+    () =>
+      allTransactions.filter(
+        (t) => (t.accountId ?? DEFAULT_ACCOUNT_ID) === accountId,
+      ),
+    [allTransactions, accountId],
+  );
 
-      setTransactions(mockTransactions);
-      setLoading(false);
-    }, 300);
+  const transactionsInPeriod = useMemo(
+    () =>
+      transactions.filter((tx) =>
+        isTransactionInAccountPeriod(tx.date, selectedPeriod),
+      ),
+    [transactions, selectedPeriod],
+  );
 
-    return () => clearTimeout(timer);
-  }, [accountId]);
+  const periodIncomeTotal = useMemo(
+    () =>
+      transactionsInPeriod
+        .filter((tx) => tx.type === 'income')
+        .reduce((s, tx) => s + tx.amount, 0),
+    [transactionsInPeriod],
+  );
 
-  // Filter and sort transactions
-  const filteredTransactions = transactions
+  const periodExpenseTotal = useMemo(
+    () =>
+      transactionsInPeriod
+        .filter((tx) => tx.type === 'expense')
+        .reduce((s, tx) => s + tx.amount, 0),
+    [transactionsInPeriod],
+  );
+
+  // Filter and sort transactions (within selected period)
+  const filteredTransactions = transactionsInPeriod
     .filter(tx => {
       if (filter !== 'all' && tx.type !== filter) return false;
       if (search) {
@@ -124,6 +98,21 @@ export function AccountActivity({
     })
     .slice(0, limit);
 
+  const filterLabel = (f: FilterType) => {
+    switch (f) {
+      case 'all':
+        return t('all');
+      case 'income':
+        return t('income');
+      case 'expense':
+        return t('filterExpenseSingular');
+      case 'transfer':
+        return t('transfer');
+      default:
+        return f;
+    }
+  };
+
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
       'INVESTMENT': 'text-brand-primary bg-brand-primary/10',
@@ -139,7 +128,7 @@ export function AccountActivity({
   if (loading) {
     return (
       <div>
-        <h2 className="text-lg font-bold text-white mb-4">Account Activity</h2>
+        <h2 className="text-lg font-bold text-white mb-4">{t('accountActivity')}</h2>
         <div className="bg-brand-card rounded-2xl border border-white/5 overflow-hidden">
           <div className="animate-pulse">
             <div className="border-b border-white/5 bg-white/5 p-4">
@@ -165,11 +154,21 @@ export function AccountActivity({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-white">Account Activity</h2>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+        <div className="space-y-2">
+          <h2 className="text-lg font-bold text-white">{t('accountActivity')}</h2>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums">
+            <span className="text-emerald-400 font-bold">
+              {t('periodSummaryIncome')}: {formatCurrency(periodIncomeTotal, currency)}
+            </span>
+            <span className="text-red-400 font-bold">
+              {t('periodSummaryExpense')}: {formatCurrency(periodExpenseTotal, currency)}
+            </span>
+          </div>
+        </div>
         {filteredTransactions.length > 0 && (
-          <span className="text-[10px] text-brand-muted">
-            {filteredTransactions.length} transactions
+          <span className="text-[10px] text-brand-muted shrink-0">
+            {filteredTransactions.length} {t('transactionsCountLabel')}
           </span>
         )}
       </div>
@@ -183,13 +182,13 @@ export function AccountActivity({
                 key={f}
                 onClick={() => setFilter(f)}
                 className={cn(
-                  "px-3 py-1.5 text-xs font-medium capitalize transition-all rounded-md",
+                  'px-3 py-1.5 text-xs font-medium transition-all rounded-md',
                   filter === f
                     ? 'bg-brand-primary text-white'
                     : 'text-brand-muted hover:text-white'
                 )}
               >
-                {f}
+                {filterLabel(f)}
               </button>
             ))}
           </div>
@@ -200,10 +199,10 @@ export function AccountActivity({
               onChange={(e) => setSort(e.target.value as SortType)}
               className="bg-brand-card border border-white/5 rounded-lg px-3 py-1.5 text-xs text-white"
             >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="highest">Highest amount</option>
-              <option value="lowest">Lowest amount</option>
+              <option value="newest">{t('sortNewestFirst')}</option>
+              <option value="oldest">{t('sortOldestFirst')}</option>
+              <option value="highest">{t('sortHighestAmount')}</option>
+              <option value="lowest">{t('sortLowestAmount')}</option>
             </select>
 
             <div className="relative">
@@ -212,7 +211,7 @@ export function AccountActivity({
               </span>
               <input
                 type="text"
-                placeholder="Search transactions..."
+                placeholder={t('searchTransactionsPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="bg-brand-card border border-white/5 rounded-lg pl-7 pr-3 py-1.5 text-xs text-white placeholder:text-brand-muted focus:outline-none focus:ring-1 focus:ring-brand-primary"
@@ -229,7 +228,7 @@ export function AccountActivity({
             <span className="material-symbols-outlined text-4xl text-brand-muted mb-2">
               receipt_long
             </span>
-            <p className="text-sm text-brand-muted">No transactions found</p>
+            <p className="text-sm text-brand-muted">{t('noTransactionsFound')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -237,19 +236,19 @@ export function AccountActivity({
               <thead>
                 <tr className="border-b border-white/5 bg-white/5">
                   <th className="px-6 py-4 text-left text-xs font-bold text-brand-muted uppercase">
-                    Date
+                    {t('date')}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-brand-muted uppercase">
-                    Transaction
+                    {t('transaction')}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-brand-muted uppercase">
-                    Category
+                    {t('category')}
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-bold text-brand-muted uppercase">
-                    Amount
+                    {t('amount')}
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-bold text-brand-muted uppercase">
-                    Actions
+                    {t('actionsColumn')}
                   </th>
                 </tr>
               </thead>
@@ -298,7 +297,7 @@ export function AccountActivity({
                     )}>
                       {tx.type === 'income' ? '+' : 
                        tx.type === 'expense' ? '-' : ''}
-                      {formatCurrency(Math.abs(tx.amount), 'MNT')}
+                      {formatCurrency(Math.abs(tx.amount), currency)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-muted hover:text-white">
@@ -316,7 +315,7 @@ export function AccountActivity({
         {filteredTransactions.length > 0 && filteredTransactions.length >= limit && (
           <div className="p-4 text-center border-t border-white/5">
             <button className="text-xs font-bold text-brand-primary hover:text-white transition-colors">
-              View all transactions
+              {t('viewAllTransactions')}
             </button>
           </div>
         )}

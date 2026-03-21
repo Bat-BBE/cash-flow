@@ -5,7 +5,6 @@ import { Header } from '@/components/dashboard/header';
 import { NetWorthCard } from '@/components/dashboard/net-worth-card';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { TransactionsTable } from '@/components/dashboard/transactions-table';
-import { BudgetCards } from '@/components/dashboard/budget-cards';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { SmartInsight } from '@/components/dashboard/smart-insight';
 import { TrendChart } from '@/components/dashboard/trend-chart';
@@ -30,7 +29,6 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8 items-start">
               <div className="xl:col-span-2 space-y-4 md:space-y-6">
                 <TransactionsTable />
-                <BudgetCards />
               </div>
 
               <aside className="space-y-4 md:space-y-8">

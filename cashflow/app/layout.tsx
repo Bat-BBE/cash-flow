@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { DashboardProvider } from "@/components/providers/dashboard-provider";
+import { ScheduledCalendarProvider } from "@/contexts/scheduled-calendar-context";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -10,8 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CashFlow - Wealth Pro Dashboard",
-  description: "Modern financial dashboard for managing your wealth",
+  title: "CashFlow — Санхүүгийн хянах самбар",
+  description:
+    "Өөрийн орлого, зарлага, зээл, төлбөрийг нэг дороос удирдах орчин үеийн самбар.",
 };
 
 export default function RootLayout({
@@ -20,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="mn" className="dark">
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -29,7 +31,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} antialiased min-h-screen`}>
         <DashboardProvider>
-          {children}
+          <ScheduledCalendarProvider>{children}</ScheduledCalendarProvider>
         </DashboardProvider>
       </body>
     </html>
