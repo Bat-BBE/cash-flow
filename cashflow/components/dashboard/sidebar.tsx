@@ -9,7 +9,6 @@ import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 import { cn } from '@/lib/utils';
 import { ProfileDrawer } from './profile-drawer';
-
 interface NavItem {
   label: string;
   translationKey: string;
@@ -20,10 +19,38 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  { label: 'Dashboard',  translationKey: 'dashboard', icon: 'dashboard',              href: '/home',      badge: { color: 'emerald' } },
-  { label: 'Accounts',   translationKey: 'accounts',  icon: 'account_balance_wallet', href: '/accounts',  badge: { count: 5, color: 'brand' } },
-  { label: 'Budgets',    translationKey: 'budgets',   icon: 'savings',                href: '/budgets',   badge: { count: 2, color: 'amber' } },
-  { label: 'Analytics',  translationKey: 'analytics', icon: 'analytics',              href: '/analytics' },
+  { 
+    label: 'Dashboard', 
+    translationKey: 'dashboard', 
+    icon: 'dashboard', 
+    href: '/home',
+    badge: { color: 'emerald' }
+  },
+  { 
+    label: 'Accounts', 
+    translationKey: 'accounts', 
+    icon: 'account_balance_wallet', 
+    href: '/accounts',
+    badge: { count: 5, color: 'brand' }
+  },
+  { 
+    label: 'Analytics', 
+    translationKey: 'analytics', 
+    icon: 'analytics', 
+    href: '/analytics' 
+  },
+  {
+    label: 'loan',
+    translationKey: 'loan',
+    icon: 'payments',
+    href: '/payments',
+  },
+  {
+    label: 'Calendar',
+    translationKey: 'calendar',
+    icon: 'calendar_month',
+    href: '/scheduled',
+  },
 ];
 
 const badgeColors: Record<string, string> = {

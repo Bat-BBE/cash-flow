@@ -2,6 +2,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { MN_MONTH_NAMES } from '@/lib/calendar-locale-mn';
 
 interface MonthPickerProps {
   isOpen: boolean;
@@ -13,11 +14,6 @@ interface MonthPickerProps {
 export function MonthPicker({ isOpen, onClose, currentDate, onSelectMonth }: MonthPickerProps) {
   if (!isOpen) return null;
 
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ];
-
   const years = [2023, 2024];
 
   return (
@@ -28,7 +24,8 @@ export function MonthPicker({ isOpen, onClose, currentDate, onSelectMonth }: Mon
           <button className="p-1 hover:text-primary transition-colors">
             <span className="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-          <span className="text-sm font-bold text-white">{currentDate.getFullYear()}</span>
+          <span className="text-xs text-slate-500 font-semibold">Жил</span>
+          <span className="text-sm font-bold text-white tabular-nums">{currentDate.getFullYear()}</span>
           <button className="p-1 hover:text-primary transition-colors">
             <span className="material-symbols-outlined text-sm">chevron_right</span>
           </button>
@@ -42,8 +39,8 @@ export function MonthPicker({ isOpen, onClose, currentDate, onSelectMonth }: Mon
       </div>
 
       {/* Months grid */}
-      <div className="p-4 grid grid-cols-3 gap-2">
-        {months.map((month, index) => (
+        <div className="p-4 grid grid-cols-3 gap-2">
+        {MN_MONTH_NAMES.map((month, index) => (
           <button
             key={month}
             onClick={() => {

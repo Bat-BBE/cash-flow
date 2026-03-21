@@ -1,7 +1,7 @@
 // components/scheduled/add-item-modal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,13 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { cn, formatDateForInputLocal } from '@/lib/utils';
 
 interface AddItemModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: 'bill' | 'income';
   onAdd: (data: any) => void;
+  /** When set (e.g. from calendar day), pre-fills the date field. */
+  initialDate?: string | null;
 }
 
 const BILL_ICONS = [
@@ -50,7 +52,13 @@ const INCOME_CATEGORIES = [
   'Rental', 'Dividend', 'Interest', 'Gift'
 ];
 
-export function AddItemModal({ open, onOpenChange, type, onAdd }: AddItemModalProps) {
+export function AddItemModal({
+  open,
+  onOpenChange,
+  type,
+  onAdd,
+  initialDate = null,
+}: AddItemModalProps) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
@@ -61,6 +69,11 @@ export function AddItemModal({ open, onOpenChange, type, onAdd }: AddItemModalPr
   const isBill = type === 'bill';
   const icons = isBill ? BILL_ICONS : INCOME_ICONS;
   const categories = isBill ? BILL_CATEGORIES : INCOME_CATEGORIES;
+
+  useEffect(() => {
+    if (!open) return;
+    setDate(initialDate ?? formatDateForInputLocal(new Date()));
+  }, [open, initialDate, type]);
 
   const handleSubmit = () => {
     onAdd({

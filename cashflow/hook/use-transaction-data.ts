@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ref, get } from 'firebase/database';
-import { db, BASE_PATH } from '@/lib/firebase';
+import { db, BASE_PATH, DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
+import { accountLabelForId } from '@/lib/account-labels';
 import { Transaction, TransactionFilter } from '@/components/transactions/types';
 
 /* ─── Raw Firebase tx ─────────────────────────────────────────────── */
@@ -55,7 +56,7 @@ export function useTransactionData() {
           id,
           date:        t.date.split(' ')[0],
           category:    t.category || (t.debit !== 0 ? 'Бусад зарлага' : 'Бусад орлого'),
-          account:     'Залуусын харилцах',
+          account:     accountLabelForId(t.accountId ?? DEFAULT_ACCOUNT_ID),
           description: t.description || '—',
           amount:      Math.abs(t.debit !== 0 ? t.debit : t.credit),
           type:        t.type ?? (t.debit !== 0 ? 'expense' : 'income'),

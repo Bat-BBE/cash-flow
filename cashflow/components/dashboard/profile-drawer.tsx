@@ -152,9 +152,6 @@ export function ProfileDrawer({
                 <h2 className="text-xl font-bold text-white leading-tight">
                   {defaultUser.name}
                 </h2>
-                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-md border border-emerald-500/20">
-                  ACTIVE
-                </span>
               </div>
               <p className="text-brand-muted text-sm font-medium">
                 @{defaultUser.username}
