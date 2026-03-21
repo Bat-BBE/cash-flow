@@ -8,7 +8,7 @@ import {
   type SuggestionStrategyId,
   type UserProfile,
 } from '@/lib/loan-suggestions';
-import { formatCurrency } from '@/lib/utils';
+import { addMonthsUTC, formatCurrency, parseDateInputUTC } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 /** Mongolian: "1 жил 3 сар" from total months */
@@ -28,21 +28,12 @@ function formatApproxPayoffMonthsMn(months: number | null | undefined): string {
   return formatDurationMn(months);
 }
 
-/** Estimated payoff date in Mongolian (falls back if locale missing) */
-function formatDateMn(date: Date): string {
-  try {
-    return new Intl.DateTimeFormat('mn-MN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(date);
-  } catch {
-    return new Intl.DateTimeFormat('mn', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(date);
-  }
+/** Mongolian calendar line — UTC fields only (matches server + client; no locale-ICU drift). */
+function formatDateMnUTC(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  return `${y} оны ${m} сарын ${d}`;
 }
 
 const STRATEGY_TABS: {
@@ -103,18 +94,10 @@ export function LoanSuggestionsPanel({
   );
 
   const referenceDate = useMemo(() => {
-    if (referenceDateISO) {
-      const d = new Date(referenceDateISO);
-      return Number.isNaN(d.getTime()) ? null : d;
-    }
-    return null;
+    if (!referenceDateISO) return null;
+    const d = parseDateInputUTC(referenceDateISO);
+    return Number.isNaN(d.getTime()) ? null : d;
   }, [referenceDateISO]);
-
-  function addMonths(date: Date, months: number): Date {
-    const d = new Date(date.getTime());
-    d.setMonth(d.getMonth() + months);
-    return d;
-  }
 
   const currentMonthlyPayment = useMemo(
     () => loans.reduce((s, l) => s + l.monthlyPayment, 0),
@@ -360,7 +343,10 @@ export function LoanSuggestionsPanel({
                       )}
                       {referenceDate && row.payoffMonthsSuggested != null && (
                         <span className="text-slate-400">
-                          Тойм огноо: {formatDateMn(addMonths(referenceDate, row.payoffMonthsSuggested))}
+                          Тойм огноо:{' '}
+                          {formatDateMnUTC(
+                            addMonthsUTC(referenceDate, row.payoffMonthsSuggested),
+                          )}
                         </span>
                       )}
                     </div>

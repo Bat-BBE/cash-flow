@@ -8,9 +8,6 @@ import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 import { cn } from '@/lib/utils';
 import { ProfileDrawer } from './profile-drawer';
-import { set } from 'date-fns';
-import { useDashboardData } from '@/contexts/dashboard-data-context';
-
 interface NavItem {
   label: string;
   translationKey: string;
@@ -39,13 +36,6 @@ const mainNavItems: NavItem[] = [
     badge: { count: 5, color: 'brand' }
   },
   { 
-    label: 'Budgets', 
-    translationKey: 'budgets', 
-    icon: 'savings', 
-    href: '/budgets',
-    badge: { count: 2, color: 'amber' }
-  },
-  { 
     label: 'Analytics', 
     translationKey: 'analytics', 
     icon: 'analytics', 
@@ -55,8 +45,14 @@ const mainNavItems: NavItem[] = [
     label: 'loan',
     translationKey: 'loan',
     icon: 'payments',
-    href: '/payments'
-  }
+    href: '/payments',
+  },
+  {
+    label: 'Calendar',
+    translationKey: 'calendar',
+    icon: 'calendar_month',
+    href: '/scheduled',
+  },
 ];
 
 const systemNavItems: NavItem[] = [

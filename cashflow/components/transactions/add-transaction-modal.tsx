@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useDashboardOptional } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
+import { DEFAULT_LANGUAGE } from '@/lib/types';
 
 interface AddTransactionModalProps {
   isOpen: boolean;  // open -> isOpen болгох
@@ -38,7 +39,7 @@ export function AddTransactionModal({
   categories,
 }: AddTransactionModalProps) {
   const dashboard = useDashboardOptional();
-  const language = dashboard?.language ?? 'MN';
+  const language = dashboard?.language ?? DEFAULT_LANGUAGE;
   const tr = useTranslation(language);
 
   const [type, setType] = useState<'expense' | 'income' | 'transfer'>('expense');

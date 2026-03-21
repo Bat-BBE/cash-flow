@@ -1,7 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { DashboardData, Currency, TransactionFilter, User, Language } from '@/lib/types';
+import {
+  DashboardData,
+  Currency,
+  TransactionFilter,
+  User,
+  Language,
+  DEFAULT_LANGUAGE,
+} from '@/lib/types';
 import { mockDashboardData, mockUser } from '@/lib/mock-data';
 
 interface DashboardContextType {
@@ -26,7 +33,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [data] = useState<DashboardData>(mockDashboardData);
   const [user] = useState<User>(mockUser);
   const [currency, setCurrency] = useState<Currency>('MNT');
-  const [language, setLanguage] = useState<Language>('MN');
+  const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
   const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>('all');
   const [selectedMonth, setSelectedMonth] = useState('Oct 2023');
   const [sidebarOpen, setSidebarOpen] = useState(false);
