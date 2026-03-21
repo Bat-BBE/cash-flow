@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { useScheduledData } from '@/hook/use-scheduled-data';
 import { Calendar } from '@/components/scheduled/calendar';
 import { MonthPicker } from '@/components/scheduled/month-picker';
@@ -54,29 +53,21 @@ export default function ScheduledPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex bg-navy-deep">
-        <Sidebar />
-        <main className="flex-1 min-h-screen flex flex-col bg-navy-deep">
-          <Header />
-          <div className="flex-1 flex items-center justify-center px-4">
-            <div className="text-center">
-              <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-              <p className="text-slate-400 font-medium">Loading scheduled data...</p>
-            </div>
+      <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
+        <div className="flex flex-1 items-center justify-center px-4 py-16">
+          <div className="text-center">
+            <div className="mb-4 size-12 animate-spin rounded-full border-4 border-primary/30 border-t-primary"></div>
+            <p className="font-medium text-slate-400">Loading scheduled data...</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </DashboardShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-navy-deep">
-      <Sidebar />
-
-      <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-navy-deep">
-        <Header />
-
-        <div className="flex-1 p-4 sm:p-6 max-w-[1440px] mx-auto w-full space-y-6">
+    <>
+    <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
+        <div className="mx-auto w-full max-w-[1440px] space-y-6 p-4 sm:p-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -171,9 +162,8 @@ export default function ScheduledPage() {
             </Button>
           </div>
         </div>
-      </main>
+    </DashboardShell>
 
-      {/* Modals */}
       <AddItemModal
         open={showAddModal}
         onOpenChange={setShowAddModal}
@@ -186,6 +176,6 @@ export default function ScheduledPage() {
         onOpenChange={setShowDayDetails}
         day={selectedDate}
       />
-    </div>
+    </>
   );
 }

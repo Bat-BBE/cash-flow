@@ -2,6 +2,9 @@
   "name": "cashflow-dashboard",
   "version": "1.0.0",
   "private": true,
+  "browserslist": [
+    "defaults"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
