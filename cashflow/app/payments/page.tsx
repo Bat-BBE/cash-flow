@@ -21,6 +21,7 @@ import {
   rollMonthlyStartDateIfPast,
 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { sumPrincipalRepaidThisCalendarMonth } from '@/lib/loan-principal-this-month';
 
 type LoanStatus = 'active' | 'overdue' | 'paid';
 
@@ -79,10 +80,10 @@ export default function LoansPage() {
     (sum, l) => sum + paydownFloorTotal(l),
     0,
   );
-  const monthlyIncome = userProfile?.monthlyIncome ?? 0;
-  const possiblePayFromSalary = Math.max(
-    0,
-    (userProfile?.monthlyIncome ?? 0) * 0.9 * 0.885 * 0.6,
+  const principalPaidThisMonth = useMemo(
+    () => sumPrincipalRepaidThisCalendarMonth(),
+    // Recompute if loan snapshot identity changes (dev HMR)
+    [loans],
   );
 
   const prioritizedLoans = useMemo(() => {
@@ -161,13 +162,11 @@ export default function LoansPage() {
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="text-sm font-medium text-slate-400">Одоогоор төлж байгаа</p>
                   <p className="text-2xl font-bold tracking-tight text-sky-200 tabular-nums md:text-[1.65rem]">
-                    {formatCurrency(possiblePayFromSalary, currency)}
+                    {formatCurrency(principalPaidThisMonth, currency)}
                   </p>
-                  {monthlyIncome > 0 && (
-                    <p className="pt-1 text-xs text-slate-500 tabular-nums">
-                      Үндсэн цалин {formatCurrency(monthlyIncome, currency)}
-                    </p>
-                  )}
+                  <p className="pt-1 text-xs text-slate-500 leading-snug">
+                    {t('paymentsPrincipalThisMonthHint')}
+                  </p>
                 </div>
               </div>
             </div>
