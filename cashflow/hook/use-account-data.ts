@@ -2,8 +2,33 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ref, get } from 'firebase/database';
-import { db, BASE_PATH } from '@/lib/firebase';
+import { db, BASE_PATH, DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
 import { Account, Transaction, AccountStats, AccountGroup } from '@/components/accounts/types';
+import loanFile from '@/loan.json';
+
+type LoanJsonRow = {
+  id: string;
+  name: string;
+  lender: string;
+  balance: number;
+  icon: string;
+  status: string;
+};
+
+function buildLoanAccounts(currency: string): Account[] {
+  const rows = (loanFile as { loans?: LoanJsonRow[] }).loans ?? [];
+  return rows.map((loan) => ({
+    id: loan.id,
+    name: loan.name,
+    type: 'LOAN' as const,
+    /** Negative = liability (owed). */
+    balance: -Math.abs(loan.balance),
+    currency,
+    icon: loan.icon || 'payments',
+    institution: loan.lender,
+    active: loan.status === 'active',
+  }));
+}
 
 /* ─── useAccountData ─────────────────────────────────────────────── */
 type RawAccount = {
@@ -13,12 +38,62 @@ type RawAccount = {
 };
 
 type RawTx = {
-  date: string; debit: number; credit: number;
-  description: string; category: string; merchant: string | null;
-  type: 'income' | 'expense';
+  date: string;
+  debit: number;
+  credit: number;
+  description: string;
+  category: string;
+  merchant: string | null;
+  type?: 'income' | 'expense';
+  /** When missing, row is treated as belonging to the default checking account. */
+  accountId?: string;
 };
 
-export function useAccountData(initialAccountId?: string) {
+function rawRowsToTransactions(
+  rawTxs: Record<string, RawTx>,
+  defaultAccountId: string,
+): Transaction[] {
+  const rows: Transaction[] = [];
+  for (const [id, t] of Object.entries(rawTxs)) {
+    if (!t.date || t.date === 'Нийт дүн:') continue;
+    const baseDate = t.date.split(' ')[0];
+    const desc = t.description ?? '';
+    const aid = t.accountId ?? defaultAccountId;
+
+    const hasDebit = Math.abs(t.debit) > 0;
+    const hasCredit = Math.abs(t.credit) > 0;
+
+    if (hasDebit) {
+      rows.push({
+        id: `${id}-d`,
+        name: desc || 'Зарлага',
+        date: baseDate,
+        amount: Math.abs(t.debit),
+        type: 'expense',
+        icon: 'shopping_bag',
+        category: (t.category || 'Бусад зарлага').toUpperCase(),
+        description: desc,
+        accountId: aid,
+      });
+    }
+    if (hasCredit) {
+      rows.push({
+        id: `${id}-c`,
+        name: desc || 'Орлого',
+        date: baseDate,
+        amount: Math.abs(t.credit),
+        type: 'income',
+        icon: 'trending_up',
+        category: (t.category || 'Бусад орлого').toUpperCase(),
+        description: desc,
+        accountId: aid,
+      });
+    }
+  }
+  return rows.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export function useAccountData(initialAccountId: string = DEFAULT_ACCOUNT_ID) {
   const [accounts,         setAccounts]         = useState<Account[]>([]);
   const [transactions,     setTransactions]     = useState<Transaction[]>([]);
   const [selectedAccount,  setSelectedAccount]  = useState<Account | null>(null);
@@ -28,11 +103,12 @@ export function useAccountData(initialAccountId?: string) {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      // Accounts
-      const accSnap = await get(ref(db, `${BASE_PATH}/accounts`));
-      if (!accSnap.exists()) { setLoading(false); return; }
+      const loanCurrency = (loanFile as { currency?: string }).currency ?? 'MNT';
+      const loanAccounts = buildLoanAccounts(loanCurrency);
 
-      const rawAccs: Record<string, RawAccount> = accSnap.val();
+      // Accounts (Firebase — may be empty)
+      const accSnap = await get(ref(db, `${BASE_PATH}/accounts`));
+      const rawAccs: Record<string, RawAccount> = accSnap.exists() ? accSnap.val() : {};
       const accList: Account[] = Object.values(rawAccs).map((a) => ({
         id:            a.id,
         name:          a.name,
@@ -45,46 +121,48 @@ export function useAccountData(initialAccountId?: string) {
         active:        a.active,
         color:         a.color,
       }));
-      setAccounts(accList);
 
-      // Stats
-      const totalBalance    = accList.reduce((s, a) => s + a.balance, 0);
-      const prevBalance     = totalBalance * 0.976; // ~2.4% өөрчлөлт
+      /** Drop cash, cards, savings & investment accounts; add loans from loan.json. */
+      const accListFiltered = accList.filter(
+        (a) =>
+          a.type !== 'CASH' &&
+          a.type !== 'CARDS' &&
+          a.type !== 'SAVINGS' &&
+          a.type !== 'INVESTMENT',
+      );
+      const merged = [...accListFiltered, ...loanAccounts];
+      setAccounts(merged);
+
+      // Stats (includes loan liabilities as negative balances)
+      const totalBalance = merged.reduce((s, a) => s + a.balance, 0);
+      const prevBalance = totalBalance * 0.976;
       setStats({
         totalBalance,
-        totalChange:       Math.round(totalBalance - prevBalance),
-        changePercentage:  2.4,
-        monthlyAverage:    Math.round(totalBalance / 12),
-        interestAccrued:   Math.round(accList.filter((a) => ['SAVINGS','BANK'].includes(a.type)).reduce((s, a) => s + a.balance * 0.015 / 12, 0)),
-        activeAccounts:    accList.filter((a) => a.active).length,
+        totalChange: Math.round(totalBalance - prevBalance),
+        changePercentage: 2.4,
+        monthlyAverage: Math.round(merged.length ? totalBalance / 12 : 0),
+        interestAccrued: Math.round(
+          merged
+            .filter((a) => a.type === 'BANK')
+            .reduce((s, a) => s + a.balance * 0.015 / 12, 0),
+        ),
+        activeAccounts: merged.filter((a) => a.active).length,
       });
 
-      // Default selected account
-      const def = accList.find((a) => a.id === initialAccountId)
-        ?? accList.find((a) => a.active)
-        ?? accList[0];
+      const def =
+        merged.find((a) => a.id === initialAccountId) ??
+        merged.find((a) => a.id === DEFAULT_ACCOUNT_ID) ??
+        merged.find((a) => a.active) ??
+        merged[0] ??
+        null;
       setSelectedAccount(def);
 
-      // Transactions (сүүлийн 20)
       const txSnap = await get(ref(db, `${BASE_PATH}/transactions`));
       if (txSnap.exists()) {
         const rawTxs: Record<string, RawTx> = txSnap.val();
-        const txList: Transaction[] = Object.entries(rawTxs)
-          .filter(([, t]) => t.date && t.date !== 'Нийт дүн:')
-          .map(([id, t]) => ({
-            id,
-            name:        t.description || '—',
-            date:        t.date.split(' ')[0],
-            amount:      Math.abs(t.debit !== 0 ? t.debit : t.credit),
-            type:        t.type ?? (t.debit !== 0 ? 'expense' : 'income'),
-            icon:        t.type === 'income' ? 'trending_up' : 'shopping_bag',
-            category:    t.category?.toUpperCase() ?? 'OTHER',
-            description: t.description,
-            accountId:   '5466262686',
-          }))
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          .slice(0, 20);
-        setTransactions(txList);
+        setTransactions(rawRowsToTransactions(rawTxs, DEFAULT_ACCOUNT_ID));
+      } else {
+        setTransactions([]);
       }
     } catch (err) {
       console.error('[useAccountData]', err);
@@ -123,14 +201,11 @@ export function useAccountData(initialAccountId?: string) {
 
   const accountGroups = (): AccountGroup[] => {
     const groups: AccountGroup[] = [
-      { title: 'cash',              type: 'CASH',       icon: 'payments',         accounts: [] },
-      { title: 'bank',              type: 'BANK',       icon: 'account_balance',  accounts: [] },
-      { title: 'cards',             type: 'CARDS',      icon: 'credit_card',      accounts: [] },
-      { title: 'savingsInvestments',type: 'SAVINGS',    icon: 'savings',          accounts: [] },
-      { title: 'investments',       type: 'INVESTMENT', icon: 'trending_up',      accounts: [] },
+      { title: 'bank', type: 'BANK', icon: 'account_balance', accounts: [] },
+      { title: 'loans', type: 'LOAN', icon: 'request_quote', accounts: [] },
     ];
     accounts.forEach((acc) => {
-      const g = groups.find((g) => g.type === acc.type);
+      const g = groups.find((gr) => gr.type === acc.type);
       if (g) g.accounts.push(acc);
     });
     return groups.filter((g) => g.accounts.length > 0);

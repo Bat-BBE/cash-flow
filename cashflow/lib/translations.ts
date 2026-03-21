@@ -19,6 +19,7 @@ export const translations = {
     logoutLabel: 'Гарах',
     wealthManagement: 'Хөрөнгийн удирдлага',
     loan: 'Зээл',
+    calendar: 'Календарь',
 
     // Net Worth Card
     totalNetWorth: 'Нийт цэвэр хөрөнгө',
@@ -128,6 +129,16 @@ export const translations = {
     addTransactionBtn: 'Гүйлгээ нэмэх',
     availableBalance: 'Боломжит үлдэгдэл',
     accountActivity: 'Дансны хөдөлгөөн',
+    accountsSidebarTotalBalance: 'Нийт үлдэгдэл',
+    accountsSidebarChange: 'Өөрчлөлт',
+
+    // Bank account period (7 хоног / 1 сар / …)
+    periodRange1W: '7 хоног',
+    periodRange1M: '1 сар',
+    periodRange3M: '3 сар',
+    periodRange1Y: '1 жил',
+    periodSummaryIncome: 'Орлого',
+    periodSummaryExpense: 'Зарлага',
 
     // Add transaction modal
     newTransactionTitle: 'Шинэ гүйлгээ',
@@ -147,6 +158,23 @@ export const translations = {
     cashAndDeposit: 'Бэлэн / хадгаламж',
     investmentsLegend: 'Хөрөнгө оруулалт',
     otherAssets: 'Бусад',
+
+    // Accounts page / details / activity (extra)
+    loadingAccounts: 'Данснууд ачааллаж байна...',
+    selectAccountToViewDetails: 'Данс сонгож дэлгэрэнгүйг үзнэ үү',
+    financialInstitution: 'Санхүүгийн байгууллага',
+    accountEndingIn: 'Дуусах дугаар',
+    updatedJustNow: 'Сая шинэчлэгдсэн',
+    searchTransactionsPlaceholder: 'Гүйлгээ хайх...',
+    sortNewestFirst: 'Эхэнд нь шинэ',
+    sortOldestFirst: 'Эхэнд нь хуучин',
+    sortHighestAmount: 'Хамгийн их дүн',
+    sortLowestAmount: 'Хамгийн бага дүн',
+    actionsColumn: 'Үйлдэл',
+    transactionsCountLabel: 'гүйлгээ',
+    filterExpenseSingular: 'Зарлага',
+    noLoansFound: 'Зээл олдсонгүй.',
+    languageToggleLabel: 'Хэл',
   },
   EN: {
     // Header
@@ -167,6 +195,7 @@ export const translations = {
     logoutLabel: 'Logout',
     wealthManagement: 'Wealth Management',
     loan: 'Loan',
+    calendar: 'Calendar',
 
     // Net Worth Card
     totalNetWorth: 'Total Net Worth',
@@ -276,6 +305,15 @@ export const translations = {
     addTransactionBtn: 'Add Transaction',
     availableBalance: 'Available Balance',
     accountActivity: 'Account Activity',
+    accountsSidebarTotalBalance: 'Total Balance',
+    accountsSidebarChange: 'Change',
+
+    periodRange1W: '1 week',
+    periodRange1M: '1 month',
+    periodRange3M: '3 months',
+    periodRange1Y: '1 year',
+    periodSummaryIncome: 'Income',
+    periodSummaryExpense: 'Expenses',
 
     // Add transaction modal
     newTransactionTitle: 'New Transaction',
@@ -295,13 +333,35 @@ export const translations = {
     cashAndDeposit: 'Cash / Deposit',
     investmentsLegend: 'Investments',
     otherAssets: 'Other',
+
+    // Accounts page / details / activity (extra)
+    loadingAccounts: 'Loading accounts...',
+    selectAccountToViewDetails: 'Select an account to view details',
+    financialInstitution: 'Financial Institution',
+    accountEndingIn: 'Account ending in',
+    updatedJustNow: 'Updated just now',
+    searchTransactionsPlaceholder: 'Search transactions...',
+    sortNewestFirst: 'Newest first',
+    sortOldestFirst: 'Oldest first',
+    sortHighestAmount: 'Highest amount',
+    sortLowestAmount: 'Lowest amount',
+    actionsColumn: 'Actions',
+    transactionsCountLabel: 'transactions',
+    filterExpenseSingular: 'Expense',
+    noLoansFound: 'No loans found.',
+    languageToggleLabel: 'Language',
   },
 };
 
-export type TranslationKey = keyof typeof translations.EN;
+/** Keys follow the Mongolian (`MN`) catalog — add new strings there first. */
+export type TranslationKey = keyof typeof translations.MN;
 
 export function useTranslation(language: 'MN' | 'EN') {
   return (key: TranslationKey): string => {
-    return translations[language][key] || key;
+    const primary = translations[language][key];
+    if (primary != null && primary !== '') return primary;
+    // Fallback to Mongolian if a key is missing in EN
+    const mn = translations.MN[key];
+    return mn ?? String(key);
   };
 }
