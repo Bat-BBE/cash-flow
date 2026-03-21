@@ -2,7 +2,7 @@
 export interface Account {
   id: string;
   name: string;
-  type: 'CASH' | 'BANK' | 'CARDS' | 'SAVINGS' | 'INVESTMENT';
+  type: 'CASH' | 'BANK' | 'CARDS' | 'SAVINGS' | 'INVESTMENT' | 'LOAN';
   balance: number;
   currency?: string;
   icon: string;

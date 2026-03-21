@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
-import { useScheduledData } from '@/hook/use-scheduled-data';
+import { useScheduledCalendar } from '@/contexts/scheduled-calendar-context';
 import { Calendar } from '@/components/scheduled/calendar';
 import { MonthPicker } from '@/components/scheduled/month-picker';
 import { BillsList } from '@/components/scheduled/bills-list';
@@ -12,7 +12,8 @@ import { LiquidityChart } from '@/components/scheduled/liquidity-chart';
 import { AddItemModal } from '@/components/scheduled/add-item-modal';
 import { DayDetailsModal } from '@/components/scheduled/day-details-modal';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { formatDateForInputLocal } from '@/lib/utils';
+import type { CalendarDay } from '@/components/scheduled/types';
 
 export default function ScheduledPage() {
   const {
@@ -23,33 +24,45 @@ export default function ScheduledPage() {
     summary,
     loading,
     currentDate,
-    viewMode,
-    selectedDate,
     showMonthPicker,
-    overdueCount,
-    weekDays,
-    setViewMode,
-    setSelectedDate,
     setShowMonthPicker,
     changeMonth,
+    goToToday,
+    selectedDate,
+    setSelectedDate,
+    updateBillStatus,
+    deleteBill,
+    loanCurrency,
+    upcomingLoanPayments,
     addBill,
     addIncome,
-    updateBillStatus,
-    deleteBill
-  } = useScheduledData();
+  } = useScheduledCalendar();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalType, setAddModalType] = useState<'bill' | 'income'>('bill');
+  const [prefillDateForAdd, setPrefillDateForAdd] = useState<string | null>(null);
   const [showDayDetails, setShowDayDetails] = useState(false);
 
   const handleAddClick = (type: 'bill' | 'income') => {
+    setPrefillDateForAdd(null);
     setAddModalType(type);
     setShowAddModal(true);
   };
 
-  const handleDayClick = (day: any) => {
+  const handleDayClick = (day: CalendarDay) => {
     setSelectedDate(day);
     setShowDayDetails(true);
+  };
+
+  const openAddFromSelectedDay = (type: 'bill' | 'income') => {
+    if (!selectedDate) return;
+    const iso = formatDateForInputLocal(
+      selectedDate.date instanceof Date ? selectedDate.date : new Date(selectedDate.date),
+    );
+    setPrefillDateForAdd(iso);
+    setAddModalType(type);
+    setShowDayDetails(false);
+    setShowAddModal(true);
   };
 
   if (loading) {
@@ -77,83 +90,50 @@ export default function ScheduledPage() {
         <Header />
 
         <div className="flex-1 p-4 sm:p-6 max-w-[1440px] mx-auto w-full space-y-6">
-          {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-black tracking-tight text-white">
-                Scheduled Bills & Forecast
+                Санхүүгийн календарь
               </h1>
-              <p className="text-slate-400 mt-1">
-                Plan your liquidity and track upcoming commitments.
-              </p>
-            </div>
-
-            <div className="flex bg-navy-dark p-1 rounded-xl border border-white/5 shadow-inner">
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={cn(
-                  "px-5 py-2 rounded-lg text-sm font-bold transition-colors",
-                  viewMode === 'calendar'
-                    ? 'bg-primary/20 text-primary border border-primary/20'
-                    : 'text-slate-500 hover:text-white'
-                )}
-              >
-                Calendar
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={cn(
-                  "px-5 py-2 rounded-lg text-sm font-semibold transition-colors",
-                  viewMode === 'list'
-                    ? 'bg-primary/20 text-primary border border-primary/20'
-                    : 'text-slate-500 hover:text-white'
-                )}
-              >
-                List View
-              </button>
             </div>
           </div>
 
-          {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 relative">
-            {/* Calendar Section */}
             <Calendar
               days={calendarDays}
               currentDate={currentDate}
+              currency={loanCurrency}
               onDayClick={handleDayClick}
               onPrevMonth={() => changeMonth('prev')}
               onNextMonth={() => changeMonth('next')}
               onMonthPickerToggle={() => setShowMonthPicker(!showMonthPicker)}
-              weekDays={weekDays}
+              onGoToToday={goToToday}
             />
 
-            {/* Month Picker Popup */}
             <MonthPicker
               isOpen={showMonthPicker}
               onClose={() => setShowMonthPicker(false)}
               currentDate={currentDate}
-              onSelectMonth={(month, year) => {
-                changeMonth('next'); // Simplified
+              onSelectMonth={() => {
+                changeMonth('next');
               }}
             />
 
-            {/* Bills & Income Lists */}
             <div className="lg:col-span-5 flex flex-col gap-6">
               <BillsList
                 bills={bills}
-                overdueCount={overdueCount}
                 onUpdateStatus={updateBillStatus}
                 onDelete={deleteBill}
+                upcomingLoanPayments={upcomingLoanPayments}
+                currency={loanCurrency}
               />
 
-              <IncomeList incomes={incomes} />
+              <IncomeList incomes={incomes} currency={loanCurrency} />
             </div>
           </div>
 
-          {/* Liquidity Chart */}
           <LiquidityChart projections={projections} summary={summary} />
 
-          {/* Floating Action Button */}
           <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
             <Button
               onClick={() => handleAddClick('income')}
@@ -173,11 +153,14 @@ export default function ScheduledPage() {
         </div>
       </main>
 
-      {/* Modals */}
       <AddItemModal
         open={showAddModal}
-        onOpenChange={setShowAddModal}
+        onOpenChange={(open) => {
+          setShowAddModal(open);
+          if (!open) setPrefillDateForAdd(null);
+        }}
         type={addModalType}
+        initialDate={prefillDateForAdd}
         onAdd={addModalType === 'bill' ? addBill : addIncome}
       />
 
@@ -185,6 +168,9 @@ export default function ScheduledPage() {
         open={showDayDetails}
         onOpenChange={setShowDayDetails}
         day={selectedDate}
+        currency={loanCurrency}
+        onAddBill={() => openAddFromSelectedDay('bill')}
+        onAddIncome={() => openAddFromSelectedDay('income')}
       />
     </div>
   );
