@@ -88,25 +88,10 @@ export function StatsCards() {
       icon: 'trending_down',
       color: 'bg-orange-500/10 text-orange-400',
     },
-    {
-      title: t('statSavings'),
-      value: stats ? formatCurrency(stats.savings.total, 'MNT') : '0 ₮',
-      change: `${stats?.savings.rate ? formatPercentage(stats.savings.rate) : '0%'} ${t('savingsRateSuffix')}`,
-      icon: 'savings',
-      color: 'bg-blue-500/10 text-blue-400',
-    },
-    {
-      title: t('statInvestments'),
-      value: stats ? formatCurrency(stats.investments.total, 'MNT') : '0 ₮',
-      change: `${stats?.investments.returnPercentage ? formatPercentage(stats.investments.returnPercentage) : '0%'} ${t('investmentReturnSuffix')}`,
-      changePercentage: stats?.investments.returnPercentage,
-      icon: 'show_chart',
-      color: 'bg-purple-500/10 text-purple-400',
-    },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 max-w-3xl">
       {cards.map((card, index) => (
         <StatCard key={index} {...card} loading={loading} />
       ))}

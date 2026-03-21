@@ -1,40 +1,56 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { ref, get, set, update, remove } from 'firebase/database';
-import { db, BASE_PATH } from '@/lib/firebase';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   ScheduledBill,
   ScheduledIncome,
+  ScheduledLoanPayment,
   CalendarDay,
   LiquidityProjection,
   MonthlySummary,
+  type LoanMonthSchedule,
+  type UpcomingLoanPaymentRow,
 } from '@/components/scheduled/types';
+import loanFile from '@/loan.json';
+import {
+  getScheduledLoanPaymentsForDay,
+  type LoanForSchedule,
+} from '@/lib/loan-schedule';
+import {
+  loadScheduledFromStorage,
+  saveScheduledToStorage,
+  buildStoragePayload,
+  rawBillToScheduled,
+  rawIncomeToScheduled,
+  type RawProjection,
+} from '@/lib/scheduled-local-storage';
+import {
+  transactionsToScheduledBillsAndIncomes,
+  isDashboardScheduledId,
+  type DashboardRawTx,
+} from '@/lib/dashboard-tx-to-scheduled';
+import { normalizeCalendarDateKey } from '@/lib/utils';
+import { ref, get } from 'firebase/database';
+import { db, BASE_PATH } from '@/lib/firebase';
 
-/* ─── Raw Firebase types ─────────────────────────────────────────── */
-type RawBill = {
-  id: string; name: string; amount: number; date: string;
-  dayOfMonth: number; category: string; status: ScheduledBill['status'];
-  icon: string; color: string; recurring: boolean; recurrenceDay: number;
-};
+const LOANS: LoanForSchedule[] = (loanFile as { loans: LoanForSchedule[] }).loans ?? [];
 
-type RawIncome = {
-  id: string; name: string; amount: number; date: string;
-  dayOfMonth: number; category: string; status: ScheduledIncome['status'];
-  icon: string; color: string; recurring: boolean; recurrenceDay: number;
-};
+/** Хуанлийн одоогийн сараас эхлэн хэдэн сарын зээлийн төлөлтийг жагсаалтаар харуулах */
+const LOAN_SCHEDULE_MONTHS_AHEAD = 6;
 
-type RawProjection = {
-  date: string; dayOfMonth: number;
-  projectedBalance: number; currentBalance: number;
-  scheduledBill: number; scheduledIncome: number;
-};
-
-type RawSummary = {
-  startingBalance: number; endingBalance: number;
-  totalOutgoing: number; totalIncoming: number;
-  netChange: number; overdueCount: number; period: string;
-};
+function buildLoanMonthSchedule(
+  year: number,
+  month: number,
+  loans: LoanForSchedule[],
+): LoanMonthSchedule {
+  const last = new Date(year, month + 1, 0).getDate();
+  const days: { day: number; payments: ScheduledLoanPayment[] }[] = [];
+  for (let d = 1; d <= last; d++) {
+    const payments = getScheduledLoanPaymentsForDay(loans, year, month, d);
+    if (payments.length) days.push({ day: d, payments });
+  }
+  return { year, month, days };
+}
 
 /* ─── Calendar builder ───────────────────────────────────────────── */
 function buildCalendarDays(
@@ -42,40 +58,69 @@ function buildCalendarDays(
   month: number,
   bills: ScheduledBill[],
   incomes: ScheduledIncome[],
+  loans: LoanForSchedule[] = LOANS,
 ): CalendarDay[] {
   const days: CalendarDay[] = [];
-  const firstDay   = new Date(year, month, 1);
-  const lastDay    = new Date(year, month + 1, 0);
-  const today      = new Date();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const today = new Date();
   const prevOffset = firstDay.getDay();
 
-  // Өмнөх сарын сүүлийн өдрүүд
   for (let i = prevOffset - 1; i >= 0; i--) {
     const date = new Date(year, month, -i);
-    days.push({ date, day: date.getDate(), month: date.getMonth(), year: date.getFullYear(), isCurrentMonth: false, isToday: false, bills: [], income: [] });
-  }
-
-  // Энэ сарын өдрүүд
-  for (let i = 1; i <= lastDay.getDate(); i++) {
-    const date    = new Date(year, month, i);
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    const py = date.getFullYear();
+    const pm = date.getMonth();
+    const pd = date.getDate();
     days.push({
       date,
-      day:            i,
-      month,
-      year,
-      isCurrentMonth: true,
-      isToday:        date.toDateString() === today.toDateString(),
-      bills:          bills.filter((b) => b.date === dateStr),
-      income:         incomes.filter((inc) => inc.date === dateStr),
+      day: pd,
+      month: pm,
+      year: py,
+      isCurrentMonth: false,
+      isToday: false,
+      bills: [],
+      income: [],
+      loanPayments: getScheduledLoanPaymentsForDay(loans, py, pm, pd),
     });
   }
 
-  // Дараагийн сарын эхний өдрүүд
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    const date = new Date(year, month, i);
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+    days.push({
+      date,
+      day: i,
+      month,
+      year,
+      isCurrentMonth: true,
+      isToday: date.toDateString() === today.toDateString(),
+      bills: bills.filter(
+        (b) => normalizeCalendarDateKey(b.date) === dateStr,
+      ),
+      income: incomes.filter(
+        (inc) => normalizeCalendarDateKey(inc.date) === dateStr,
+      ),
+      loanPayments: getScheduledLoanPaymentsForDay(loans, year, month, i),
+    });
+  }
+
   const remaining = 42 - days.length;
   for (let i = 1; i <= remaining; i++) {
     const date = new Date(year, month + 1, i);
-    days.push({ date, day: date.getDate(), month: date.getMonth(), year: date.getFullYear(), isCurrentMonth: false, isToday: false, bills: [], income: [] });
+    const py = date.getFullYear();
+    const pm = date.getMonth();
+    const pd = date.getDate();
+    days.push({
+      date,
+      day: pd,
+      month: pm,
+      year: py,
+      isCurrentMonth: false,
+      isToday: false,
+      bills: [],
+      income: [],
+      loanPayments: getScheduledLoanPaymentsForDay(loans, py, pm, pd),
+    });
   }
 
   return days;
@@ -86,122 +131,153 @@ function recalcSummary(
   bills: ScheduledBill[],
   incomes: ScheduledIncome[],
   startingBalance: number,
-  period: string,
 ): MonthlySummary {
   const totalOutgoing = bills.filter((b) => b.status !== 'paid').reduce((s, b) => s + b.amount, 0);
   const totalIncoming = incomes.reduce((s, i) => s + i.amount, 0);
   const endingBalance = startingBalance - totalOutgoing + totalIncoming;
   return {
     startingBalance,
-    endingBalance:  Math.round(endingBalance),
+    endingBalance: Math.round(endingBalance),
     totalOutgoing,
     totalIncoming,
-    netChange:      Math.round(endingBalance - startingBalance),
+    netChange: Math.round(endingBalance - startingBalance),
   };
+}
+
+function periodFromDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function projectionsFromRaw(raw: Record<string, RawProjection>): LiquidityProjection[] {
+  return Object.values(raw ?? {}).map((p) => ({
+    date: p.date,
+    projectedBalance: p.projectedBalance,
+    currentBalance: p.currentBalance,
+    dayOfMonth: p.dayOfMonth,
+  }));
 }
 
 /* ─── Hook ───────────────────────────────────────────────────────── */
 export function useScheduledData() {
-  const [currentDate,      setCurrentDate]      = useState(new Date());
-  const [bills,            setBills]            = useState<ScheduledBill[]>([]);
-  const [incomes,          setIncomes]          = useState<ScheduledIncome[]>([]);
-  const [calendarDays,     setCalendarDays]     = useState<CalendarDay[]>([]);
-  const [projections,      setProjections]      = useState<LiquidityProjection[]>([]);
-  const [summary,          setSummary]          = useState<MonthlySummary | null>(null);
-  const [loading,          setLoading]          = useState(true);
-  const [viewMode,         setViewMode]         = useState<'calendar' | 'list'>('calendar');
-  const [selectedDate,     setSelectedDate]     = useState<CalendarDay | null>(null);
-  const [showMonthPicker,  setShowMonthPicker]  = useState(false);
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [bills, setBills] = useState<ScheduledBill[]>([]);
+  const [incomes, setIncomes] = useState<ScheduledIncome[]>([]);
+  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
+  const [projections, setProjections] = useState<LiquidityProjection[]>([]);
+  const [summary, setSummary] = useState<MonthlySummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [selectedDate, setSelectedDate] = useState<CalendarDay | null>(null);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  /** Same Firebase path as dashboard (`DashboardDataProvider`): account transactions */
+  const [dashboardTxs, setDashboardTxs] = useState<DashboardRawTx[]>([]);
+  /** Avoid writing empty state to localStorage before the first load finishes (Strict Mode / race). */
+  const initialHydrationDone = useRef(false);
 
-  /* ── Fetch from Firebase ── */
-  const fetchData = useCallback(async () => {
+  const { bills: dashBills, incomes: dashIncomes } = useMemo(
+    () => transactionsToScheduledBillsAndIncomes(dashboardTxs),
+    [dashboardTxs],
+  );
+
+  const mergedBills = useMemo(() => [...dashBills, ...bills], [dashBills, bills]);
+  const mergedIncomes = useMemo(() => [...dashIncomes, ...incomes], [dashIncomes, incomes]);
+
+  /** Same source as dashboard home: `users/.../transactions` */
+  const fetchDashboardTransactions = useCallback(async () => {
+    try {
+      const snap = await get(ref(db, `${BASE_PATH}/transactions`));
+      if (!snap.exists()) {
+        setDashboardTxs([]);
+        return;
+      }
+      const txs = Object.values(snap.val() as Record<string, DashboardRawTx>).filter(
+        (t) => t.date && t.date !== 'Нийт дүн:',
+      );
+      setDashboardTxs(txs);
+    } catch (e) {
+      console.error('[useScheduledData] Firebase transactions (dashboard)', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchDashboardTransactions();
+  }, [fetchDashboardTransactions]);
+
+  const fetchData = useCallback(() => {
     setLoading(true);
     try {
-      const snap = await get(ref(db, `${BASE_PATH}/scheduled`));
-      if (!snap.exists()) { setLoading(false); return; }
+      const raw = loadScheduledFromStorage();
+      const now = new Date();
+      const defaultPeriod = periodFromDate(now);
 
-      const raw = snap.val() as {
-        bills:       Record<string, RawBill>;
-        incomes:     Record<string, RawIncome>;
-        projections: Record<string, RawProjection>;
-        summary:     RawSummary;
-      };
+      if (!raw) {
+        setBills([]);
+        setIncomes([]);
+        setProjections([]);
+        setSummary(null);
+        return;
+      }
 
-      // Одоогийн сарын огноог тохируулна
-      const period = raw.summary?.period ?? `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-      const [py, pm] = period.split('-').map(Number);
+      const period = raw.summary?.period ?? defaultPeriod;
 
-      // Bills — period-т тохирох огноогоор шинэчлэнэ
-      const billList: ScheduledBill[] = Object.values(raw.bills ?? {}).map((b) => ({
-        id:       b.id,
-        name:     b.name,
-        amount:   b.amount,
-        date:     `${py}-${String(pm).padStart(2, '0')}-${String(b.recurrenceDay).padStart(2, '0')}`,
-        category: b.category,
-        status:   b.status,
-        icon:     b.icon,
-        color:    b.color,
-      }));
+      const billList: ScheduledBill[] = Object.values(raw.bills ?? {}).map((b) =>
+        rawBillToScheduled(b, period),
+      );
+      const incomeList: ScheduledIncome[] = Object.values(raw.incomes ?? {}).map((i) =>
+        rawIncomeToScheduled(i, period),
+      );
+      const projList = projectionsFromRaw(raw.projections ?? {});
 
-      // Incomes
-      const incomeList: ScheduledIncome[] = Object.values(raw.incomes ?? {}).map((i) => ({
-        id:       i.id,
-        name:     i.name,
-        amount:   i.amount,
-        date:     `${py}-${String(pm).padStart(2, '0')}-${String(i.recurrenceDay).padStart(2, '0')}`,
-        category: i.category,
-        status:   i.status,
-        icon:     i.icon,
-        color:    i.color,
-      }));
-
-      // Projections
-      const projList: LiquidityProjection[] = Object.values(raw.projections ?? {}).map((p) => ({
-        date:             p.date,
-        projectedBalance: p.projectedBalance,
-        currentBalance:   p.currentBalance,
-        dayOfMonth:       p.dayOfMonth,
-      }));
-
-      // Summary
-      const sum: MonthlySummary = {
-        startingBalance: raw.summary.startingBalance,
-        endingBalance:   raw.summary.endingBalance,
-        totalOutgoing:   raw.summary.totalOutgoing,
-        totalIncoming:   raw.summary.totalIncoming,
-        netChange:       raw.summary.netChange,
-      };
-
-      const calDays = buildCalendarDays(py, pm - 1, billList, incomeList);
+      let sum: MonthlySummary | null = null;
+      if (raw.summary) {
+        sum = {
+          startingBalance: raw.summary.startingBalance,
+          endingBalance: raw.summary.endingBalance,
+          totalOutgoing: raw.summary.totalOutgoing,
+          totalIncoming: raw.summary.totalIncoming,
+          netChange: raw.summary.netChange,
+        };
+      } else {
+        sum = recalcSummary(billList, incomeList, 0);
+      }
 
       setBills(billList);
       setIncomes(incomeList);
       setProjections(projList);
       setSummary(sum);
-      setCalendarDays(calDays);
-      setCurrentDate(new Date(py, pm - 1, 1));
     } catch (err) {
       console.error('[useScheduledData]', err);
     } finally {
+      initialHydrationDone.current = true;
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  // Сар солигдоход calendar-ийг дахин тооцно
   useEffect(() => {
-    if (bills.length > 0 || incomes.length > 0) {
-      setCalendarDays(buildCalendarDays(
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    setCalendarDays(
+      buildCalendarDays(
         currentDate.getFullYear(),
         currentDate.getMonth(),
-        bills,
-        incomes,
-      ));
-    }
-  }, [currentDate, bills, incomes]);
+        mergedBills,
+        mergedIncomes,
+        LOANS,
+      ),
+    );
+  }, [currentDate, mergedBills, mergedIncomes]);
 
-  /* ── Сар солих ── */
+  /* Persist to localStorage whenever scheduled data changes (after initial load). */
+  useEffect(() => {
+    if (loading || !initialHydrationDone.current) return;
+    const period = periodFromDate(currentDate);
+    const overdueCount = bills.filter((b) => b.status === 'overdue').length;
+    const payload = buildStoragePayload(bills, incomes, projections, summary, overdueCount, period);
+    saveScheduledToStorage(payload);
+  }, [bills, incomes, projections, summary, currentDate, loading]);
+
   const changeMonth = (direction: 'prev' | 'next') => {
     setCurrentDate((prev) => {
       const d = new Date(prev);
@@ -210,47 +286,94 @@ export function useScheduledData() {
     });
   };
 
-  /* ── Bill нэмэх ── */
-  const addBill = async (bill: Omit<ScheduledBill, 'id'>) => {
-    const newBill: ScheduledBill = { ...bill, id: `bill_${Date.now()}` };
-    const day = parseInt(bill.date.split('-')[2]);
-    await set(ref(db, `${BASE_PATH}/scheduled/bills/${newBill.id}`), {
-      ...newBill, recurring: true, recurrenceDay: day,
+  const goToToday = useCallback(() => {
+    const t = new Date();
+    setCurrentDate(new Date(t.getFullYear(), t.getMonth(), 1));
+  }, []);
+
+  const addBill = useCallback((bill: Omit<ScheduledBill, 'id'>) => {
+    const newBill: ScheduledBill = {
+      ...bill,
+      id: `bill_${Date.now()}`,
+      date: normalizeCalendarDateKey(bill.date) || bill.date,
+    };
+    setBills((prev) => {
+      const updated = [...prev, newBill];
+      setSummary((s) => recalcSummary(updated, incomes, s?.startingBalance ?? 0));
+      return updated;
     });
-    const updated = [...bills, newBill];
-    setBills(updated);
-    setSummary(recalcSummary(updated, incomes, summary?.startingBalance ?? 0, ''));
-  };
+  }, [incomes]);
 
-  /* ── Income нэмэх ── */
-  const addIncome = async (income: Omit<ScheduledIncome, 'id'>) => {
-    const newIncome: ScheduledIncome = { ...income, id: `inc_${Date.now()}` };
-    const day = parseInt(income.date.split('-')[2]);
-    await set(ref(db, `${BASE_PATH}/scheduled/incomes/${newIncome.id}`), {
-      ...newIncome, recurring: true, recurrenceDay: day,
+  const addIncome = useCallback((income: Omit<ScheduledIncome, 'id'>) => {
+    const newIncome: ScheduledIncome = {
+      ...income,
+      id: `inc_${Date.now()}`,
+      date: normalizeCalendarDateKey(income.date) || income.date,
+    };
+    setIncomes((prev) => {
+      const updated = [...prev, newIncome];
+      setSummary((s) => recalcSummary(bills, updated, s?.startingBalance ?? 0));
+      return updated;
     });
-    const updated = [...incomes, newIncome];
-    setIncomes(updated);
-    setSummary(recalcSummary(bills, updated, summary?.startingBalance ?? 0, ''));
-  };
+  }, [bills]);
 
-  /* ── Bill status шинэчлэх ── */
-  const updateBillStatus = async (id: string, status: ScheduledBill['status']) => {
-    await update(ref(db, `${BASE_PATH}/scheduled/bills/${id}`), { status });
-    setBills((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
-  };
+  const updateBillStatus = useCallback((id: string, status: ScheduledBill['status']) => {
+    if (isDashboardScheduledId(id)) return;
+    setBills((prev) => {
+      const updated = prev.map((b) => (b.id === id ? { ...b, status } : b));
+      setSummary((s) => recalcSummary(updated, incomes, s?.startingBalance ?? 0));
+      return updated;
+    });
+  }, [incomes]);
 
-  /* ── Bill устгах ── */
-  const deleteBill = async (id: string) => {
-    await remove(ref(db, `${BASE_PATH}/scheduled/bills/${id}`));
-    const updated = bills.filter((b) => b.id !== id);
-    setBills(updated);
-    setSummary(recalcSummary(updated, incomes, summary?.startingBalance ?? 0, ''));
-  };
+  const deleteBill = useCallback((id: string) => {
+    if (isDashboardScheduledId(id)) return;
+    setBills((prev) => {
+      const updated = prev.filter((b) => b.id !== id);
+      setSummary((s) => recalcSummary(updated, incomes, s?.startingBalance ?? 0));
+      return updated;
+    });
+  }, [incomes]);
+
+  const loanCurrency = (loanFile as { currency?: string }).currency ?? 'MNT';
+
+  const loanPaymentMonthsAhead = useMemo(() => {
+    const blocks: LoanMonthSchedule[] = [];
+    const startY = currentDate.getFullYear();
+    const startM = currentDate.getMonth();
+    for (let i = 0; i < LOAN_SCHEDULE_MONTHS_AHEAD; i++) {
+      const cursor = new Date(startY, startM + i, 1);
+      blocks.push(buildLoanMonthSchedule(cursor.getFullYear(), cursor.getMonth(), LOANS));
+    }
+    return blocks;
+  }, [currentDate]);
+
+  const upcomingLoanPayments = useMemo(() => {
+    const rows: UpcomingLoanPaymentRow[] = [];
+    for (const block of loanPaymentMonthsAhead) {
+      for (const { day, payments } of block.days) {
+        for (const p of payments) {
+          const dueDate = `${block.year}-${String(block.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          rows.push({
+            ...p,
+            dueDate,
+            listKey: `${p.id}-${dueDate}`,
+          });
+        }
+      }
+    }
+    rows.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+    return rows;
+  }, [loanPaymentMonthsAhead]);
+
+  const refreshAll = useCallback(() => {
+    fetchData();
+    void fetchDashboardTransactions();
+  }, [fetchData, fetchDashboardTransactions]);
 
   return {
-    bills,
-    incomes,
+    bills: mergedBills,
+    incomes: mergedIncomes,
     calendarDays,
     projections,
     summary,
@@ -259,16 +382,18 @@ export function useScheduledData() {
     viewMode,
     selectedDate,
     showMonthPicker,
-    overdueCount:   bills.filter((b) => b.status === 'overdue').length,
-    weekDays:       ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    overdueCount: bills.filter((b) => b.status === 'overdue').length,
     setViewMode,
     setSelectedDate,
     setShowMonthPicker,
     changeMonth,
+    goToToday,
     addBill,
     addIncome,
     updateBillStatus,
     deleteBill,
-    refreshData: fetchData,
+    refreshData: refreshAll,
+    loanCurrency,
+    upcomingLoanPayments,
   };
 }

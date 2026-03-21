@@ -1,16 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useDashboard } from '@/components/providers/dashboard-provider';
-import { Currency } from '@/lib/types';
 import { useTranslation } from '@/lib/translations';
-import { cn } from '@/lib/utils';
 import { AddTransactionModal } from '@/components/transactions/add-transaction-modal';
-import { format } from 'date-fns';
-import { useDashboardData } from '@/contexts/dashboard-data-context';
 
 interface HeaderProps {
   onAddTransaction?: (transaction: any) => void;
@@ -19,25 +13,15 @@ interface HeaderProps {
 }
 
 export function Header({ onAddTransaction, accounts = [], categories = [] }: HeaderProps) {
-  const router = useRouter();
-  const { currency, setCurrency, selectedMonth, language, setLanguage, setSidebarOpen } = useDashboard();
+  const { language, setLanguage, setSidebarOpen } = useDashboard();
   const t = useTranslation(language);
-  const [searchQuery, setSearchQuery] = React.useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [date] = useState<Date>(new Date());
-   const [showSearchBar, setShowSearchBar] = useState(false);
-
-  const currencies: Currency[] = ['MNT', 'USD', 'EUR'];
 
   const handleAddTransaction = (transaction: any) => {
     if (onAddTransaction) {
       onAddTransaction(transaction);
     }
     setShowAddModal(false);
-  };
-
-  const handleCalendarClick = () => {
-    router.push('/scheduled');
   };
 
   return (
@@ -66,36 +50,33 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-2 md:gap-4 flex-shrink-0">
-          <div className="flex items-center gap-1 bg-brand-card/80 p-1 rounded-2xl border border-brand-border/30">
-            {(['MN', 'EN'] as const).map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setLanguage(lang)}
-                className={cn(
-                  'px-2 md:px-3 py-1.5 text-[11px] font-bold rounded-xl transition-all min-w-[44px]',
-                  language === lang
-                    ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20'
-                    : 'text-brand-muted hover:text-white hover:bg-brand-card'
-                )}
-              >
-                {lang}
-              </button>
-            ))}
-          </div>
-
-          <Button
-            onClick={handleCalendarClick}
-            variant="outline"
-            className="hidden sm:flex items-center gap-2 px-3 py-2.5 bg-brand-card/80 border-brand-border/30 rounded-2xl text-brand-text text-xs md:text-sm hover:bg-brand-card hover:border-brand-primary/50 font-medium transition-all group"
+          <div
+            className="hidden sm:flex items-center gap-1 rounded-xl border border-white/10 bg-brand-card/40 p-0.5"
+            title={t('languageToggleLabel')}
           >
-            <span className="material-symbols-outlined text-lg text-brand-primary group-hover:scale-110 transition-transform">
-              calendar_month
-            </span>
-            <span className="hidden md:inline">
-              {format(date, 'MMM dd, yyyy')}
-            </span>
-          </Button>
-
+            <button
+              type="button"
+              onClick={() => setLanguage('MN')}
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors ${
+                language === 'MN'
+                  ? 'bg-brand-primary text-white'
+                  : 'text-brand-muted hover:text-white'
+              }`}
+            >
+              MN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage('EN')}
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors ${
+                language === 'EN'
+                  ? 'bg-brand-primary text-white'
+                  : 'text-brand-muted hover:text-white'
+              }`}
+            >
+              EN
+            </button>
+          </div>
           <Button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-1 px-3 md:px-4 py-2.5 bg-gradient-to-r from-brand-primary to-brand-primary/80 text-white font-bold rounded-2xl text-xs md:text-sm hover:brightness-110 transition-all shadow-lg shadow-brand-primary/25"

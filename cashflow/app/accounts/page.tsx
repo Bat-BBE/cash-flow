@@ -8,6 +8,7 @@ import { Header } from '@/components/dashboard/header';
 import { AccountsSidebar } from '@/components/accounts/accounts-sidebar';
 import { AccountDetails } from '@/components/accounts/account-details';
 import { useAccountData } from '@/hook/use-account-data';
+import { DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
 
 export default function AccountsPage() {
   const { language } = useDashboard();
@@ -15,12 +16,13 @@ export default function AccountsPage() {
   
   const { 
     accounts, 
+    transactions,
     selectedAccount, 
     stats, 
     loading, 
     selectAccount, 
     accountGroups 
-  } = useAccountData('2');
+  } = useAccountData(DEFAULT_ACCOUNT_ID);
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('1M');
@@ -42,7 +44,7 @@ export default function AccountsPage() {
           <div className="flex-1 flex items-center justify-center px-4">
             <div className="text-center">
               <div className="size-12 border-4 border-brand-primary/30 border-t-brand-primary rounded-full animate-spin mb-4"></div>
-              <p className="text-brand-muted font-medium">Loading accounts...</p>
+              <p className="text-brand-muted font-medium">{t('loadingAccounts')}</p>
             </div>
           </div>
         </main>
@@ -72,6 +74,8 @@ export default function AccountsPage() {
           <div className="flex-1 min-w-0">
             <AccountDetails
               account={selectedAccount}
+              transactions={transactions}
+              transactionsLoading={loading}
               onTransfer={handleTransfer}
               onAddTransaction={handleAddTransaction}
               onPeriodChange={setSelectedPeriod}
