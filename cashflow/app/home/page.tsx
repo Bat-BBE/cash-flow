@@ -23,12 +23,12 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8 items-start">
               <div className="xl:col-span-2 space-y-4 md:space-y-6">
                 <TransactionsTable />
+                <SpendingChart />
               </div>
 
               <aside className="space-y-4 md:space-y-8">
-                <SpendingChart />
+                <TrendChart />s
                 <SmartInsight />
-                <TrendChart />
               </aside>
             </div>
           </div>

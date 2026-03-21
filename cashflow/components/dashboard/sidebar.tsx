@@ -446,12 +446,10 @@ export function Sidebar() {
           membershipType: user.membershipType,
           joinedDate:     user.joinedDate,
           score:          user.score,
-          savings:        user.savings,
           goals:          user.goals,
           wealthTier:     user.wealthTier,
           bio:            user.bio,
         }}
-        sidebarCollapsed={isMobile ? !sidebarOpen : isCollapsed}
       />
     </div>
   );

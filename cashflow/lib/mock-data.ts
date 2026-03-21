@@ -4,17 +4,17 @@ import { DashboardData, User } from './types';
 
 export const mockUser: User = {
   id: '1',
-  name: 'Tserenchimed',
+  name: 'Цэрэнчимэд',
   username: 'tserenchim17',
   email: 'tserenchimed@example.com',
   avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAa_NkUFRqXrA0LDQpNYPirATqy8sASNNeUgcMjsCLguANo487bhy2XHGYfjf1KtglTlgHkk6KTyDFRzP0iQELNjUoel_KDNoLkMHMbHlsU0BplmQMGXyGczxXkqVpooRexNzHx-LbHCfWgvMS3IlNX_h7J39AohTbAfaM--pa95aFvwNMykNSYMCwgRXXkGC1R8rXGEsWkcq6jVfIOB4Ci42D8iWyl5mNMImoekfXx8jyUsb0r6VUFrsujeLBLUziJFXSeeZENsgg',
-  membershipType: 'PREMIUM',
-  joinedDate: 'October 2022',
+  membershipType: 'ПРЕМИУМ',
+  joinedDate: '2022 оны 10-р сар',
   score: 782,
   savings: 14200,
   goals: { completed: 4, total: 6 },
-  wealthTier: 'Tier 2',
-  bio: 'Strategic investor focused on long-term growth and portfolio diversification. Building generational wealth through automation.',
+  wealthTier: '2-р түвшин',
+  bio: 'Урт хугацааны өсөлт болон портфолио төрөлжүүлэлтэд чиглэсэн стратегийн хөрөнгө оруулагч. Автоматжуулалтаар үеийн баялаг бүтээж байна.',
 };
 
 export const mockDashboardData: DashboardData = {

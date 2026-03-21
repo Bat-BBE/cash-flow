@@ -124,23 +124,6 @@ export default function ScheduledPage() {
           </div>
 
           <LiquidityChart projections={projections} summary={summary} />
-
-          <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
-            <Button
-              onClick={() => handleAddClick('income')}
-              className="rounded-full bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90"
-            >
-              <span className="material-symbols-outlined mr-2">add</span>
-              Орлого нэмэх
-            </Button>
-            <Button
-              onClick={() => handleAddClick('bill')}
-              className="rounded-full bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
-            >
-              <span className="material-symbols-outlined mr-2">add</span>
-              Төлбөр нэмэх
-            </Button>
-          </div>
         </div>
       </DashboardShell>
 

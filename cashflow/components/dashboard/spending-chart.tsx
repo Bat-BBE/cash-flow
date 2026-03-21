@@ -17,7 +17,6 @@ import { useDashboardData }                      from '@/contexts/dashboard-data
 import { useDashboard }                          from '@/components/providers/dashboard-provider';
 import { useTranslation }                        from '@/lib/translations';
 
-/* ─── Compact formatter ──────────────────────────────────────────── */
 function fmtCompact(v: number): string {
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}сая₮`;
   if (v >= 1_000)     return `${Math.round(v / 1_000)}мян₮`;

@@ -82,7 +82,7 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button
+          {/* <button
             type="button"
             onClick={() => router.push('/scheduled')}
             className="flex items-center gap-1.5 h-9 px-2.5 sm:px-3
@@ -97,7 +97,7 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
             <span className="hidden md:inline tabular-nums text-[11px]">
               {format(date, 'MMM d')}
             </span>
-          </button>
+          </button> */}
 
           <button
             type="button"
