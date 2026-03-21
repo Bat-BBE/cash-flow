@@ -21,6 +21,31 @@ export interface ScheduledIncome {
   color?: string; // ✅ color нэмсэн
 }
 
+/** Зээлийн сарын төлөлт — loan.json-оос (хуанлийн өдөрт харуулна) */
+export interface ScheduledLoanPayment {
+  id: string;
+  name: string;
+  lender: string;
+  amount: number;
+  icon: string;
+  color?: string;
+  status: 'active' | 'overdue' | 'paid';
+}
+
+/** Нэг сарын зээлийн төлөх өдрүүд */
+export interface LoanMonthSchedule {
+  year: number;
+  /** 0–11 */
+  month: number;
+  days: { day: number; payments: ScheduledLoanPayment[] }[];
+}
+
+/** Upcoming bills жагсаалтад нэг мөр болгон (огноо + loan.json) */
+export interface UpcomingLoanPaymentRow extends ScheduledLoanPayment {
+  dueDate: string;
+  listKey: string;
+}
+
 export interface CalendarDay {
   date: Date;
   day: number;
@@ -31,6 +56,7 @@ export interface CalendarDay {
   isSelected?: boolean;
   bills: ScheduledBill[];
   income: ScheduledIncome[];
+  loanPayments: ScheduledLoanPayment[];
 }
 
 export interface LiquidityProjection {
