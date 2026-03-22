@@ -22,6 +22,8 @@ import {
 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { sumPrincipalRepaidThisCalendarMonth } from '@/lib/loan-principal-this-month';
+import { LoanPaydownStyleCard } from '@/components/payments/loan-paydown-style-card';
+import { NewLoanFeasibilityCard } from '@/components/payments/new-loan-feasibility-card';
 
 type LoanStatus = 'active' | 'overdue' | 'paid';
 
@@ -113,7 +115,7 @@ export default function LoansPage() {
       <main className="flex-1 h-screen overflow-y-auto bg-brand-bg custom-scrollbar flex flex-col">
         <Header />
 
-        <div className="flex-1 p-4 md:p-8 max-w-[1400px] mx-auto w-full space-y-8 mt-10">
+        <div className="flex-1 p-4 md:p-8 max-w-[1400px] mx-auto w-full space-y-8 mt-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-black tracking-tight text-white">Нийт зээл</h1>
@@ -178,6 +180,13 @@ export default function LoansPage() {
             userProfile={userProfile}
             suggestionConfig={suggestionConfig}
             referenceDateISO={loanFile.generatedAt}
+          />
+
+          <NewLoanFeasibilityCard
+            loans={loansForSuggestions}
+            currency={currency}
+            userProfile={userProfile}
+            language={language}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
@@ -270,6 +279,8 @@ export default function LoansPage() {
               )}
             </section>
           </div>
+
+          <LoanPaydownStyleCard />
         </div>
       </main>
     </div>

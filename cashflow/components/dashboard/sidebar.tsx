@@ -248,20 +248,19 @@ export function Sidebar() {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
       <aside
         onMouseLeave={() => { if (!isMobile) setShowUserMenu(false); }}
         className={cn(
-          'fixed left-0 top-16 z-40 flex min-h-0 flex-col border-r border-white/[0.06]',
+          'fixed top-16 z-40 flex min-h-0 flex-col',
           'bg-[#0e0c1e]/80 backdrop-blur-2xl',
           'h-[calc(100dvh-4rem)]',
           'transition-[width,transform] duration-300 ease-[cubic-bezier(.4,0,.2,1)]',
           sidebarWidth,
-          isMobile
-            ? effectiveOpen
-              ? 'translate-x-0'
-              : '-translate-x-full'
-            : 'translate-x-0',
+          // ── Desktop: зүүн тал ──
+          !isMobile && 'left-0 border-r border-white/[0.06] translate-x-0',
+          // ── Mobile: баруун тал ──
+          isMobile && 'right-0 border-l border-white/[0.06]',
+          isMobile && (effectiveOpen ? 'translate-x-0' : 'translate-x-full'),
         )}
       >
         {/* Subtle inner noise / gradient */}
