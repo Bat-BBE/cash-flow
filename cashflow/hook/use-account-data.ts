@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ref, get } from 'firebase/database';
-import { db, BASE_PATH, DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
+import { getFirebaseDb, BASE_PATH, DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
 import { Account, Transaction, AccountStats, AccountGroup } from '@/components/accounts/types';
 import loanFile from '@/loan.json';
 
@@ -107,7 +107,7 @@ export function useAccountData(initialAccountId: string = DEFAULT_ACCOUNT_ID) {
       const loanAccounts = buildLoanAccounts(loanCurrency);
 
       // Accounts (Firebase — may be empty)
-      const accSnap = await get(ref(db, `${BASE_PATH}/accounts`));
+      const accSnap = await get(ref(getFirebaseDb(), `${BASE_PATH}/accounts`));
       const rawAccs: Record<string, RawAccount> = accSnap.exists() ? accSnap.val() : {};
       const accList: Account[] = Object.values(rawAccs).map((a) => ({
         id:            a.id,
@@ -157,7 +157,7 @@ export function useAccountData(initialAccountId: string = DEFAULT_ACCOUNT_ID) {
         null;
       setSelectedAccount(def);
 
-      const txSnap = await get(ref(db, `${BASE_PATH}/transactions`));
+      const txSnap = await get(ref(getFirebaseDb(), `${BASE_PATH}/transactions`));
       if (txSnap.exists()) {
         const rawTxs: Record<string, RawTx> = txSnap.val();
         setTransactions(rawRowsToTransactions(rawTxs, DEFAULT_ACCOUNT_ID));

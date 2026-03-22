@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ref, get, set, remove, update } from 'firebase/database';
-import { db, BASE_PATH } from '@/lib/firebase';
+import { getFirebaseDb, BASE_PATH } from '@/lib/firebase';
 import { Budget, BudgetSummary, TransferData } from '@/components/budgets/types';
 
 /* ─── Raw Firebase budget type ───────────────────────────────────── */
@@ -57,7 +57,7 @@ export function useBudgetData() {
   const fetchBudgets = useCallback(async () => {
     setLoading(true);
     try {
-      const snap = await get(ref(db, `${BASE_PATH}/budgets`));
+      const snap = await get(ref(getFirebaseDb(), `${BASE_PATH}/budgets`));
       if (!snap.exists()) { setLoading(false); return; }
 
       const raw: Record<string, RawBudget> = snap.val();
@@ -112,8 +112,8 @@ export function useBudgetData() {
     // Firebase-д шинэчлэнэ
     const fromB = updated.find((b) => b.id === data.fromBudgetId);
     const toB   = updated.find((b) => b.id === data.toBudgetId);
-    if (fromB) await update(ref(db, `${BASE_PATH}/budgets/budget_${fromB.category}`), { spent: fromB.spent, remaining: fromB.remaining, status: fromB.status });
-    if (toB)   await update(ref(db, `${BASE_PATH}/budgets/budget_${toB.category}`),   { spent: toB.spent,   remaining: toB.remaining,   status: toB.status   });
+    if (fromB) await update(ref(getFirebaseDb(), `${BASE_PATH}/budgets/budget_${fromB.category}`), { spent: fromB.spent, remaining: fromB.remaining, status: fromB.status });
+    if (toB)   await update(ref(getFirebaseDb(), `${BASE_PATH}/budgets/budget_${toB.category}`),   { spent: toB.spent,   remaining: toB.remaining,   status: toB.status   });
   };
 
   /* ── Add budget ── */
@@ -124,14 +124,14 @@ export function useBudgetData() {
       remaining: budget.limit - budget.spent,
       status:    calcStatus(budget.spent, budget.limit),
     };
-    await set(ref(db, `${BASE_PATH}/budgets/${newBudget.id}`), { ...newBudget, period: selectedPeriod });
+    await set(ref(getFirebaseDb(), `${BASE_PATH}/budgets/${newBudget.id}`), { ...newBudget, period: selectedPeriod });
     setBudgets((prev) => [...prev, newBudget]);
     setSummary(calcSummary([...budgets, newBudget]));
   };
 
   /* ── Delete budget ── */
   const deleteBudget = async (id: string) => {
-    await remove(ref(db, `${BASE_PATH}/budgets/${id}`));
+    await remove(ref(getFirebaseDb(), `${BASE_PATH}/budgets/${id}`));
     const updated = budgets.filter((b) => b.id !== id);
     setBudgets(updated);
     setSummary(calcSummary(updated));
@@ -147,7 +147,7 @@ export function useBudgetData() {
     setBudgets(updated);
     setSummary(calcSummary(updated));
     const changed = updated.find((b) => b.id === id);
-    if (changed) await update(ref(db, `${BASE_PATH}/budgets/${id}`), changed);
+    if (changed) await update(ref(getFirebaseDb(), `${BASE_PATH}/budgets/${id}`), changed);
   };
 
   return {

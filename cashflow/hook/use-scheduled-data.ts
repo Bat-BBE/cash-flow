@@ -31,7 +31,7 @@ import {
 } from '@/lib/dashboard-tx-to-scheduled';
 import { normalizeCalendarDateKey } from '@/lib/utils';
 import { ref, get } from 'firebase/database';
-import { db, BASE_PATH } from '@/lib/firebase';
+import { getFirebaseDb, BASE_PATH } from '@/lib/firebase';
 
 const LOANS: LoanForSchedule[] = (loanFile as { loans: LoanForSchedule[] }).loans ?? [];
 
@@ -199,7 +199,7 @@ export function useScheduledData() {
   /** Same source as dashboard home: `users/.../transactions` */
   const fetchDashboardTransactions = useCallback(async () => {
     try {
-      const snap = await get(ref(db, `${BASE_PATH}/transactions`));
+      const snap = await get(ref(getFirebaseDb(), `${BASE_PATH}/transactions`));
       if (!snap.exists()) {
         setDashboardTxs([]);
         return;

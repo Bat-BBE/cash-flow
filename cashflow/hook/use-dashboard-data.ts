@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ref, get } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { getFirebaseDb } from '@/lib/firebase';
 import {
   NetWorth, Stats, Transaction,
   Budget, SpendingData, Insight, TrendData,
@@ -386,7 +386,7 @@ export function useDashboardData(
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const snap = await get(ref(db, `users/${userId}/transactions`));
+      const snap = await get(ref(getFirebaseDb(), `users/${userId}/transactions`));
       if (!snap.exists()) return;
       const txs: RawTx[] = Object.values(snap.val() as Record<string, RawTx>)
         .filter((t) => t.date && t.date !== 'Нийт дүн:');

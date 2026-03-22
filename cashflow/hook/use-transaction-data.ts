@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ref, get } from 'firebase/database';
-import { db, BASE_PATH, DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
+import { getFirebaseDb, BASE_PATH, DEFAULT_ACCOUNT_ID } from '@/lib/firebase';
 import { accountLabelForId } from '@/lib/account-labels';
 import { Transaction, TransactionFilter } from '@/components/transactions/types';
 
@@ -46,7 +46,7 @@ export function useTransactionData() {
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
-      const snap = await get(ref(db, `${BASE_PATH}/transactions`));
+      const snap = await get(ref(getFirebaseDb(), `${BASE_PATH}/transactions`));
       if (!snap.exists()) { setLoading(false); return; }
 
       const raw: Record<string, RawTx> = snap.val();
