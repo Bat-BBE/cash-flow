@@ -65,6 +65,10 @@ function buildCalendarDays(
   const lastDay = new Date(year, month + 1, 0);
   const today = new Date();
   const prevOffset = firstDay.getDay();
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 
   for (let i = prevOffset - 1; i >= 0; i--) {
     const date = new Date(year, month, -i);
@@ -125,6 +129,16 @@ function buildCalendarDays(
 
   return days;
 }
+
+/* ─── Date helpers ──────────────────────────────────────────────── */
+const formatYMD = (year: number, monthIndex: number, day: number) =>
+  `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+const extractDayOfMonth = (ymd: string) => {
+  const parts = ymd.split('-');
+  const day = Number(parts[2]);
+  return Number.isFinite(day) ? day : 1;
+};
 
 /* ─── Recalculate summary ────────────────────────────────────────── */
 function recalcSummary(
@@ -284,11 +298,18 @@ export function useScheduledData() {
       d.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
       return d;
     });
+    setSelectedDate(null);
+  };
+
+  const jumpToMonth = (monthIndex: number, year: number) => {
+    setCurrentDate(new Date(year, monthIndex, 1));
+    setSelectedDate(null);
   };
 
   const goToToday = useCallback(() => {
     const t = new Date();
     setCurrentDate(new Date(t.getFullYear(), t.getMonth(), 1));
+    setSelectedDate(null);
   }, []);
 
   const addBill = useCallback((bill: Omit<ScheduledBill, 'id'>) => {
@@ -387,6 +408,7 @@ export function useScheduledData() {
     setSelectedDate,
     setShowMonthPicker,
     changeMonth,
+    jumpToMonth,
     goToToday,
     addBill,
     addIncome,

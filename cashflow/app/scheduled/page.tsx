@@ -10,7 +10,6 @@ import { IncomeList } from '@/components/scheduled/income-list';
 import { LiquidityChart } from '@/components/scheduled/liquidity-chart';
 import { AddItemModal } from '@/components/scheduled/add-item-modal';
 import { DayDetailsModal } from '@/components/scheduled/day-details-modal';
-import { Button } from '@/components/ui/button';
 import { formatDateForInputLocal } from '@/lib/utils';
 import type { CalendarDay } from '@/components/scheduled/types';
 
@@ -26,6 +25,7 @@ export default function ScheduledPage() {
     showMonthPicker,
     setShowMonthPicker,
     changeMonth,
+    jumpToMonth,
     goToToday,
     selectedDate,
     setSelectedDate,
@@ -64,6 +64,21 @@ export default function ScheduledPage() {
     setShowAddModal(true);
   };
 
+  const handlePrevMonth = () => {
+    setShowDayDetails(false);
+    changeMonth('prev');
+  };
+
+  const handleNextMonth = () => {
+    setShowDayDetails(false);
+    changeMonth('next');
+  };
+
+  const handleToday = () => {
+    setShowDayDetails(false);
+    goToToday();
+  };
+
   if (loading) {
     return (
       <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
@@ -95,8 +110,9 @@ export default function ScheduledPage() {
               currentDate={currentDate}
               currency={loanCurrency}
               onDayClick={handleDayClick}
-              onPrevMonth={() => changeMonth('prev')}
-              onNextMonth={() => changeMonth('next')}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              onToday={handleToday}
               onMonthPickerToggle={() => setShowMonthPicker(!showMonthPicker)}
               onGoToToday={goToToday}
             />
@@ -105,9 +121,7 @@ export default function ScheduledPage() {
               isOpen={showMonthPicker}
               onClose={() => setShowMonthPicker(false)}
               currentDate={currentDate}
-              onSelectMonth={() => {
-                changeMonth('next');
-              }}
+              onSelectMonth={(monthIndex, year) => jumpToMonth(monthIndex, year)}
             />
 
             <div className="flex flex-col gap-6 lg:col-span-5">

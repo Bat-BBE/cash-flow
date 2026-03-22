@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useDashboard }            from '@/components/providers/dashboard-provider';
-import { useTranslation }          from '@/lib/translations';
-import { cn }                      from '@/lib/utils';
-import { AddTransactionModal }     from '@/components/transactions/add-transaction-modal';
-import { format }                  from 'date-fns';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { useDashboard } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
+import { cn } from '@/lib/utils';
+import { AddTransactionModal } from '@/components/transactions/add-transaction-modal';
+import { BrandLogo } from '@/components/dashboard/brand-logo';
 
 const PAGE_TITLE: Record<string, string> = {
   '/home':                 'Хянах самбар',
@@ -33,14 +34,12 @@ export interface HeaderProps {
 }
 
 export function Header({ onAddTransaction, accounts = [], categories = [] }: HeaderProps) {
-  const router   = useRouter();
   const pathname = usePathname();
-  const { language, setLanguage, setSidebarOpen } = useDashboard();
+  const { language, setSidebarOpen } = useDashboard();
   const t         = useTranslation(language);
   const pageTitle = titleForPath(pathname);
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [date]                          = useState(() => new Date());
 
   return (
     <>
@@ -57,7 +56,15 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
             <span className="material-symbols-outlined text-[22px] leading-none">menu</span>
           </button>
 
-          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <Link
+            href="/home"
+            className="lg:hidden shrink-0 rounded-xl outline-none ring-brand-primary/40 focus-visible:ring-2"
+            aria-label="CashFlow home"
+          >
+            <BrandLogo size="sm" maxWidthClassName="max-w-[7rem]" priority />
+          </Link>
+
+          <div className="hidden min-w-0 items-center gap-2.5 sm:gap-3 md:flex">
             <div
               className={cn(
                 'relative shrink-0 overflow-hidden rounded-xl',
@@ -70,7 +77,7 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
                 className="size-full object-contain p-1"
               />
             </div>
-            <div className="min-w-0 hidden md:block">
+            <div className="min-w-0">
               <p className="text-[16px] font-black uppercase leading-none tracking-wider text-brand-primary">
                 CashFlow
               </p>
@@ -81,31 +88,11 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* <button
-            type="button"
-            onClick={() => router.push('/scheduled')}
-            className="flex items-center gap-1.5 h-9 px-2.5 sm:px-3
-                       bg-white/[0.05] border border-white/[0.07] rounded-xl
-                       text-white/45 hover:text-white hover:bg-white/[0.09]
-                       transition-all text-[11px] font-semibold shrink-0"
-            aria-label="Хуваарь"
-          >
-            <span className="material-symbols-outlined text-[18px] leading-none text-brand-primary">
-              calendar_month
-            </span>
-            <span className="hidden md:inline tabular-nums text-[11px]">
-              {format(date, 'MMM d')}
-            </span>
-          </button> */}
-
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 h-9 px-3
-                       bg-brand-primary hover:bg-brand-primary/90
-                       text-white font-bold rounded-xl
-                       text-[11px] sm:text-xs transition-all shrink-0"
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-brand-primary px-3 font-bold text-white transition-all hover:bg-brand-primary/90 text-[11px] sm:text-xs"
           >
             <span className="material-symbols-outlined text-[18px] leading-none font-bold">add</span>
             <span className="hidden sm:inline">{t('addTransaction')}</span>

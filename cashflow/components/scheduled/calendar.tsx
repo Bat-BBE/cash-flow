@@ -15,6 +15,7 @@ interface CalendarProps {
   onDayClick: (day: CalendarDay) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
+  onToday: () => void;
   onMonthPickerToggle: () => void;
   onGoToToday: () => void;
 }
@@ -27,6 +28,7 @@ export function Calendar({
   onDayClick,
   onPrevMonth,
   onNextMonth,
+  onToday,
   onMonthPickerToggle,
   onGoToToday,
 }: CalendarProps) {
@@ -142,7 +144,7 @@ export function Calendar({
         {/* Calendar days */}
         {days.map((day, index) => (
           <CalendarCell
-            key={index}
+          key={day.date.getTime()}
             day={day}
             currency={currency}
             compact={isSidebar}
@@ -263,6 +265,15 @@ function CalendarCell({
     <div
       onClick={onClick}
       title={tooltip}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      aria-label={`Select ${day.year}-${day.month + 1}-${day.day}`}
       className={cn(
         'calendar-cell relative flex min-h-0 cursor-pointer flex-col overflow-hidden font-medium transition-all',
         compact ? 'h-[4.25rem] p-1 text-[10px]' : 'h-28 p-2 text-xs sm:p-2.5',
