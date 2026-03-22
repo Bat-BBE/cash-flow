@@ -13,25 +13,25 @@ import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import {
   aggregateExpenseStructure,
+  type AnalysisTransaction,
   type ExpenseClassification,
-  type MockClassifiedTransaction,
-} from '@/lib/analytics/transaction-classification-mock';
+} from '@/lib/analytics/analysis-flow-model';
 
 const SWIPE_OFFSET_THRESHOLD = 96;
 const SWIPE_VELOCITY = 520;
 
 type ExpenseSwipeDeckProps = {
   queue: string[];
-  expenseRows: MockClassifiedTransaction[];
-  allRowsForSummary: MockClassifiedTransaction[];
+  expenseRows: AnalysisTransaction[];
+  allRowsForSummary: AnalysisTransaction[];
   onClassify: (id: string, classification: ExpenseClassification) => void;
   onRestartDeck: () => void;
 };
 
 function txById(
-  rows: MockClassifiedTransaction[],
+  rows: AnalysisTransaction[],
   id: string
-): MockClassifiedTransaction | undefined {
+): AnalysisTransaction | undefined {
   return rows.find((r) => r.id === id);
 }
 
@@ -39,7 +39,7 @@ function SwipeableExpenseCard({
   tx,
   onCommit,
 }: {
-  tx: MockClassifiedTransaction;
+  tx: AnalysisTransaction;
   onCommit: (direction: 'left' | 'right') => void;
 }) {
   const x = useMotionValue(0);
@@ -163,7 +163,11 @@ export function ExpenseSwipeDeck({
   const currentId = queue[0];
   const current = currentId ? txById(expenseRows, currentId) : undefined;
   const stackPreview = useMemo(
-    () => queue.slice(1, 4).map((id) => txById(expenseRows, id)).filter(Boolean) as MockClassifiedTransaction[],
+    () =>
+      queue
+        .slice(1, 4)
+        .map((id) => txById(expenseRows, id))
+        .filter(Boolean) as AnalysisTransaction[],
     [queue, expenseRows]
   );
 
