@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 import { AddTransactionModal } from '@/components/transactions/add-transaction-modal';
+<<<<<<< HEAD
+=======
+import { format } from 'date-fns';
+import { useDashboardData } from '@/contexts/dashboard-data-context';
+import Link from 'next/link';
+import { BrandLogo } from '@/components/dashboard/brand-logo';
+>>>>>>> 3e4acc72ed3df6050f52a337c1c70ac2889bdc16
 
 interface HeaderProps {
   onAddTransaction?: (transaction: any) => void;
@@ -28,24 +35,20 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
     <>
       <header className="h-20 bg-brand-sidebar/50 backdrop-blur-xl px-3 sm:px-4 md:px-8 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30 border-b border-white/5">
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          {/* Mobile Sidebar Toggle */}
-          {/* <div className="lg:hidden flex items-center gap-2 min-w-0">
-            <div className="relative h-12 w-10 overflow-hidden rounded-xl">
-              <img
-                src="/logo.png"
-                alt="CashFlow"
-                className="h-full w-full object-contain"
-              />
-            </div>
-          </div> */}
+          <Link
+            href="/home"
+            className="lg:hidden shrink-0 rounded-xl outline-none ring-brand-primary/40 focus-visible:ring-2"
+            aria-label="CashFlow home"
+          >
+            <BrandLogo size="sm" maxWidthClassName="max-w-[7rem]" priority />
+          </Link>
           <button
+            type="button"
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden flex items-center justify-center h-10 w-10 rounded-xl bg-brand-card/50 border border-brand-border/30 text-brand-text hover:text-white hover:bg-brand-card transition-all"
           >
             <span className="material-symbols-outlined">menu</span>
           </button>
-
-         
         </div>
 
         {/* Actions */}
