@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { useScheduledCalendar } from '@/contexts/scheduled-calendar-context';
 import { Calendar } from '@/components/scheduled/calendar';
 import { MonthPicker } from '@/components/scheduled/month-picker';
@@ -67,30 +66,22 @@ export default function ScheduledPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex bg-navy-deep">
-        <Sidebar />
-        <main className="flex-1 min-h-screen flex flex-col bg-navy-deep">
-          <Header />
-          <div className="flex-1 flex items-center justify-center px-4">
-            <div className="text-center">
-              <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-              <p className="text-slate-400 font-medium">Loading scheduled data...</p>
-            </div>
+      <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
+        <div className="flex flex-1 items-center justify-center px-4 py-16">
+          <div className="text-center">
+            <div className="mb-4 size-12 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+            <p className="font-medium text-slate-400">Ачааллаж байна...</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </DashboardShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-navy-deep">
-      <Sidebar />
-
-      <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-navy-deep">
-        <Header />
-
-        <div className="flex-1 p-4 sm:p-6 max-w-[1440px] mx-auto w-full space-y-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <>
+      <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
+        <div className="mx-auto w-full max-w-[1440px] flex-1 space-y-6 p-4 sm:p-6">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <h1 className="text-3xl font-black tracking-tight text-white">
                 Санхүүгийн календарь
@@ -98,7 +89,7 @@ export default function ScheduledPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 relative">
+          <div className="relative grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-12">
             <Calendar
               days={calendarDays}
               currentDate={currentDate}
@@ -119,7 +110,7 @@ export default function ScheduledPage() {
               }}
             />
 
-            <div className="lg:col-span-5 flex flex-col gap-6">
+            <div className="flex flex-col gap-6 lg:col-span-5">
               <BillsList
                 bills={bills}
                 onUpdateStatus={updateBillStatus}
@@ -133,25 +124,8 @@ export default function ScheduledPage() {
           </div>
 
           <LiquidityChart projections={projections} summary={summary} />
-
-          <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
-            <Button
-              onClick={() => handleAddClick('income')}
-              className="bg-secondary hover:bg-secondary/90 text-white rounded-full shadow-lg shadow-secondary/20"
-            >
-              <span className="material-symbols-outlined mr-2">add</span>
-              Add Income
-            </Button>
-            <Button
-              onClick={() => handleAddClick('bill')}
-              className="bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg shadow-primary/20"
-            >
-              <span className="material-symbols-outlined mr-2">add</span>
-              Add Bill
-            </Button>
-          </div>
         </div>
-      </main>
+      </DashboardShell>
 
       <AddItemModal
         open={showAddModal}
@@ -172,6 +146,6 @@ export default function ScheduledPage() {
         onAddBill={() => openAddFromSelectedDay('bill')}
         onAddIncome={() => openAddFromSelectedDay('income')}
       />
-    </div>
+    </>
   );
 }

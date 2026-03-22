@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { useBudgetData } from '@/hook/use-budget-data';
 import { BudgetSummaryCards } from '@/components/budgets/budget-summary-cards';
 import { BudgetCard } from '@/components/budgets/budget-card';
@@ -53,11 +52,9 @@ export default function BudgetsPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#0f172a]">
-      <Sidebar />
-      <main className="flex-1 min-h-screen overflow-y-auto flex flex-col bg-[#0f172a]">
-        <Header />
-        <div className="flex-1 p-4 sm:p-6 md:p-8 space-y-8">
+    <>
+    <DashboardShell className="bg-[#0f172a]" mainClassName="bg-[#0f172a]">
+        <div className="space-y-8 p-4 sm:p-6 md:p-8">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
             <div>
               <h2 className="text-3xl font-bold text-white tracking-tight">Monthly Budgets</h2>
@@ -107,7 +104,7 @@ export default function BudgetsPage() {
             <AddCategoryButton onClick={() => setShowAddModal(true)} />
           </div>
         </div>
-      </main>
+    </DashboardShell>
 
       <AddBudgetModal
         open={showAddModal}
@@ -124,6 +121,6 @@ export default function BudgetsPage() {
         }}
         initialBudget={selectedBudget}
       />
-    </div>
+    </>
   );
 }

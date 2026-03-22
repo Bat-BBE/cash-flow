@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useIsNarrow } from '@/hook/use-is-mobile';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,10 +14,7 @@ interface NavItem {
   translationKey: string;
   icon: string;
   href: string;
-  badge?: {
-    count?: number;
-    color?: string;
-  };
+  badge?: { count?: number; color?: string };
   children?: NavItem[];
 }
 
@@ -55,367 +53,448 @@ const mainNavItems: NavItem[] = [
   },
 ];
 
-const systemNavItems: NavItem[] = [
-  { 
-    label: 'Settings', 
-    translationKey: 'settings', 
-    icon: 'settings', 
-    href: '/settings' 
-  },
-  { 
-    label: 'Support', 
-    translationKey: 'support', 
-    icon: 'help_center', 
-    href: '/support' 
-  },
-];
+const badgeColors: Record<string, string> = {
+  brand:   'bg-violet-500/15 text-violet-300 border-violet-500/25',
+  emerald: 'bg-emerald-500/12 text-emerald-400 border-emerald-500/20',
+  amber:   'bg-amber-500/12 text-amber-400 border-amber-500/20',
+  blue:    'bg-blue-500/12 text-blue-400 border-blue-500/20',
+  red:     'bg-red-500/12 text-red-400 border-red-500/20',
+};
 
-const badgeColors = {
-  brand: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20',
-  emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  red: 'bg-red-500/10 text-red-400 border-red-500/20',
+/* ── tiny glow dot per nav item ── */
+const itemGlows: Record<string, string> = {
+  '/home':      'from-emerald-500/20',
+  '/accounts':  'from-violet-500/20',
+  '/budgets':   'from-amber-500/20',
+  '/analytics': 'from-blue-500/20',
 };
 
 export function Sidebar() {
   const { user, language, sidebarOpen, setSidebarOpen } = useDashboard();
-  const t = useTranslation(language);
+  const t        = useTranslation(language);
   const pathname = usePathname();
-  const router = useRouter();
-  
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const router   = useRouter();
+
+  const [expandedItems,      setExpandedItems]      = useState<string[]>([]);
+  const [isCollapsed,        setIsCollapsed]        = useState(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showUserMenu,       setShowUserMenu]       = useState(false);
+  const isMobile = useIsNarrow(768);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
-
-  // return 'hello wrold';
-  
+  /* Гадна дарахад хаах — нээх товчийг ижил даралтаар буруу хаахгүйн тулд listener-ийг дараагийн тикээр залгана */
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    if (!showUserMenu) return;
+    let detach: (() => void) | undefined;
+    const timer = window.setTimeout(() => {
+      const closeIfOutside = (target: EventTarget | null) => {
+        if (menuRef.current && target instanceof Node && !menuRef.current.contains(target)) {
+          setShowUserMenu(false);
+        }
+      };
+      const onPointerDown = (e: PointerEvent) => closeIfOutside(e.target);
+      document.addEventListener('pointerdown', onPointerDown, true);
+      detach = () => document.removeEventListener('pointerdown', onPointerDown, true);
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      detach?.();
     };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
+  }, [showUserMenu]);
 
+  /* close sidebar when route changes on mobile */
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [pathname, isMobile, setSidebarOpen]);
 
-  const effectiveCollapsed = isMobile || isTablet ? true : isCollapsed;
-  const effectiveOpen = isMobile ? sidebarOpen : true;
+  /** Drawer: нээлттэй үед бүрэн гарчиг; desktop: зөвхөн товчлуураар нээгдэнэ (hover-оор биш). */
+  const expanded           = isMobile ? sidebarOpen : !isCollapsed;
+  const effectiveOpen      = isMobile ? sidebarOpen : true;
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  const toggleExpand = (href: string) => {
-    setExpandedItems(prev => 
-      prev.includes(href) 
-        ? prev.filter(item => item !== href)
-        : [...prev, href]
+  const toggleExpand = (href: string) =>
+    setExpandedItems(prev =>
+      prev.includes(href) ? prev.filter(i => i !== href) : [...prev, href]
     );
-  };
 
-  const handleLogout = () => {
-    router.push('/');
-  };
-
-  const handleProfileClick = () => {
-    setIsProfileDrawerOpen(true);
-  };
-
-  const handleSystemClick = () => {
-    router.push('/settings');
-  };
-
-  const handleSupportClick = () => {
-    router.push('/support');;
-  };
-
-  const handleProfileDrawerClose = () => {
-    setIsProfileDrawerOpen(false);
-  };
-
-  const renderNavItem = (item: NavItem, isSubItem = false) => {
-    const isActive = pathname === item.href;
+  /* ── Nav item renderer ── */
+  const renderNavItem = (item: NavItem, depth = 0) => {
+    const isActive   = pathname === item.href;
     const isExpanded = expandedItems.includes(item.href);
-    const hasChildren = item.children && item.children.length > 0;
+    const hasChildren = !!item.children?.length;
 
     return (
-      <div key={item.href} className="relative">
+      <div key={item.href}>
         <Link
           href={item.href}
           onClick={(e) => {
-            if (hasChildren) {
-              e.preventDefault();
-              toggleExpand(item.href);
-            }
+            if (hasChildren) { e.preventDefault(); toggleExpand(item.href); }
             if (isMobile) setSidebarOpen(false);
           }}
           className={cn(
-            'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group relative',
-            effectiveCollapsed && !isHovered ? 'justify-center' : 'justify-start',
-            isActive 
-              ? 'bg-gradient-to-r from-brand-primary/20 to-brand-primary/5 text-brand-primary'
-              : 'text-brand-muted hover:bg-white/5 hover:text-white'
+            'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 mb-3',
+            depth > 0 && 'ml-7 py-2 text-[12px]',
+            isActive
+              ? 'bg-white/[0.08] text-white'
+              : 'text-white/40 hover:bg-white/[0.05] hover:text-white/80',
           )}
         >
+          {/* Active left accent */}
           {isActive && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-brand-primary rounded-r-full" />
+            <span
+              className={cn(
+                'absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-gradient-to-b',
+                'from-violet-400 to-violet-600',
+              )}
+            />
           )}
 
+          {/* Active glow */}
+          {isActive && (
+            <span
+              className={cn(
+                'absolute inset-0 rounded-xl opacity-30 bg-gradient-to-r to-transparent pointer-events-none',
+                itemGlows[item.href] ?? 'from-white/10',
+              )}
+            />
+          )}
+
+          {/* Icon */}
           <span className={cn(
-            'material-symbols-outlined transition-all duration-200',
-            isActive ? 'text-brand-primary' : 'group-hover:scale-110',
-            effectiveCollapsed && !isHovered ? 'text-2xl' : 'text-xl'
+            'material-symbols-outlined shrink-0 transition-all duration-200',
+            expanded ? 'text-[20px]' : 'text-[22px]',
+            isActive ? 'text-white' : 'text-white/35 group-hover:text-white/70',
           )}>
             {item.icon}
           </span>
 
-          {(!effectiveCollapsed || isHovered) && (
+          {/* Label + badge */}
+          {expanded && (
             <>
-              <span className={cn(
-                'flex-1 text-sm transition-all',
-                isActive ? 'font-bold' : 'font-medium',
-                isSubItem && 'opacity-80'
-              )}>
-                {t(item.translationKey as any)}
-              </span>
+              <span className="flex-1 truncate">{t(item.translationKey as any)}</span>
 
               {item.badge && (
                 <span className={cn(
-                  'px-2 py-0.5 text-[10px] font-bold rounded-full border',
-                  badgeColors[item.badge.color as keyof typeof badgeColors]
+                  'shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-full border leading-none',
+                  badgeColors[item.badge.color ?? 'brand'],
                 )}>
-                  {item.badge.count || 'New'}
+                  {item.badge.count ?? 'Шинэ'}
                 </span>
               )}
 
               {hasChildren && (
-                <span className="material-symbols-outlined text-sm transition-transform duration-200">
-                  {isExpanded ? 'expand_less' : 'expand_more'}
+                <span className={cn(
+                  'material-symbols-outlined text-[16px] text-white/25 transition-transform duration-200',
+                  isExpanded && 'rotate-180',
+                )}>
+                  expand_more
                 </span>
               )}
             </>
           )}
 
-          {effectiveCollapsed && !isHovered && (
-            <div className="absolute left-full ml-2 px-2 py-1 bg-brand-card border border-white/5 rounded-lg text-xs font-bold whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+          {/* Collapsed tooltip */}
+          {!expanded && (
+            <div className={cn(
+              'pointer-events-none invisible absolute left-full z-50 ml-3 whitespace-nowrap',
+              'rounded-lg border border-white/10 bg-[#131220]/95 px-2.5 py-1.5',
+              'text-[11px] font-semibold text-white/80 shadow-xl backdrop-blur-xl',
+              'opacity-0 translate-x-1 transition-all duration-150',
+              'group-hover:visible group-hover:opacity-100 group-hover:translate-x-0',
+            )}>
               {t(item.translationKey as any)}
+              {item.badge && (
+                <span className={cn('ml-2 text-[9px] font-bold', badgeColors[item.badge.color ?? 'brand'])}>
+                  {item.badge.count ?? 'Шинэ'}
+                </span>
+              )}
             </div>
           )}
         </Link>
 
-        {hasChildren && isExpanded && (!effectiveCollapsed || isHovered) && (
-          <div className="ml-8 mt-1 space-y-1">
-            {item.children?.map(child => renderNavItem(child, true))}
+        {/* Children */}
+        {hasChildren && isExpanded && expanded && (
+          <div className="mt-0.5 space-y-0.5">
+            {item.children!.map(child => renderNavItem(child, depth + 1))}
           </div>
         )}
       </div>
     );
   };
 
+  const sidebarWidth = expanded ? 'w-60' : 'w-[68px]';
+
   return (
-    <>
-      {isMobile && effectiveOpen && (
+    <div className="relative flex shrink-0">
+      {/*
+        Spacer (md+): fixed sidebar flex мөрөнд зай үлдээнэ. Mobile-д drawer тул зайгүй.
+      */}
+      <div
+        aria-hidden
+        className={cn(
+          'hidden shrink-0 self-stretch md:block',
+          'transition-[width] duration-300 ease-[cubic-bezier(.4,0,.2,1)]',
+          sidebarWidth,
+        )}
+      />
+
+      {/* Mobile overlay — header-ийн доор */}
+      {isMobile && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden animate-fadeIn"
+          aria-hidden
+          className={cn(
+            'fixed inset-x-0 bottom-0 top-16 z-[35] bg-black/70 backdrop-blur-sm transition-all duration-300 lg:hidden',
+            effectiveOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+          )}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <aside
+        onMouseLeave={() => { if (!isMobile) setShowUserMenu(false); }}
         className={cn(
-          'fixed lg:sticky top-0 left-0 h-screen bg-gradient-to-b from-brand-sidebar to-brand-sidebar/95 flex flex-col shrink-0 border-r border-white/5 z-50 transition-all duration-300',
-          effectiveCollapsed && !isHovered ? 'w-20' : 'w-64',
-          isMobile 
-            ? effectiveOpen ? 'translate-x-0' : '-translate-x-full'
-            : 'translate-x-0'
+          'fixed left-0 top-16 z-40 flex min-h-0 flex-col border-r border-white/[0.06]',
+          'bg-[#0e0c1e]/80 backdrop-blur-2xl',
+          'h-[calc(100dvh-4rem)]',
+          'transition-[width,transform] duration-300 ease-[cubic-bezier(.4,0,.2,1)]',
+          sidebarWidth,
+          isMobile
+            ? effectiveOpen
+              ? 'translate-x-0'
+              : '-translate-x-full'
+            : 'translate-x-0',
         )}
-        // onMouseEnter={() => setIsHovered(true)}
-        // onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-
-        <div className={cn(
-          "p-6 flex items-center border-b border-white/5 relative",
-          effectiveCollapsed && !isHovered ? 'justify-center' : 'justify-between'
-        )}>
-          <div className={cn(
-            "flex items-center",
-            effectiveCollapsed && !isHovered ? 'gap-0' : 'gap-3'
-          )}>
-            <div className="relative">
-              <div className="absolute inset-0 bg-brand-primary/20 blur-lg rounded-full" />
-              {/* <div className="relative w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-primary/80 rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/30">
-                <span className="material-symbols-outlined text-white font-bold text-2xl">
-                  account_balance_wallet
-                </span>
-              </div> */}
-              <img src="/logo.png" alt="CashFlow Logo" className="relative w-12 h-9 rounded-xl" />
-            </div>
-            
-            {(!effectiveCollapsed || isHovered) && (
-              <div className="animate-slideIn">
-                <h1 className="text-white text-lg font-black tracking-tight">CashFlow</h1>
-                <p className="text-brand-muted text-[8px] uppercase tracking-widest font-bold">
-                  {t('wealthManagement')}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {isMobile && effectiveOpen && (
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-white/5 text-brand-muted hover:text-white transition-all"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          )}
-
-          {!isMobile && !isTablet && (
-            <button
-              onClick={toggleCollapse}
-              className={cn(
-                "absolute -right-3 top-8 h-6 w-6 bg-brand-card border border-white/10 rounded-full flex items-center justify-center hover:bg-brand-primary hover:text-white transition-all z-10",
-                isCollapsed && !isHovered && 'rotate-180'
-              )}
-            >
-              <span className="material-symbols-outlined text-sm">
-                chevron_left
-              </span>
-            </button>
-          )}
+        {/* Subtle inner noise / gradient */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-none">
+          <div className="absolute inset-0 bg-gradient-to-b from-violet-950/10 via-transparent to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 overflow-y-auto custom-scrollbar">
-          <div className="space-y-6">
-            <div className="space-y-1">
-              {(!effectiveCollapsed || isHovered) && (
-                <p className="px-4 pb-2 text-[10px] font-bold text-brand-muted/50 uppercase tracking-widest">
-                  {t('main')}
-                </p>
-              )}
-              {mainNavItems.map(item => renderNavItem(item))}
-            </div>
-
-            {/* <div className="space-y-1">
-              {(!effectiveCollapsed || isHovered) && (
-                <p className="px-4 pb-2 text-[10px] font-bold text-brand-muted/50 uppercase tracking-widest">
-                  {t('system')}
-                </p>
-              )}
-              {systemNavItems.map(item => renderNavItem(item))}
-            </div> */}
-          </div>
-        </nav>
-
-        {/* User Profile Section */}
-        <div className={cn(
-          "p-4 mt-auto border-t border-white/5 relative",
-          effectiveCollapsed && !isHovered ? 'flex justify-center' : ''
-        )}>
-          {showUserMenu && (!effectiveCollapsed || isHovered) && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 bg-brand-card border border-white/5 rounded-2xl shadow-2xl overflow-hidden animate-slideUp z-50">
-
-              <button
-                onClick={handleProfileClick}
-                className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
-              >
-                <span className="material-symbols-outlined text-brand-muted">person</span>
-                {t('profileLabel')}
-              </button>
-
-              <button
-                onClick={handleSystemClick}
-                className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
-              >
-                <span className="material-symbols-outlined text-brand-muted">settings</span>
-                {t('settings')}
-              </button>
-
-              <button
-                onClick={handleSupportClick}
-                className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
-              >
-                <span className="material-symbols-outlined text-brand-muted">help</span>
-                {t('support')}
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
-              >
-                <span className="material-symbols-outlined">logout</span>
-                {t('logoutLabel')}
-              </button>
-
-            </div>
-          )}
+        {/* ── Desktop collapse toggle ── */}
+        {!isMobile && (
           <button
-            onClick={() => setShowUserMenu(v => !v)}
+            type="button"
+            aria-label={isCollapsed ? 'Сидбарыг нээх' : 'Сидбарыг хаах'}
+            onClick={() => setIsCollapsed(v => !v)}
             className={cn(
-              "flex items-center gap-3 w-full p-2 rounded-2xl transition-all hover:bg-white/5",
-              effectiveCollapsed && !isHovered ? 'justify-center' : 'justify-start'
+              'absolute -right-3 top-8 z-10',
+              'flex h-6 w-6 items-center justify-center rounded-full',
+              'border border-white/10 bg-[#1a1830] shadow-lg',
+              'text-white/40 transition-all duration-200 hover:border-violet-500/40 hover:text-violet-400',
             )}
           >
-            <div className="relative">
-              <Avatar className="h-10 w-10 ring-2 ring-brand-primary/20 ring-offset-2 ring-offset-brand-sidebar">
+            <span className={cn(
+              'material-symbols-outlined text-[14px] transition-transform duration-300',
+              isCollapsed ? 'rotate-180' : '',
+            )}>
+              chevron_left
+            </span>
+          </button>
+        )}
+
+        {/* ── Mobile close button ── */}
+        {isMobile && effectiveOpen && (
+          <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.06] px-4">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-white/20">Цэс</span>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+        )}
+
+        {/* ── Navigation ── */}
+        <nav className="min-h-0 flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto px-2.5 py-5 custom-scrollbar">
+          {/* Section label */}
+          {expanded && (
+            <p className="mb-2 px-3 text-[9px] font-black uppercase tracking-[0.15em] text-white/20">
+              {t('main')}
+            </p>
+          )}
+
+          {mainNavItems.map(item => renderNavItem(item))}
+
+          {/* Divider */}
+          {/* <div className="my-3 mx-3 border-t border-white/[0.05]" /> */}
+
+          {/* Settings + support as slim items */}
+          {/* {([
+            { href: '/settings', icon: 'settings',     key: 'settings' },
+            { href: '/support',  icon: 'help_center',  key: 'support'  },
+          ] as { href: string; icon: string; key: string }[]).map(({ href, icon, key }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => { if (isMobile) setSidebarOpen(false); }}
+                className={cn(
+                  'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200',
+                  isActive
+                    ? 'bg-white/[0.07] text-white'
+                    : 'text-white/30 hover:bg-white/[0.04] hover:text-white/60',
+                )}
+              >
+                <span className={cn(
+                  'material-symbols-outlined shrink-0 transition-all',
+                  expanded ? 'text-[20px]' : 'text-[22px]',
+                )}>
+                  {icon}
+                </span>
+                {expanded && <span className="truncate">{t(key as any)}</span>}
+
+                {!expanded && (
+                  <div className="pointer-events-none invisible absolute left-full z-50 ml-3 whitespace-nowrap rounded-lg border border-white/10 bg-[#131220]/95 px-2.5 py-1.5 text-[11px] font-semibold text-white/80 shadow-xl backdrop-blur-xl opacity-0 translate-x-1 transition-all duration-150 group-hover:visible group-hover:opacity-100 group-hover:translate-x-0">
+                    {t(key as any)}
+                  </div>
+                )}
+              </Link>
+            );
+          })} */}
+        </nav>
+
+        {/* ── User / account — доод талд, өргөтгөсөн үед төвлөрсөн ── */}
+        <div
+          ref={menuRef}
+          className={cn(
+            'relative mt-auto shrink-0 border-t border-white/[0.06] bg-[#0e0c1e]/40 p-2.5',
+            expanded && 'flex flex-col items-center',
+            isMobile && 'flex w-full flex-col gap-2',
+          )}
+        >
+          {/* Гар утас: урсгалд профайлын дээр — доош гарч дэлгэцээс харагдахгүй алдахгүй */}
+          {isMobile && showUserMenu && (
+            <div className="order-1 w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl">
+              {[
+                { icon: 'person',   label: t('profileLabel'), action: () => { setIsProfileDrawerOpen(true); setShowUserMenu(false); } },
+                { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
+                { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
+              ].map(({ icon, label, action }) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={action}
+                  className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors active:bg-white/10 hover:bg-white/[0.05] hover:text-white"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+                  {label}
+                </button>
+              ))}
+              <div className="border-t border-white/[0.06]" />
+              <button
+                type="button"
+                onClick={() => { router.push('/'); setShowUserMenu(false); }}
+                className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors active:bg-rose-500/15 hover:bg-rose-500/[0.08] hover:text-rose-300"
+              >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                {t('logoutLabel')}
+              </button>
+            </div>
+          )}
+
+          {/* Desktop: absolute popup */}
+          {!isMobile && (
+            <div
+              className={cn(
+                'absolute z-[55] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl',
+                'origin-bottom transition-all duration-200',
+                expanded
+                  ? 'bottom-full left-1/2 mb-2 w-[min(calc(100%-0.75rem),13.5rem)] -translate-x-1/2'
+                  : 'bottom-full left-2 right-2 mb-2',
+                showUserMenu
+                  ? 'pointer-events-auto opacity-100 scale-100 translate-y-0'
+                  : 'pointer-events-none opacity-0 scale-95 translate-y-2',
+              )}
+            >
+              {[
+                { icon: 'person',   label: t('profileLabel'), action: () => { setIsProfileDrawerOpen(true); setShowUserMenu(false); } },
+                { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
+                { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
+              ].map(({ icon, label, action }) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={action}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors hover:bg-white/[0.05] hover:text-white"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+                  {label}
+                </button>
+              ))}
+              <div className="border-t border-white/[0.06]" />
+              <button
+                type="button"
+                onClick={() => { router.push('/'); setShowUserMenu(false); }}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors hover:bg-rose-500/[0.08] hover:text-rose-300"
+              >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                {t('logoutLabel')}
+              </button>
+            </div>
+          )}
+
+          {/* Avatar button */}
+          <button
+            type="button"
+            onClick={() => setShowUserMenu(v => !v)}
+            className={cn(
+              'order-2 flex w-full items-center gap-3 rounded-xl p-2 transition-all duration-200',
+              'hover:bg-white/[0.05]',
+              showUserMenu && 'bg-white/[0.05]',
+              expanded ? 'flex-col justify-center gap-1.5 py-3' : 'justify-center',
+            )}
+          >
+            <div className="relative shrink-0">
+              <Avatar className="h-9 w-9 ring-1 ring-white/10 ring-offset-2 ring-offset-[#0e0c1e] md:h-10 md:w-10">
                 <AvatarImage src={user.avatarUrl} alt={user.name} />
-                <AvatarFallback className="bg-gradient-to-br from-brand-primary to-brand-primary/80 text-white">
-                  {user.name?.charAt(0) || 'U'}
+                <AvatarFallback className="bg-gradient-to-br from-violet-600 to-violet-800 text-xs font-bold text-white">
+                  {user.name?.charAt(0) ?? 'U'}
                 </AvatarFallback>
               </Avatar>
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-emerald-500 rounded-full ring-2 ring-brand-sidebar" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-1.5 ring-[#0e0c1e]" />
             </div>
 
-            {(!effectiveCollapsed || isHovered) && (
-              <div className="flex-1 text-left animate-slideIn">
-                <p className="text-sm font-semibold text-white truncate">
-                  {user.name || 'User'}
+            {expanded && (
+              <div className="flex min-w-0 max-w-full flex-col items-center text-center">
+                <p className="line-clamp-2 text-[12px] font-semibold leading-tight text-white/85">
+                  {user.name ?? 'User'}
                 </p>
-                <span className="text-[8px] font-black text-brand-primary uppercase tracking-wider">
-                  {user.membershipType || 'PREMIUM'}
+                <span className="mt-0.5 text-[9px] font-black uppercase tracking-widest text-violet-400/70">
+                  {user.membershipType ?? 'PREMIUM'}
                 </span>
               </div>
             )}
+
+            {expanded && (
+              <span className={cn(
+                'material-symbols-outlined shrink-0 text-[18px] text-white/25 transition-transform duration-200',
+                showUserMenu && 'rotate-180',
+              )}>
+                expand_more
+              </span>
+            )}
           </button>
-
-          {effectiveCollapsed && !isHovered && (
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-[6px] text-brand-muted/30 font-bold">v2.4.1</span>
-            </div>
-          )}
         </div>
-
       </aside>
 
-      {/* Profile Drawer */}
       <ProfileDrawer
         isOpen={isProfileDrawerOpen}
-        onClose={handleProfileDrawerClose}
+        onClose={() => setIsProfileDrawerOpen(false)}
         user={{
-          name: user.name,
-          username: user.username,
-          avatarUrl: user.avatarUrl,
+          name:           user.name,
+          username:       user.username,
+          avatarUrl:      user.avatarUrl,
           membershipType: user.membershipType,
-          joinedDate: user.joinedDate,
-          score: user.score,
-          savings: user.savings,
-          goals: user.goals,
-          wealthTier: user.wealthTier,
-          bio: user.bio,
+          joinedDate:     user.joinedDate,
+          score:          user.score,
+          goals:          user.goals,
+          wealthTier:     user.wealthTier,
+          bio:            user.bio,
         }}
-        sidebarCollapsed={effectiveCollapsed}
       />
-    </>
+    </div>
   );
 }

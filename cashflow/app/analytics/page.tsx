@@ -1,10 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
-import { useDashboard } from '@/components/providers/dashboard-provider';
-import { useTranslation } from '@/lib/translations';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { useAnalyticsData } from '@/hook/use-analytics-data';
 
 import { AnalyticsHeader } from '@/components/analytics/analytics-header';
@@ -15,8 +12,6 @@ import { AnalyticsInsights } from '@/components/analytics/analytics-insights';
 import { AnalyticsFooter } from '@/components/analytics/analytics-footer';
 
 export default function AnalyticsPage() {
-  const { language } = useDashboard();
-  const t = useTranslation(language);
   const [period, setPeriod] = useState('6M');
   const [lastUpdated] = useState(new Date());
   
@@ -40,29 +35,20 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex bg-[#1a1f2e]">
-        <Sidebar />
-        <main className="flex-1 min-h-screen flex flex-col bg-[#1a1f2e]">
-          <Header />
-          <div className="flex-1 flex items-center justify-center px-4">
-            <div className="text-center">
-              <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-              <p className="text-slate-400 font-medium">Loading analytics...</p>
-            </div>
+      <DashboardShell className="bg-[#1a1f2e]" mainClassName="bg-[#1a1f2e]">
+        <div className="flex flex-1 items-center justify-center px-4 py-16">
+          <div className="text-center">
+            <div className="mb-4 size-12 animate-spin rounded-full border-4 border-primary/30 border-t-primary"></div>
+            <p className="font-medium text-slate-400">Loading analytics...</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </DashboardShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-[#1a1f2e]">
-      <Sidebar />
-      
-      <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-[#1a1f2e]">
-        <Header />
-        
-        <div className="flex-1 p-4 sm:p-6 md:p-8 custom-scrollbar space-y-8">
+    <DashboardShell className="bg-[#1a1f2e]" mainClassName="bg-[#1a1f2e]">
+        <div className="space-y-8 p-4 sm:p-6 md:p-8">
 
           <AnalyticsHeader
             period={period}
@@ -116,7 +102,6 @@ export default function AnalyticsPage() {
           />
           
         </div>
-      </main>
-    </div>
+    </DashboardShell>
   );
 }
