@@ -175,7 +175,7 @@ export const translations = {
     filterExpenseSingular: 'Зарлага',
     noLoansFound: 'Зээл олдсонгүй.',
     languageToggleLabel: 'Хэл',
-    paymentsPrincipalThisMonthHint: 'Энэ сард зээлийн үндсээс хасагдсан (хуваарь)',
+    paymentsPrincipalThisMonthHint: 'Энэ сард үндсэн зээлээс хасагдах',
   },
   EN: {
     // Header

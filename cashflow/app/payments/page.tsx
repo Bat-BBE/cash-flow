@@ -113,7 +113,7 @@ export default function LoansPage() {
       <main className="flex-1 h-screen overflow-y-auto bg-brand-bg custom-scrollbar flex flex-col">
         <Header />
 
-        <div className="flex-1 p-4 md:p-8 max-w-[1400px] mx-auto w-full space-y-8">
+        <div className="flex-1 p-4 md:p-8 max-w-[1400px] mx-auto w-full space-y-8 mt-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-black tracking-tight text-white">Нийт зээл</h1>

@@ -137,7 +137,7 @@ export default function ScheduledPage() {
             </div>
           </div>
 
-          <LiquidityChart projections={projections} summary={summary} />
+          {/* <LiquidityChart projections={projections} summary={summary} /> */}
         </div>
       </DashboardShell>
 
