@@ -109,43 +109,6 @@ export const SANKEY_MOCK_NODES: CashflowSankeyNodeDef[] = [
   { name: 'Хуримтлал / үлдэгдэл', nodeKind: 'remainingLeaf' },
 ];
 
-export const SANKEY_MOCK_LINKS: CashflowSankeyLinkDef[] = [
-  // Навч орлого → бүлэг
-  { source: 0, target: 5, value: 600_000, linkKind: 'inflow' },
-  { source: 1, target: 5, value: 80_000, linkKind: 'inflow' },
-  { source: 2, target: 6, value: 150_000, linkKind: 'inflow' },
-  { source: 3, target: 6, value: 80_000, linkKind: 'inflow' },
-  { source: 4, target: 7, value: 90_000, linkKind: 'inflow' },
-  // Бүлэг → нийт орлого
-  { source: 5, target: 8, value: 680_000, linkKind: 'incomeAggregate' },
-  { source: 6, target: 8, value: 230_000, linkKind: 'incomeAggregate' },
-  { source: 7, target: 8, value: 90_000, linkKind: 'incomeAggregate' },
-  // Нийт орлого → гол урсгал
-  { source: 8, target: 9, value: 1_000_000, linkKind: 'hub' },
-  // Гол урсгал → зардлын бүлгүүд
-  { source: 9, target: 10, value: 310_000, linkKind: 'hub' },
-  { source: 9, target: 11, value: 340_000, linkKind: 'hub' },
-  { source: 9, target: 12, value: 170_000, linkKind: 'hub' },
-  { source: 9, target: 13, value: 180_000, linkKind: 'hub' },
-  // Тогтмол зардал → навч
-  { source: 10, target: 14, value: 150_000, linkKind: 'expense' },
-  { source: 10, target: 15, value: 120_000, linkKind: 'expense' },
-  { source: 10, target: 16, value: 40_000, linkKind: 'expense' },
-  // Хувьсах зардал → навч
-  { source: 11, target: 17, value: 120_000, linkKind: 'expense' },
-  { source: 11, target: 18, value: 80_000, linkKind: 'expense' },
-  { source: 11, target: 19, value: 60_000, linkKind: 'expense' },
-  { source: 11, target: 20, value: 45_000, linkKind: 'expense' },
-  { source: 11, target: 21, value: 35_000, linkKind: 'expense' },
-  // Зээлийн төлөлт → навч
-  { source: 12, target: 22, value: 80_000, linkKind: 'loan' },
-  { source: 12, target: 23, value: 25_000, linkKind: 'loan' },
-  { source: 12, target: 24, value: 45_000, linkKind: 'loan' },
-  { source: 12, target: 25, value: 20_000, linkKind: 'loan' },
-  // Үлдэгдэл → хуримтлал
-  { source: 13, target: 26, value: 180_000, linkKind: 'remaining' },
-];
-
 export type CashflowSankeySummary = {
   totalInflow: number;
   totalExpense: number;
@@ -174,27 +137,6 @@ export function getSankeySummaryFromLinks(links: CashflowSankeyLinkDef[]): Cashf
 
   return { totalInflow, totalExpense, totalLoanPayments, remainingCash };
 }
-
-export function buildSankeyChartData(): {
-  nodes: Array<CashflowSankeyNodeDef & Record<string, unknown>>;
-  links: Array<{ source: number; target: number; value: number; linkKind: SankeyLinkKind }>;
-} {
-  const links = SANKEY_MOCK_LINKS.map((l) => ({
-    source: l.source,
-    target: l.target,
-    value: l.value,
-    linkKind: l.linkKind,
-  }));
-  /** Жижиг урсгалыг дараа нь зурах */
-  links.sort((a, b) => a.value - b.value);
-
-  return {
-    nodes: SANKEY_MOCK_NODES.map((n) => ({ ...n })),
-    links,
-  };
-}
-
-export const SANKEY_MOCK_SUMMARY = getSankeySummaryFromLinks(SANKEY_MOCK_LINKS);
 
 export type SankeyDisplayMode = 'amount' | 'percentage';
 

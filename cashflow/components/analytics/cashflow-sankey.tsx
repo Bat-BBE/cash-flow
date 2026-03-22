@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ResponsiveContainer,
   Sankey,
@@ -11,14 +11,18 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import {
-  buildSankeyChartData,
   formatCompactMnt,
   formatPctOneDecimal,
   pctOfTotalInflow,
-  SANKEY_MOCK_SUMMARY,
+  type CashflowSankeySummary,
   type SankeyDisplayMode,
   type SankeyLinkKind,
 } from '@/lib/analytics/cashflow-sankey-data';
+
+export type CashflowSankeyChartData = {
+  nodes: Array<Record<string, unknown>>;
+  links: Array<{ source: number; target: number; value: number; linkKind: SankeyLinkKind }>;
+};
 
 const LINK_STROKE: Record<SankeyLinkKind, string> = {
   inflow: '#38bdf8',
@@ -514,10 +518,15 @@ function SummaryChip({
   );
 }
 
-export function CashflowSankeySection() {
+type CashflowSankeySectionProps = {
+  sankeyData: CashflowSankeyChartData;
+  summary: CashflowSankeySummary;
+};
+
+export function CashflowSankeySection({ sankeyData, summary }: CashflowSankeySectionProps) {
   const [displayMode, setDisplayMode] = useState<SankeyDisplayMode>('amount');
-  const data = useMemo(() => buildSankeyChartData(), []);
-  const s = SANKEY_MOCK_SUMMARY;
+  const data = sankeyData;
+  const s = summary;
   const totalInflow = s.totalInflow || 1;
 
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   Cell,
   Pie,
@@ -15,13 +15,13 @@ import {
   aggregateExpenseStructure,
   aggregateFlexibleStructure,
   aggregateIncomeStructure,
-  INITIAL_MOCK_TRANSACTIONS,
+  INITIAL_ANALYSIS_TRANSACTIONS,
   MOCK_EXPENSE_IDS_ORDER,
+  type AnalysisTransaction,
   type ExpenseClassification,
   type FlexibleClassification,
   type IncomeClassification,
-  type MockClassifiedTransaction,
-} from '@/lib/analytics/transaction-classification-mock';
+} from '@/lib/analytics/analysis-flow-model';
 
 const TAB_CONFIG = [
   {
@@ -144,10 +144,15 @@ function HorizontalBarLegend({
   );
 }
 
-export function TransactionClassificationSection() {
-  const [rows, setRows] = useState<MockClassifiedTransaction[]>(
-    () => INITIAL_MOCK_TRANSACTIONS.map((r) => ({ ...r }))
-  );
+type TransactionClassificationSectionProps = {
+  transactions: AnalysisTransaction[];
+  setTransactions: Dispatch<SetStateAction<AnalysisTransaction[]>>;
+};
+
+export function TransactionClassificationSection({
+  transactions: rows,
+  setTransactions,
+}: TransactionClassificationSectionProps) {
   const [expenseQueue, setExpenseQueue] = useState<string[]>(() => [
     ...MOCK_EXPENSE_IDS_ORDER,
   ]);
@@ -159,16 +164,16 @@ export function TransactionClassificationSection() {
   const flexibleAgg = useMemo(() => aggregateFlexibleStructure(rows), [rows]);
 
   const updateIncome = useCallback((id: string, v: IncomeClassification) => {
-    setRows((prev) =>
+    setTransactions((prev) =>
       prev.map((r) => (r.id === id ? { ...r, income: v } : r))
     );
-  }, []);
+  }, [setTransactions]);
 
   const updateExpense = useCallback((id: string, v: ExpenseClassification) => {
-    setRows((prev) =>
+    setTransactions((prev) =>
       prev.map((r) => (r.id === id ? { ...r, expense: v } : r))
     );
-  }, []);
+  }, [setTransactions]);
 
   const classifyExpenseFromSwipe = useCallback(
     (id: string, v: ExpenseClassification) => {
@@ -180,20 +185,20 @@ export function TransactionClassificationSection() {
 
   const resetExpenseDeck = useCallback(() => {
     setExpenseQueue([...MOCK_EXPENSE_IDS_ORDER]);
-    setRows((prev) =>
+    setTransactions((prev) =>
       prev.map((r) => {
         if (r.tab !== 'expense') return r;
-        const init = INITIAL_MOCK_TRANSACTIONS.find((x) => x.id === r.id);
+        const init = INITIAL_ANALYSIS_TRANSACTIONS.find((x) => x.id === r.id);
         return init ? { ...r, expense: init.expense } : r;
       })
     );
-  }, []);
+  }, [setTransactions]);
 
   const updateFlexible = useCallback((id: string, v: FlexibleClassification) => {
-    setRows((prev) =>
+    setTransactions((prev) =>
       prev.map((r) => (r.id === id ? { ...r, flexible: v } : r))
     );
-  }, []);
+  }, [setTransactions]);
 
   const visibleRows = useMemo(
     () => rows.filter((r) => r.tab === activeTab),
