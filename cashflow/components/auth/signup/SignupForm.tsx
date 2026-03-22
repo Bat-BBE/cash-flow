@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
+import { BrandLogo } from "@/components/dashboard/brand-logo";
 import PasswordInput from "./PasswordInput";
 import { cn } from "@/lib/utils";
 
@@ -92,8 +93,8 @@ const SignupForm = ({ onSubmit, onLogin }: SignupFormProps) => {
     <div className="min-h-screen flex items-center justify-center p-2 bg-[#141824] border border-slate-800/50 shadow-2xl rounded-[24px]">
       <div className="w-full">
         <div className="text-center">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(109,91,255,0.3)] mx-auto">
-            <img src="/logo.png" alt="CashFlow Logo" className="relative w-12 h-12 rounded-xl" /> 
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(109,91,255,0.3)] mx-auto p-2">
+            <BrandLogo size="md" maxWidthClassName="max-w-[3.5rem]" />
           </div>
         </div>
 

@@ -32,6 +32,8 @@ export default function ScheduledPage() {
     setSelectedDate,
     setShowMonthPicker,
     changeMonth,
+    jumpToMonth,
+    goToToday,
     addBill,
     addIncome,
     updateBillStatus,
@@ -50,6 +52,21 @@ export default function ScheduledPage() {
   const handleDayClick = (day: any) => {
     setSelectedDate(day);
     setShowDayDetails(true);
+  };
+
+  const handlePrevMonth = () => {
+    setShowDayDetails(false);
+    changeMonth('prev');
+  };
+
+  const handleNextMonth = () => {
+    setShowDayDetails(false);
+    changeMonth('next');
+  };
+
+  const handleToday = () => {
+    setShowDayDetails(false);
+    goToToday();
   };
 
   if (loading) {
@@ -121,8 +138,9 @@ export default function ScheduledPage() {
               days={calendarDays}
               currentDate={currentDate}
               onDayClick={handleDayClick}
-              onPrevMonth={() => changeMonth('prev')}
-              onNextMonth={() => changeMonth('next')}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              onToday={handleToday}
               onMonthPickerToggle={() => setShowMonthPicker(!showMonthPicker)}
               weekDays={weekDays}
             />
@@ -133,7 +151,8 @@ export default function ScheduledPage() {
               onClose={() => setShowMonthPicker(false)}
               currentDate={currentDate}
               onSelectMonth={(month, year) => {
-                changeMonth('next'); // Simplified
+                setShowDayDetails(false);
+                jumpToMonth(month, year);
               }}
             />
 

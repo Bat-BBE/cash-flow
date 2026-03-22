@@ -11,6 +11,7 @@ interface CalendarProps {
   onDayClick: (day: CalendarDay) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
+  onToday: () => void;
   onMonthPickerToggle: () => void;
   weekDays: string[];
 }
@@ -21,6 +22,7 @@ export function Calendar({
   onDayClick,
   onPrevMonth,
   onNextMonth,
+  onToday,
   onMonthPickerToggle,
   weekDays
 }: CalendarProps) {
@@ -49,9 +51,13 @@ export function Calendar({
             </span>
           </button>
           
-          <div className="bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider">
+          <button
+            type="button"
+            onClick={onToday}
+            className="bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider hover:bg-primary/15 transition-colors"
+          >
             Today
-          </div>
+          </button>
         </div>
 
         <div className="flex gap-2">
@@ -85,7 +91,7 @@ export function Calendar({
         {/* Calendar days */}
         {days.map((day, index) => (
           <CalendarCell
-            key={index}
+          key={day.date.getTime()}
             day={day}
             onClick={() => onDayClick(day)}
           />
@@ -102,6 +108,15 @@ function CalendarCell({ day, onClick }: { day: CalendarDay; onClick: () => void 
   return (
     <div
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      aria-label={`Select ${day.year}-${day.month + 1}-${day.day}`}
       className={cn(
         "calendar-cell p-3 h-28 text-xs font-medium relative transition-all cursor-pointer",
         day.isCurrentMonth 

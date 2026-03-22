@@ -42,17 +42,32 @@ function buildCalendarDays(
   month: number,
   bills: ScheduledBill[],
   incomes: ScheduledIncome[],
+  selectedDate?: Date | null,
 ): CalendarDay[] {
   const days: CalendarDay[] = [];
   const firstDay   = new Date(year, month, 1);
   const lastDay    = new Date(year, month + 1, 0);
   const today      = new Date();
   const prevOffset = firstDay.getDay();
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 
   // Өмнөх сарын сүүлийн өдрүүд
   for (let i = prevOffset - 1; i >= 0; i--) {
     const date = new Date(year, month, -i);
-    days.push({ date, day: date.getDate(), month: date.getMonth(), year: date.getFullYear(), isCurrentMonth: false, isToday: false, bills: [], income: [] });
+    days.push({
+      date,
+      day: date.getDate(),
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
+      bills: [],
+      income: [],
+    });
   }
 
   // Энэ сарын өдрүүд
@@ -66,6 +81,7 @@ function buildCalendarDays(
       year,
       isCurrentMonth: true,
       isToday:        date.toDateString() === today.toDateString(),
+      isSelected:     selectedDate ? isSameDay(date, selectedDate) : false,
       bills:          bills.filter((b) => b.date === dateStr),
       income:         incomes.filter((inc) => inc.date === dateStr),
     });
@@ -75,18 +91,38 @@ function buildCalendarDays(
   const remaining = 42 - days.length;
   for (let i = 1; i <= remaining; i++) {
     const date = new Date(year, month + 1, i);
-    days.push({ date, day: date.getDate(), month: date.getMonth(), year: date.getFullYear(), isCurrentMonth: false, isToday: false, bills: [], income: [] });
+    days.push({
+      date,
+      day: date.getDate(),
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      isCurrentMonth: false,
+      isToday: false,
+      isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
+      bills: [],
+      income: [],
+    });
   }
 
   return days;
 }
+
+/* ─── Date helpers ──────────────────────────────────────────────── */
+const formatYMD = (year: number, monthIndex: number, day: number) =>
+  `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+const extractDayOfMonth = (ymd: string) => {
+  const parts = ymd.split('-');
+  const day = Number(parts[2]);
+  return Number.isFinite(day) ? day : 1;
+};
 
 /* ─── Recalculate summary ────────────────────────────────────────── */
 function recalcSummary(
   bills: ScheduledBill[],
   incomes: ScheduledIncome[],
   startingBalance: number,
-  period: string,
+  _period: string,
 ): MonthlySummary {
   const totalOutgoing = bills.filter((b) => b.status !== 'paid').reduce((s, b) => s + b.amount, 0);
   const totalIncoming = incomes.reduce((s, i) => s + i.amount, 0);
@@ -172,7 +208,7 @@ export function useScheduledData() {
         netChange:       raw.summary.netChange,
       };
 
-      const calDays = buildCalendarDays(py, pm - 1, billList, incomeList);
+      const calDays = buildCalendarDays(py, pm - 1, billList, incomeList, null);
 
       setBills(billList);
       setIncomes(incomeList);
@@ -189,17 +225,45 @@ export function useScheduledData() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Сар солигдоход calendar-ийг дахин тооцно
+  // Сар солигдоход recurring өдөр (day-of-month)-ийг тухайн сар руу зөөнө.
+  // (Firebase-с хадгалагдаж буй нь recurrenceDay тул одоогийн сарын year/month-тай date-г нь тааруулж өгнө.)
   useEffect(() => {
-    if (bills.length > 0 || incomes.length > 0) {
-      setCalendarDays(buildCalendarDays(
+    const year = currentDate.getFullYear();
+    const monthIndex = currentDate.getMonth();
+
+    if (bills.length > 0) {
+      setBills((prev) =>
+        prev.map((b) => {
+          const day = extractDayOfMonth(b.date);
+          const nextDate = formatYMD(year, monthIndex, day);
+          return nextDate === b.date ? b : { ...b, date: nextDate };
+        }),
+      );
+    }
+
+    if (incomes.length > 0) {
+      setIncomes((prev) =>
+        prev.map((i) => {
+          const day = extractDayOfMonth(i.date);
+          const nextDate = formatYMD(year, monthIndex, day);
+          return nextDate === i.date ? i : { ...i, date: nextDate };
+        }),
+      );
+    }
+  }, [currentDate]);
+
+  // Calendar өдөр/сонголтыг дахин тооцно
+  useEffect(() => {
+    setCalendarDays(
+      buildCalendarDays(
         currentDate.getFullYear(),
         currentDate.getMonth(),
         bills,
         incomes,
-      ));
-    }
-  }, [currentDate, bills, incomes]);
+        selectedDate?.date ?? null,
+      ),
+    );
+  }, [currentDate, bills, incomes, selectedDate]);
 
   /* ── Сар солих ── */
   const changeMonth = (direction: 'prev' | 'next') => {
@@ -208,6 +272,17 @@ export function useScheduledData() {
       d.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
       return d;
     });
+    setSelectedDate(null);
+  };
+
+  const jumpToMonth = (monthIndex: number, year: number) => {
+    setCurrentDate(new Date(year, monthIndex, 1));
+    setSelectedDate(null);
+  };
+
+  const goToToday = () => {
+    setCurrentDate(new Date());
+    setSelectedDate(null);
   };
 
   /* ── Bill нэмэх ── */
@@ -265,6 +340,8 @@ export function useScheduledData() {
     setSelectedDate,
     setShowMonthPicker,
     changeMonth,
+    jumpToMonth,
+    goToToday,
     addBill,
     addIncome,
     updateBillStatus,
