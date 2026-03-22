@@ -1,12 +1,15 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
     const { prompt } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key missing' }), { status: 500 });
+      return NextResponse.json(
+        { text: '', skipped: true as const, reason: 'GEMINI_API_KEY тохируулаагүй байна.' },
+        { status: 200 },
+      );
     }
 
     const res = await fetch(
@@ -18,29 +21,33 @@ export async function POST(req: NextRequest) {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { temperature: 0.7, maxOutputTokens: 1000 },
         }),
-      }
+      },
     );
 
     if (!res.ok) {
-    const err = await res.json();
-    if (res.status === 429) {
-        const delay = err?.error?.details?.find((d: any) => d.retryDelay)?.retryDelay ?? '60s';
-        return new Response(
-        JSON.stringify({ error: `Хүсэлтийн лимит дууссан. ${delay}-ийн дараа дахин оролдоно уу.` }),
-        { status: 429 }
+      let err: unknown;
+      try {
+        err = await res.json();
+      } catch {
+        err = { message: await res.text() };
+      }
+      if (res.status === 429) {
+        const delay =
+          (err as { error?: { details?: { retryDelay?: string }[] } })?.error?.details?.find(
+            (d) => 'retryDelay' in d && d.retryDelay,
+          )?.retryDelay ?? '60s';
+        return NextResponse.json(
+          { error: `Хүсэлтийн лимит дууссан. ${delay}-ийн дараа дахин оролдоно уу.` },
+          { status: 429 },
         );
-    }
-    return new Response(JSON.stringify({ error: err }), { status: res.status });
+      }
+      return NextResponse.json({ error: err }, { status: res.status });
     }
 
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    return new Response(JSON.stringify({ text }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
+    return NextResponse.json({ text });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

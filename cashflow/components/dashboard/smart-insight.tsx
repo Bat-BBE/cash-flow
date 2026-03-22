@@ -224,6 +224,7 @@ export function SmartInsight() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
   const [error,     setError]     = useState<string | null>(null);
+  const [showGeminiSetupHint, setShowGeminiSetupHint] = useState(false);
 
   const abortRef     = useRef<AbortController | null>(null);
   const lastFetchRef = useRef<{ months: number; txCount: number } | null>(null);
@@ -239,6 +240,7 @@ export function SmartInsight() {
     setInsights([]);
     setActiveIdx(0);
     setError(null);
+    setShowGeminiSetupHint(false);
 
     const summary = buildFinancialSummary(rawTxs, months);
 
@@ -279,8 +281,14 @@ ${summary}
       if (!res.ok) throw new Error(`API error: ${res.status}`);
 
       const data = await res.json();
-      const text = data.text ?? '';
+      if (data.skipped) {
+        setInsights([]);
+        setError(null);
+        setShowGeminiSetupHint(true);
+        return;
+      }
 
+      const text = data.text ?? '';
       const parsed = parseAIInsights(text);
       if (parsed.length) {
         setInsights(parsed);
@@ -424,7 +432,14 @@ ${summary}
       {!aiLoading && !error && insights.length === 0 && (
         <div className="flex items-center gap-3 py-2">
           <span className="material-symbols-outlined p-2 rounded-xl text-sm bg-white/5 text-white/30 border border-white/10">lightbulb</span>
-          <p className="text-sm text-white/30">Мэдэгдэл байхгүй байна</p>
+          <p className="text-sm text-white/30">
+            Мэдэгдэл байхгүй байна.
+            {showGeminiSetupHint && (
+              <span className="block mt-1 text-[10px] text-white/20 leading-relaxed">
+                AI зөвлөмж ашиглахын тулд .env.local дээр GEMINI_API_KEY нэмнэ үү (Google AI Studio түлхүүр). Vercel дээр ч ижил нэрээр орчны хувьсагч нэмнэ.
+              </span>
+            )}
+          </p>
         </div>
       )}
 

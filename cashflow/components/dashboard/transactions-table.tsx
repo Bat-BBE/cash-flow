@@ -32,12 +32,6 @@ export function TransactionsTable() {
 
   const hasMore = filteredTransactions.length > PREVIEW_COUNT;
 
-  const visibleTransactions = expanded
-    ? filteredTransactions.slice(0, EXPANDED_COUNT)
-    : filteredTransactions.slice(0, PREVIEW_COUNT);
-
-  const hasMore = filteredTransactions.length > PREVIEW_COUNT;
-
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'completed': return 'text-emerald-400 bg-emerald-400/10';
@@ -163,7 +157,6 @@ export function TransactionsTable() {
                   <p className="text-[10px] sm:text-xs text-brand-muted mt-0.5 leading-tight">
                     {formatDate(tx.date)}
                   </p>
-                  <p className="text-xs text-brand-muted">{formatDate(tx.date)}</p>
                 </div>
               </div>
             ))
