@@ -27,6 +27,7 @@ export default function ScheduledPage() {
     showMonthPicker,
     setShowMonthPicker,
     changeMonth,
+<<<<<<< HEAD
     goToToday,
     selectedDate,
     setSelectedDate,
@@ -34,6 +35,10 @@ export default function ScheduledPage() {
     deleteBill,
     loanCurrency,
     upcomingLoanPayments,
+=======
+    jumpToMonth,
+    goToToday,
+>>>>>>> 3e4acc72ed3df6050f52a337c1c70ac2889bdc16
     addBill,
     addIncome,
   } = useScheduledCalendar();
@@ -54,6 +59,7 @@ export default function ScheduledPage() {
     setShowDayDetails(true);
   };
 
+<<<<<<< HEAD
   const openAddFromSelectedDay = (type: 'bill' | 'income') => {
     if (!selectedDate) return;
     const iso = formatDateForInputLocal(
@@ -63,6 +69,21 @@ export default function ScheduledPage() {
     setAddModalType(type);
     setShowDayDetails(false);
     setShowAddModal(true);
+=======
+  const handlePrevMonth = () => {
+    setShowDayDetails(false);
+    changeMonth('prev');
+  };
+
+  const handleNextMonth = () => {
+    setShowDayDetails(false);
+    changeMonth('next');
+  };
+
+  const handleToday = () => {
+    setShowDayDetails(false);
+    goToToday();
+>>>>>>> 3e4acc72ed3df6050f52a337c1c70ac2889bdc16
   };
 
   if (loading) {
@@ -104,8 +125,9 @@ export default function ScheduledPage() {
               currentDate={currentDate}
               currency={loanCurrency}
               onDayClick={handleDayClick}
-              onPrevMonth={() => changeMonth('prev')}
-              onNextMonth={() => changeMonth('next')}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              onToday={handleToday}
               onMonthPickerToggle={() => setShowMonthPicker(!showMonthPicker)}
               onGoToToday={goToToday}
             />

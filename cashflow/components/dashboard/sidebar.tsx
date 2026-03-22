@@ -8,6 +8,13 @@ import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 import { cn } from '@/lib/utils';
 import { ProfileDrawer } from './profile-drawer';
+<<<<<<< HEAD
+=======
+import { BrandLogo } from '@/components/dashboard/brand-logo';
+import { set } from 'date-fns';
+import { useDashboardData } from '@/contexts/dashboard-data-context';
+
+>>>>>>> 3e4acc72ed3df6050f52a337c1c70ac2889bdc16
 interface NavItem {
   label: string;
   translationKey: string;
@@ -247,29 +254,32 @@ export function Sidebar() {
           "p-6 flex items-center border-b border-white/5 relative",
           effectiveCollapsed && !isHovered ? 'justify-center' : 'justify-between'
         )}>
-          <div className={cn(
-            "flex items-center",
-            effectiveCollapsed && !isHovered ? 'gap-0' : 'gap-3'
-          )}>
-            <div className="relative">
+          <Link
+            href="/home"
+            className={cn(
+              'flex items-center min-w-0 rounded-xl outline-none ring-brand-primary/40 focus-visible:ring-2',
+              effectiveCollapsed && !isHovered ? 'gap-0 justify-center' : 'gap-3'
+            )}
+          >
+            <div className="relative shrink-0">
               <div className="absolute inset-0 bg-brand-primary/20 blur-lg rounded-full" />
-              {/* <div className="relative w-10 h-10 bg-gradient-to-br from-brand-primary to-brand-primary/80 rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/30">
-                <span className="material-symbols-outlined text-white font-bold text-2xl">
-                  account_balance_wallet
-                </span>
-              </div> */}
-              <img src="/logo.png" alt="CashFlow Logo" className="relative w-12 h-9 rounded-xl" />
+              <BrandLogo
+                size={effectiveCollapsed && !isHovered ? 'sm' : 'md'}
+                maxWidthClassName={
+                  effectiveCollapsed && !isHovered ? 'max-w-[4.25rem]' : 'max-w-[9rem]'
+                }
+              />
             </div>
-            
+
             {(!effectiveCollapsed || isHovered) && (
-              <div className="animate-slideIn">
+              <div className="animate-slideIn min-w-0">
                 <h1 className="text-white text-lg font-black tracking-tight">CashFlow</h1>
                 <p className="text-brand-muted text-[8px] uppercase tracking-widest font-bold">
                   {t('wealthManagement')}
                 </p>
               </div>
             )}
-          </div>
+          </Link>
 
           {isMobile && effectiveOpen && (
             <button
