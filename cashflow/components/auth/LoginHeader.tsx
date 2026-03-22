@@ -1,15 +1,14 @@
+"use client";
+
 import React from "react";
 import { BrandLogo } from "@/components/dashboard/brand-logo";
+import { useDashboard } from "@/components/providers/dashboard-provider";
+import { useTranslation } from "@/lib/translations";
 
-interface LoginHeaderProps {
-  title?: string;
-  subtitle?: string;
-}
+const LoginHeader = () => {
+  const { language } = useDashboard();
+  const t = useTranslation(language);
 
-const LoginHeader = ({ 
-  title = "Login", 
-  subtitle = "Welcome back! Please enter your details to sign in." 
-}: LoginHeaderProps) => {
   return (
     <div className="flex flex-col items-center">
       <div className="text-center mb-6">
@@ -19,10 +18,10 @@ const LoginHeader = ({
       </div>
       <div className="mb-2 text-center">
         <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
-          {title}
+          {t('loginTitle')}
         </h1>
         <p className="text-slate-400 font-normal">
-          {subtitle}
+          {t('loginSubtitle')}
         </p>
       </div>
     </div>

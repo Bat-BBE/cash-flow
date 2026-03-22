@@ -176,6 +176,21 @@ export const translations = {
     noLoansFound: 'Зээл олдсонгүй.',
     languageToggleLabel: 'Хэл',
     paymentsPrincipalThisMonthHint: 'Энэ сард үндсэн зээлээс хасагдах',
+
+    // Auth / Login
+    loginTitle: 'Нэвтрэх',
+    loginSubtitle: 'Дахин тавтай морилно уу. Нэвтрэхийн тулд мэдээллээ оруулна уу.',
+    loginEmailLabel: 'И-мэйл',
+    loginEmailPlaceholder: 'жишээ@gmail.com',
+    loginPasswordLabel: 'Нууц үг',
+    loginForgotPassword: 'Нууц үгээ мартсан уу?',
+    loginRememberMe: 'Намайг сана',
+    loginSignIn: 'Нэвтрэх',
+    loginDividerOr: 'эсвэл',
+    loginGoogle: 'Google-ээр нэвтрэх',
+    loginFooterNoAccount: 'Бүртгэлгүй юу?',
+    loginFooterSignUp: 'Бүртгүүлэх',
+    loginGoogleLogoAlt: 'Google лого',
   },
   EN: {
     // Header
@@ -352,6 +367,21 @@ export const translations = {
     noLoansFound: 'No loans found.',
     languageToggleLabel: 'Language',
     paymentsPrincipalThisMonthHint: 'Principal paid down this month (schedule)',
+
+    // Auth / Login
+    loginTitle: 'Sign in',
+    loginSubtitle: 'Welcome back! Enter your details to sign in.',
+    loginEmailLabel: 'Email',
+    loginEmailPlaceholder: 'you@example.com',
+    loginPasswordLabel: 'Password',
+    loginForgotPassword: 'Forgot password?',
+    loginRememberMe: 'Remember me',
+    loginSignIn: 'Sign in',
+    loginDividerOr: 'or',
+    loginGoogle: 'Continue with Google',
+    loginFooterNoAccount: "Don't have an account?",
+    loginFooterSignUp: 'Sign up',
+    loginGoogleLogoAlt: 'Google logo',
   },
 };
 
