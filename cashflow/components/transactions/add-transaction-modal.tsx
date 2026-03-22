@@ -15,6 +15,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useDashboardOptional } from '@/components/providers/dashboard-provider';
+import { useTranslation } from '@/lib/translations';
+import { DEFAULT_LANGUAGE } from '@/lib/types';
 
 interface AddTransactionModalProps {
   isOpen: boolean;
