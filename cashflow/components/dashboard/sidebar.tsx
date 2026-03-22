@@ -82,16 +82,24 @@ export function Sidebar() {
   const isMobile = useIsNarrow(768);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  /* close user menu on outside click */
+  /* Гадна дарахад хаах — нээх товчийг ижил даралтаар буруу хаахгүйн тулд listener-ийг дараагийн тикээр залгана */
   useEffect(() => {
     if (!showUserMenu) return;
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowUserMenu(false);
-      }
+    let detach: (() => void) | undefined;
+    const timer = window.setTimeout(() => {
+      const closeIfOutside = (target: EventTarget | null) => {
+        if (menuRef.current && target instanceof Node && !menuRef.current.contains(target)) {
+          setShowUserMenu(false);
+        }
+      };
+      const onPointerDown = (e: PointerEvent) => closeIfOutside(e.target);
+      document.addEventListener('pointerdown', onPointerDown, true);
+      detach = () => document.removeEventListener('pointerdown', onPointerDown, true);
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      detach?.();
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
   }, [showUserMenu]);
 
   /* close sidebar when route changes on mobile */
@@ -242,7 +250,7 @@ export function Sidebar() {
       )}
 
       <aside
-        onMouseLeave={() => setShowUserMenu(false)}
+        onMouseLeave={() => { if (!isMobile) setShowUserMenu(false); }}
         className={cn(
           'fixed left-0 top-16 z-40 flex min-h-0 flex-col border-r border-white/[0.06]',
           'bg-[#0e0c1e]/80 backdrop-blur-2xl',
@@ -348,58 +356,101 @@ export function Sidebar() {
           })} */}
         </nav>
 
-        {/* ── User / account — доод талд бэхтэй ── */}
+        {/* ── User / account — доод талд, өргөтгөсөн үед төвлөрсөн ── */}
         <div
           ref={menuRef}
-          className="relative mt-auto shrink-0 border-t border-white/[0.06] bg-[#0e0c1e]/40 p-2.5"
+          className={cn(
+            'relative mt-auto shrink-0 border-t border-white/[0.06] bg-[#0e0c1e]/40 p-2.5',
+            expanded && 'flex flex-col items-center',
+            isMobile && 'flex w-full flex-col gap-2',
+          )}
         >
-          {/* Popup menu */}
-          <div className={cn(
-            'absolute bottom-full left-2 right-2 z-50 mb-2 overflow-hidden rounded-2xl',
-            'border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl',
-            'transition-all duration-200 origin-bottom',
-            showUserMenu && expanded
-              ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 scale-95 translate-y-2 pointer-events-none',
-          )}>
-            {[
-              { icon: 'person',   label: t('profileLabel'), action: () => { setIsProfileDrawerOpen(true); setShowUserMenu(false); } },
-              { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
-              { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
-            ].map(({ icon, label, action }) => (
+          {/* Гар утас: урсгалд профайлын дээр — доош гарч дэлгэцээс харагдахгүй алдахгүй */}
+          {isMobile && showUserMenu && (
+            <div className="order-1 w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl">
+              {[
+                { icon: 'person',   label: t('profileLabel'), action: () => { setIsProfileDrawerOpen(true); setShowUserMenu(false); } },
+                { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
+                { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
+              ].map(({ icon, label, action }) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={action}
+                  className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors active:bg-white/10 hover:bg-white/[0.05] hover:text-white"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+                  {label}
+                </button>
+              ))}
+              <div className="border-t border-white/[0.06]" />
               <button
-                key={icon}
-                onClick={action}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors hover:bg-white/[0.05] hover:text-white"
+                type="button"
+                onClick={() => { router.push('/'); setShowUserMenu(false); }}
+                className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors active:bg-rose-500/15 hover:bg-rose-500/[0.08] hover:text-rose-300"
               >
-                <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
-                {label}
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                {t('logoutLabel')}
               </button>
-            ))}
-            <div className="border-t border-white/[0.06]" />
-            <button
-              onClick={() => { router.push('/'); setShowUserMenu(false); }}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors hover:bg-rose-500/[0.08] hover:text-rose-300"
+            </div>
+          )}
+
+          {/* Desktop: absolute popup */}
+          {!isMobile && (
+            <div
+              className={cn(
+                'absolute z-[55] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl',
+                'origin-bottom transition-all duration-200',
+                expanded
+                  ? 'bottom-full left-1/2 mb-2 w-[min(calc(100%-0.75rem),13.5rem)] -translate-x-1/2'
+                  : 'bottom-full left-2 right-2 mb-2',
+                showUserMenu
+                  ? 'pointer-events-auto opacity-100 scale-100 translate-y-0'
+                  : 'pointer-events-none opacity-0 scale-95 translate-y-2',
+              )}
             >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
-              {t('logoutLabel')}
-            </button>
-          </div>
+              {[
+                { icon: 'person',   label: t('profileLabel'), action: () => { setIsProfileDrawerOpen(true); setShowUserMenu(false); } },
+                { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
+                { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
+              ].map(({ icon, label, action }) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={action}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors hover:bg-white/[0.05] hover:text-white"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+                  {label}
+                </button>
+              ))}
+              <div className="border-t border-white/[0.06]" />
+              <button
+                type="button"
+                onClick={() => { router.push('/'); setShowUserMenu(false); }}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors hover:bg-rose-500/[0.08] hover:text-rose-300"
+              >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                {t('logoutLabel')}
+              </button>
+            </div>
+          )}
 
           {/* Avatar button */}
           <button
+            type="button"
             onClick={() => setShowUserMenu(v => !v)}
             className={cn(
-              'flex w-full items-center gap-3 rounded-xl p-2 transition-all duration-200',
+              'order-2 flex w-full items-center gap-3 rounded-xl p-2 transition-all duration-200',
               'hover:bg-white/[0.05]',
               showUserMenu && 'bg-white/[0.05]',
-              !expanded && 'justify-center',
+              expanded ? 'flex-col justify-center gap-1.5 py-3' : 'justify-center',
             )}
           >
             <div className="relative shrink-0">
-              <Avatar className="h-8 w-8 ring-1 ring-white/10 ring-offset-1 ring-offset-[#0e0c1e]">
+              <Avatar className="h-9 w-9 ring-1 ring-white/10 ring-offset-2 ring-offset-[#0e0c1e] md:h-10 md:w-10">
                 <AvatarImage src={user.avatarUrl} alt={user.name} />
-                <AvatarFallback className="bg-gradient-to-br from-violet-600 to-violet-800 text-white text-xs font-bold">
+                <AvatarFallback className="bg-gradient-to-br from-violet-600 to-violet-800 text-xs font-bold text-white">
                   {user.name?.charAt(0) ?? 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -407,11 +458,11 @@ export function Sidebar() {
             </div>
 
             {expanded && (
-              <div className="flex min-w-0 flex-1 flex-col items-start">
-                <p className="truncate text-[12px] font-semibold text-white/85 leading-tight">
+              <div className="flex min-w-0 max-w-full flex-col items-center text-center">
+                <p className="line-clamp-2 text-[12px] font-semibold leading-tight text-white/85">
                   {user.name ?? 'User'}
                 </p>
-                <span className="text-[9px] font-black uppercase tracking-widest text-violet-400/70">
+                <span className="mt-0.5 text-[9px] font-black uppercase tracking-widest text-violet-400/70">
                   {user.membershipType ?? 'PREMIUM'}
                 </span>
               </div>
@@ -419,20 +470,13 @@ export function Sidebar() {
 
             {expanded && (
               <span className={cn(
-                'material-symbols-outlined text-[16px] text-white/20 transition-transform duration-200 shrink-0',
+                'material-symbols-outlined shrink-0 text-[18px] text-white/25 transition-transform duration-200',
                 showUserMenu && 'rotate-180',
               )}>
-                expand_less
+                expand_more
               </span>
             )}
           </button>
-
-          {/* Collapsed tooltip for avatar */}
-          {!expanded && (
-            <div className="group/avatar absolute bottom-3 left-full z-50 ml-3 whitespace-nowrap rounded-lg border border-white/10 bg-[#131220]/95 px-2.5 py-1.5 text-[11px] font-semibold text-white/80 shadow-xl backdrop-blur-xl opacity-0 pointer-events-none">
-              {user.name}
-            </div>
-          )}
         </div>
       </aside>
 
