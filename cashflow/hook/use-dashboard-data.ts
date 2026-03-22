@@ -1,25 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { initializeApp, getApps }   from 'firebase/app';
-import { getDatabase, ref, get }    from 'firebase/database';
+import { ref, get } from 'firebase/database';
+import { db } from '@/lib/firebase';
 import {
   NetWorth, Stats, Transaction,
   Budget, SpendingData, Insight, TrendData,
 } from '@/components/dashboard/types';
-
-/* ─── Firebase ───────────────────────────────────────────────────── */
-const firebaseConfig = {
-  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  databaseURL:       process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const db  = getDatabase(app);
 
 const DEFAULT_USER_ID    = 'GANTULGA_TSERENCHIMED';
 const DEFAULT_ACCOUNT_ID = '5466262686';

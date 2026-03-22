@@ -2,13 +2,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+/** Репогийн үндсэн хавтас (cashflow-ийн эцэг) — Vercel дээр outputFileTracingRoot-тай тааруулна */
+const monorepoRoot = path.join(__dirname, '..');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Lockfile in C:\Users\LENOVO\ makes Next infer the wrong root; without this,
-  // Turbopack can pick up e.g. C:\Users\LENOVO\instrumentation.js and fail to parse it.
+  outputFileTracingRoot: monorepoRoot,
   turbopack: {
-    root: __dirname,
+    root: monorepoRoot,
   },
   images: {
     remotePatterns: [

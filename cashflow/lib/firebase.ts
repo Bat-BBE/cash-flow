@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getDatabase, type Database } from 'firebase/database';
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,36 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-export const db  = getDatabase(app);
+let cachedApp: FirebaseApp | undefined;
+let cachedDb: Database | undefined;
+
+/** Lazy init — Vercel `next build` prerender дээр модуль ачаалахад getDatabase дуудагдахгүй. */
+export function getFirebaseApp(): FirebaseApp {
+  if (!cachedApp) {
+    cachedApp = getApps()[0] ?? initializeApp(firebaseConfig);
+  }
+  return cachedApp;
+}
+
+export function getFirebaseDb(): Database {
+  if (!cachedDb) {
+    cachedDb = getDatabase(getFirebaseApp());
+  }
+  return cachedDb;
+}
+
+function bindProxy<T extends object>(getReal: () => T): T {
+  return new Proxy({} as T, {
+    get(_target, prop, receiver) {
+      const real = getReal();
+      const value = Reflect.get(real, prop, receiver);
+      return typeof value === 'function' ? (value as (...a: unknown[]) => unknown).bind(real) : value;
+    },
+  });
+}
+
+export const app = bindProxy(getFirebaseApp);
+export const db  = bindProxy(getFirebaseDb);
 
 export const DEFAULT_USER_ID = 'GANTULGA_TSERENCHIMED';
 export const DEFAULT_ACCOUNT_ID = '5466262686';
