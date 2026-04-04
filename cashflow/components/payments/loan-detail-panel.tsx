@@ -45,13 +45,13 @@ export function LoanDetailPanel({
   onClose,
 }: Props) {
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-brand-card/50 p-5 md:p-6 shadow-xl backdrop-blur-lg">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="rounded-[1.15rem] border border-white/5 bg-gradient-to-b from-brand-card/95 to-brand-card/75 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.2)] backdrop-blur-lg sm:rounded-3xl sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">{name}</h2>
-            <p className="text-sm text-slate-400 mt-1">{lender}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+            <h2 className="text-lg font-black tracking-tight text-white sm:text-xl md:text-2xl">{name}</h2>
+            <p className="mt-1 text-[13px] text-brand-muted sm:text-sm">{lender}</p>
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px] text-brand-muted sm:mt-3 sm:gap-2 sm:text-[11px]">
               <span className={statusPill(status)}>{status}</span>
               <span>·</span>
               <span className="tabular-nums">PMT {formatCurrency(monthlyPayment, currency)}/сар</span>
@@ -65,7 +65,7 @@ export function LoanDetailPanel({
             <button
               type="button"
               onClick={onClose}
-              className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
+              className="shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-bold text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:px-3 sm:py-2 sm:text-xs"
             >
               Хаах
             </button>

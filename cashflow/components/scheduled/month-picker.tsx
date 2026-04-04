@@ -1,6 +1,7 @@
 // components/scheduled/month-picker.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MN_MONTH_NAMES } from '@/lib/calendar-locale-mn';
 
@@ -12,61 +13,98 @@ interface MonthPickerProps {
 }
 
 export function MonthPicker({ isOpen, onClose, currentDate, onSelectMonth }: MonthPickerProps) {
+  const [viewYear, setViewYear] = useState(() => currentDate.getFullYear());
+
+  useEffect(() => {
+    if (isOpen) setViewYear(currentDate.getFullYear());
+  }, [isOpen, currentDate]);
+
   if (!isOpen) return null;
 
-  const years = [2023, 2024];
+  const shiftYear = (delta: number) => {
+    setViewYear((y) => Math.min(2035, Math.max(2020, y + delta)));
+  };
 
   return (
-    <div className="absolute top-24 left-6 z-20 w-80 bg-[#121827] border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden animate-fadeIn">
-      {/* Header */}
-      <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
-        <div className="flex items-center gap-2">
-          <button className="p-1 hover:text-primary transition-colors">
-            <span className="material-symbols-outlined text-sm">chevron_left</span>
-          </button>
-          <span className="text-xs text-slate-500 font-semibold">Жил</span>
-          <span className="text-sm font-bold text-white tabular-nums">{currentDate.getFullYear()}</span>
-          <button className="p-1 hover:text-primary transition-colors">
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
-          </button>
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-3 backdrop-blur-[2px] sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Сар сонгох"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[20rem] sm:max-w-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-brand-card shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
+          <div className="flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-3 py-3 sm:px-4">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => shiftYear(-1)}
+                className="rounded-lg p-1.5 text-brand-muted transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Өмнөх жил"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              </button>
+              <span className="min-w-[3.5rem] text-center text-sm font-black tabular-nums text-white sm:text-base">
+                {viewYear}
+              </span>
+              <button
+                type="button"
+                onClick={() => shiftYear(1)}
+                className="rounded-lg p-1.5 text-brand-muted transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Дараагийн жил"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-brand-muted transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Хаах"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5 p-3 sm:gap-2 sm:p-4">
+            {MN_MONTH_NAMES.map((month, index) => {
+              const isActive =
+                index === currentDate.getMonth() && viewYear === currentDate.getFullYear();
+              return (
+                <button
+                  key={month}
+                  type="button"
+                  onClick={() => {
+                    onSelectMonth(index, viewYear);
+                    onClose();
+                  }}
+                  className={cn(
+                    'rounded-xl px-2 py-2.5 text-[11px] font-bold transition-colors sm:py-3 sm:text-xs',
+                    isActive
+                      ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/25'
+                      : 'text-brand-muted hover:bg-white/[0.06] hover:text-white',
+                  )}
+                >
+                  {month}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="border-t border-white/5 px-3 py-2.5 text-center sm:px-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-[11px] font-bold text-brand-primary hover:underline sm:text-xs"
+            >
+              Буцах
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={onClose}
-          className="size-7 rounded-full glass-morphism flex items-center justify-center hover:bg-white/10 transition-all"
-        >
-          <span className="material-symbols-outlined text-sm text-white">close</span>
-        </button>
-      </div>
-
-      {/* Months grid */}
-        <div className="p-4 grid grid-cols-3 gap-2">
-        {MN_MONTH_NAMES.map((month, index) => (
-          <button
-            key={month}
-            onClick={() => {
-              onSelectMonth(index, currentDate.getFullYear());
-              onClose();
-            }}
-            className={cn(
-              "p-2 text-xs font-semibold rounded-lg transition-colors",
-              index === currentDate.getMonth()
-                ? 'text-white bg-primary shadow-lg shadow-primary/30'
-                : 'text-slate-400 hover:bg-white/5'
-            )}
-          >
-            {month}
-          </button>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="p-3 border-t border-white/5 text-center">
-        <button 
-          onClick={onClose}
-          className="text-[11px] font-bold text-primary hover:underline"
-        >
-          Буцах
-        </button>
       </div>
     </div>
   );

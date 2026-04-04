@@ -43,8 +43,8 @@ export function TransactionsTable() {
 
   if (loading) {
     return (
-      <div className="bg-brand-card rounded-2xl border border-white/5 overflow-hidden">
-        <div className="p-4 sm:p-6">
+      <div className="overflow-hidden rounded-[1.15rem] border border-white/5 bg-brand-card sm:rounded-2xl">
+        <div className="p-3.5 sm:p-6">
           <div className="animate-pulse">
             <div className="h-5 bg-white/5 rounded w-28 mb-4" />
             {[1, 2, 3].map(i => (
@@ -67,22 +67,24 @@ export function TransactionsTable() {
   }
 
   return (
-    <div className="bg-brand-card rounded-2xl border border-white/5 overflow-hidden">
-      <div className="p-4 sm:p-6">
+    <div className="overflow-hidden rounded-[1.15rem] border border-white/5 bg-brand-card sm:rounded-2xl">
+      <div className="p-3.5 sm:p-6">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2">
-          <h3 className="text-sm sm:text-lg font-bold text-white shrink-0">
+        <div className="mb-3 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <h3 className="min-w-0 shrink text-[0.8125rem] font-semibold leading-snug tracking-tight text-white sm:text-lg sm:font-bold">
             {t('recentTransactions')}
           </h3>
 
-          <div className="flex bg-brand-bg p-0.5 sm:p-1 rounded-lg">
+          <div className="flex w-full justify-end sm:w-auto">
+            <div className="inline-flex w-fit shrink-0 rounded-lg bg-brand-bg p-0.5 sm:p-1">
             {(['all', 'income', 'expense'] as const).map((type) => (
               <button
+                type="button"
                 key={type}
                 onClick={() => { setFilter(type); setExpanded(false); }}
                 className={cn(
-                  "px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all",
+                  'rounded-md px-2 py-1 text-[9px] font-medium transition-all sm:px-3 sm:py-1.5 sm:text-xs',
                   filter === type
                     ? 'bg-brand-primary text-white'
                     : 'text-brand-muted hover:text-white'
@@ -95,6 +97,7 @@ export function TransactionsTable() {
                     : t('expensesFilter')}
               </button>
             ))}
+            </div>
           </div>
         </div>
 
@@ -111,16 +114,16 @@ export function TransactionsTable() {
             visibleTransactions.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center gap-2.5 sm:gap-4 p-2.5 sm:p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                className="group flex items-center gap-2 rounded-xl p-2 transition-colors hover:bg-white/5 sm:gap-4 sm:p-3"
               >
                 {/* Icon */}
                 <div className={cn(
-                  "h-8 w-8 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center shrink-0",
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] sm:h-10 sm:w-10 sm:rounded-xl",
                   tx.type === 'income'
                     ? 'bg-emerald-500/10 text-emerald-400'
                     : 'bg-orange-500/10 text-orange-400'
                 )}>
-                  <span className="material-symbols-outlined text-base sm:text-lg">
+                  <span className="material-symbols-outlined text-[15px] sm:text-lg">
                     {tx.type === 'income' ? 'arrow_downward' : 'arrow_upward'}
                   </span>
                 </div>
@@ -128,7 +131,7 @@ export function TransactionsTable() {
                 {/* Name + meta */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <p className="font-medium text-xs sm:text-sm text-white truncate leading-tight">
+                    <p className="truncate text-[11px] font-medium leading-tight text-white sm:text-sm">
                       {tx.name}
                     </p>
                     {tx.status && (
@@ -140,7 +143,7 @@ export function TransactionsTable() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] sm:text-xs text-brand-muted truncate leading-tight">
+                  <p className="truncate text-[9px] leading-tight text-brand-muted sm:text-xs">
                     {tx.category}
                     <span className="hidden sm:inline"> • {tx.account}</span>
                   </p>
@@ -149,12 +152,12 @@ export function TransactionsTable() {
                 {/* Amount + date */}
                 <div className="text-right shrink-0">
                   <p className={cn(
-                    "text-xs sm:text-sm font-bold leading-tight",
+                    "text-[11px] font-bold leading-tight tabular-nums sm:text-sm",
                     tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'
                   )}>
                     {tx.type === 'income' ? '+' : '−'}{formatCurrency(tx.amount, 'MNT')}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-brand-muted mt-0.5 leading-tight">
+                  <p className="mt-0.5 text-[9px] leading-tight text-brand-muted sm:text-xs">
                     {formatDate(tx.date)}
                   </p>
                 </div>
@@ -167,7 +170,7 @@ export function TransactionsTable() {
         {hasMore && (
           <button
             onClick={() => setExpanded(prev => !prev)}
-            className="w-full mt-3 sm:mt-4 py-2 text-xs font-bold text-brand-primary hover:text-white transition-colors flex items-center justify-center gap-1"
+            className="mt-2 flex w-full items-center justify-center gap-1 py-2 text-[10px] font-bold text-brand-primary transition-colors hover:text-white sm:mt-4 sm:text-xs"
           >
             <span className="material-symbols-outlined text-sm">
               {expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}

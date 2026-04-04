@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
@@ -32,6 +32,10 @@ export default function AccountsPage() {
     setMobileView('detail');
   };
 
+  useEffect(() => {
+    if (!selectedAccount && mobileView === 'detail') setMobileView('sidebar');
+  }, [selectedAccount, mobileView]);
+
   /* ── Loading ── */
   if (loading) {
     return (
@@ -39,7 +43,7 @@ export default function AccountsPage() {
         <div className="flex flex-1 items-center justify-center px-4 py-16">
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-white/[0.08] border-t-brand-primary" />
-            <p className="text-[13px] font-semibold text-white/40">{t('loadingAccounts')}</p>
+            <p className="text-[11px] font-semibold text-white/40 sm:text-[13px]">{t('loadingAccounts')}</p>
           </div>
         </div>
       </DashboardShell>
@@ -48,56 +52,59 @@ export default function AccountsPage() {
 
   return (
     <DashboardShell>
-      <div className="flex h-full flex-col">
+      <div className="flex min-h-0 flex-col max-lg:h-auto lg:h-full">
 
-        {/* ── Mobile tab bar ── */}
-        <div className="shrink-0 border-b border-white/[0.05] px-4 pt-3 lg:hidden">
-          <div className="flex gap-0">
-            {[
-              { key: 'sidebar', label: 'Дансууд', icon: 'account_balance' },
-              { key: 'detail',  label: 'Дэлгэрэнгүй', icon: 'bar_chart' },
-            ].map(({ key, label, icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setMobileView(key as 'sidebar' | 'detail')}
-                className={cn(
-                  'relative flex items-center gap-1.5 px-3 pb-3 pt-1 text-[12px] font-bold transition-all duration-200',
-                  mobileView === key ? 'text-white' : 'text-white/35 hover:text-white/60',
-                )}
-              >
-                <span className="material-symbols-outlined text-[15px]">{icon}</span>
-                {label}
-                {mobileView === key && (
-                  <span className="absolute bottom-0 inset-x-2 h-[2px] rounded-full bg-brand-primary" />
-                )}
-              </button>
-            ))}
-
-            {/* Back button in detail view */}
-            {mobileView === 'detail' && selectedAccount && (
-              <button
-                type="button"
-                onClick={() => setMobileView('sidebar')}
-                className="ml-auto flex items-center gap-1 pb-3 pt-1 text-[12px] font-bold text-white/35 hover:text-white/65"
-              >
-                <span className="material-symbols-outlined text-[15px]">arrow_back</span>
-                Буцах
-              </button>
-            )}
+        {/* ── Mobile: дэлгэрэнгүй дээр sticky header (банкны апп шиг жагсаалт → буцах) ── */}
+        {mobileView === 'detail' && selectedAccount && (
+          <div
+            className="sticky top-0 z-20 flex shrink-0 items-center gap-1.5 border-b border-white/[0.06] bg-brand-bg/95 px-2.5 py-2 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-2.5 lg:hidden"
+          >
+            <button
+              type="button"
+              onClick={() => setMobileView('sidebar')}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-white/80 active:bg-white/[0.08] sm:h-10 sm:w-10"
+              aria-label="Буцах"
+            >
+              <span className="material-symbols-outlined text-[20px] sm:text-[22px]">arrow_back</span>
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-bold leading-tight tracking-tight text-white sm:text-[15px]">
+                {selectedAccount.name}
+              </p>
+              <p className="truncate text-[10px] text-white/40 sm:text-[11px]">
+                {selectedAccount.institution || 'Данс'}
+                {selectedAccount.accountNumber ? ` · •••• ${selectedAccount.accountNumber}` : ''}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* ── Main content area ── */}
-        <div className="flex min-h-0 flex-1 gap-4 p-3 sm:p-4 lg:gap-5 lg:p-6">
+        {/* ── Mobile: жагсаалтын дээр товч гарчиг ── */}
+        {mobileView === 'sidebar' && (
+          <div className="shrink-0 px-3 pt-1 pb-1.5 lg:hidden">
+            <h1 className="text-[1rem] font-bold leading-tight tracking-tight text-white sm:text-[1.125rem]">
+              {t('accountsOverview')}
+            </h1>
+            <p className="mt-0.5 text-[10px] leading-relaxed text-white/38 sm:text-[11px]">
+              Дансаа сонгоод үлдэгдэл, гүйлгээг үзнэ үү
+            </p>
+          </div>
+        )}
+
+        {/* ── Main content area — mobile дээр тойм бүхэлдээ scroll (дотоод scroll биш) ── */}
+        <div
+          className={cn(
+            'flex min-h-0 items-start gap-3 px-3 pb-4 pt-0 sm:gap-4 sm:px-4 sm:pb-4 lg:min-h-0 lg:items-stretch lg:gap-5 lg:p-6',
+            'max-lg:w-full max-lg:flex-none',
+            'lg:flex-1',
+          )}
+        >
 
           {/* ── Sidebar — left on desktop, shown/hidden on mobile ── */}
           <div
             className={cn(
-              'shrink-0 lg:block lg:w-[300px] xl:w-[340px]',
-              /* mobile: full width when active, hidden otherwise */
-              'max-lg:w-full max-lg:flex-1',
-              mobileView === 'sidebar' ? 'max-lg:flex' : 'max-lg:hidden',
+              'shrink-0 max-lg:w-full max-lg:flex-none max-lg:self-start lg:block lg:min-h-0 lg:w-[300px] lg:self-stretch xl:w-[340px]',
+              mobileView === 'sidebar' ? 'max-lg:block' : 'max-lg:hidden',
             )}
           >
             <AccountsSidebar

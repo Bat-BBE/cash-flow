@@ -15,7 +15,6 @@ interface CalendarProps {
   onDayClick: (day: CalendarDay) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
-  onToday: () => void;
   onMonthPickerToggle: () => void;
   onGoToToday: () => void;
 }
@@ -28,7 +27,6 @@ export function Calendar({
   onDayClick,
   onPrevMonth,
   onNextMonth,
-  onToday,
   onMonthPickerToggle,
   onGoToToday,
 }: CalendarProps) {
@@ -37,8 +35,8 @@ export function Calendar({
   return (
     <div
       className={cn(
-        'bg-navy-dark/40 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-sm',
-        isSidebar ? 'w-full p-2' : 'lg:col-span-7 p-4 sm:p-6',
+        'w-full rounded-[1.15rem] border border-white/5 bg-gradient-to-b from-brand-card/95 to-brand-card/75 shadow-[0_12px_40px_rgba(0,0,0,0.22)] backdrop-blur-lg sm:rounded-2xl',
+        isSidebar ? 'p-2' : 'p-3 sm:p-5 md:p-6',
       )}
     >
       {/* Calendar Header */}
@@ -52,30 +50,30 @@ export function Calendar({
           <button
             onClick={onMonthPickerToggle}
             className={cn(
-              'flex items-center bg-navy-dark border border-white/10 hover:border-primary/50 rounded-xl transition-all group',
-              isSidebar ? 'gap-1.5 px-2 py-1.5 flex-1 min-w-0' : 'gap-3 px-4 py-2.5',
+              'group flex items-center rounded-xl border border-white/10 bg-brand-bg/60 transition-all hover:border-brand-primary/40',
+              isSidebar ? 'min-w-0 flex-1 gap-1.5 px-2 py-1.5' : 'gap-2.5 px-3 py-2 sm:gap-3 sm:px-4 sm:py-2.5',
             )}
           >
             <span
               className={cn(
-                'material-symbols-outlined text-primary group-hover:scale-110 transition-transform shrink-0',
-                isSidebar && 'text-base',
+                'material-symbols-outlined shrink-0 text-brand-primary transition-transform group-hover:scale-105',
+                isSidebar ? 'text-base' : 'text-[20px] sm:text-[22px]',
               )}
             >
               calendar_month
             </span>
             <span
               className={cn(
-                'font-bold text-white truncate',
-                isSidebar ? 'text-xs' : 'text-lg',
+                'truncate font-bold text-white',
+                isSidebar ? 'text-xs' : 'text-[0.95rem] sm:text-lg',
               )}
             >
               {formatMnMonthYear(currentDate)}
             </span>
             <span
               className={cn(
-                'material-symbols-outlined text-slate-500 shrink-0',
-                isSidebar ? 'text-xs' : 'text-sm',
+                'material-symbols-outlined shrink-0 text-brand-muted',
+                isSidebar ? 'text-xs' : 'text-base',
               )}
             >
               expand_more
@@ -88,11 +86,11 @@ export function Calendar({
             title="Энэ сар руу"
             aria-label="Энэ сар руу"
             className={cn(
-              'flex items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary transition-colors hover:border-primary/40 hover:bg-primary/20 shrink-0',
+              'flex shrink-0 items-center justify-center rounded-lg border border-brand-primary/30 bg-brand-primary/15 text-brand-primary transition-colors hover:border-brand-primary/50 hover:bg-brand-primary/25',
               isSidebar ? 'p-1.5' : 'p-2',
             )}
           >
-            <span className={cn('material-symbols-outlined', isSidebar ? 'text-base' : 'text-xl')}>
+            <span className={cn('material-symbols-outlined', isSidebar ? 'text-base' : 'text-[20px] sm:text-[22px]')}>
               today
             </span>
           </button>
@@ -102,8 +100,8 @@ export function Calendar({
           <button
             onClick={onPrevMonth}
             className={cn(
-              'bg-navy-dark border border-white/5 hover:border-white/20 text-slate-400 hover:text-white rounded-xl transition-all',
-              isSidebar ? 'p-1.5' : 'p-2.5',
+              'rounded-xl border border-white/10 bg-brand-bg/50 text-brand-muted transition-all hover:border-white/15 hover:bg-white/[0.06] hover:text-white',
+              isSidebar ? 'p-1.5' : 'p-2 sm:p-2.5',
             )}
           >
             <span className={cn('material-symbols-outlined', isSidebar && 'text-lg')}>
@@ -113,8 +111,8 @@ export function Calendar({
           <button
             onClick={onNextMonth}
             className={cn(
-              'bg-navy-dark border border-white/5 hover:border-white/20 text-slate-400 hover:text-white rounded-xl transition-all',
-              isSidebar ? 'p-1.5' : 'p-2.5',
+              'rounded-xl border border-white/10 bg-brand-bg/50 text-brand-muted transition-all hover:border-white/15 hover:bg-white/[0.06] hover:text-white',
+              isSidebar ? 'p-1.5' : 'p-2 sm:p-2.5',
             )}
           >
             <span className={cn('material-symbols-outlined', isSidebar && 'text-lg')}>
@@ -127,14 +125,14 @@ export function Calendar({
       <CalendarLegend compact={isSidebar} />
 
       {/* Calendar Grid */}
-      <div className="calendar-grid grid grid-cols-7 overflow-hidden rounded-xl border border-white/5">
+      <div className="calendar-grid grid grid-cols-7 overflow-hidden rounded-xl border border-white/5 bg-brand-bg/30">
         {/* Weekday headers */}
         {MN_WEEKDAY_LABELS.map((day) => (
           <div
             key={day}
             className={cn(
-              'calendar-cell bg-navy-dark/60 text-center font-bold text-slate-500 tracking-wide',
-              isSidebar ? 'py-1.5 text-[7px]' : 'py-3 sm:py-4 text-[9px] sm:text-[10px]',
+              'calendar-cell bg-brand-card/80 text-center font-bold tracking-wide text-brand-muted',
+              isSidebar ? 'py-1.5 text-[7px]' : 'py-2.5 text-[10px] sm:py-3.5 sm:text-[11px]',
             )}
           >
             {day}
@@ -172,7 +170,7 @@ function CalendarLegend({ compact }: { compact?: boolean }) {
   return (
     <div
       className={cn(
-        'mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-white/5 bg-navy-dark/30',
+        'mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-white/5 bg-brand-bg/40 sm:mb-4 sm:gap-x-4',
         compact ? 'mb-2 px-2 py-1.5 gap-x-2' : 'px-3 py-2.5 sm:px-4',
       )}
       role="group"
@@ -197,7 +195,7 @@ function CalendarLegend({ compact }: { compact?: boolean }) {
               <span className="min-w-0 flex-1 bg-white/[0.04]" />
             </span>
             <span
-              className={cn('text-slate-400', compact ? 'text-[7px]' : 'text-[10px] sm:text-[11px]')}
+              className={cn('text-brand-muted', compact ? 'text-[7px]' : 'text-[10px] sm:text-[11px]')}
             >
               {label}
             </span>
@@ -276,14 +274,14 @@ function CalendarCell({
       aria-label={`Select ${day.year}-${day.month + 1}-${day.day}`}
       className={cn(
         'calendar-cell relative flex min-h-0 cursor-pointer flex-col overflow-hidden font-medium transition-all',
-        compact ? 'h-[4.25rem] p-1 text-[10px]' : 'h-28 p-2 text-xs sm:p-2.5',
+        compact ? 'h-[4.25rem] p-1 text-[10px]' : 'min-h-[6.25rem] h-[7.25rem] p-1.5 text-xs sm:h-28 sm:min-h-0 sm:p-2.5',
         day.isCurrentMonth
-          ? 'text-slate-400 hover:bg-white/[0.04]'
-          : 'text-slate-700 bg-navy-dark/20',
+          ? 'text-white/80 hover:bg-white/[0.05]'
+          : 'bg-brand-bg/25 text-white/25',
         day.isToday &&
-          'z-[2] rounded-xl bg-gradient-to-br from-primary/30 via-violet-600/20 to-primary/25 shadow-[0_0_0_2px_rgba(139,92,246,0.65),0_8px_28px_-4px_rgba(88,50,220,0.55),inset_0_1px_0_0_rgba(255,255,255,0.12)] ring-2 ring-primary/80',
-        !day.isToday && day.isSelected && 'ring-2 ring-primary',
-        day.isToday && day.isSelected && 'ring-2 ring-white/40',
+          'z-[2] rounded-xl bg-gradient-to-br from-brand-primary/35 via-brand-primary/15 to-violet-600/20 shadow-[0_0_0_2px_rgba(112,96,240,0.55),0_8px_24px_-4px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.1)] ring-2 ring-brand-primary/70',
+        !day.isToday && day.isSelected && 'ring-2 ring-brand-primary/60',
+        day.isToday && day.isSelected && 'ring-2 ring-white/35',
       )}
     >
       <span
@@ -292,8 +290,8 @@ function CalendarCell({
           compact ? 'size-5 text-[10px]' : 'size-7',
           day.isToday &&
             (compact
-              ? 'size-6 bg-gradient-to-br from-primary to-violet-600 font-black text-white shadow-md shadow-primary/50 ring-1 ring-white/25'
-              : 'size-8 bg-gradient-to-br from-primary to-violet-600 text-sm font-black text-white shadow-lg shadow-primary/50 ring-2 ring-white/25'),
+              ? 'size-6 bg-gradient-to-br from-brand-primary to-violet-600 font-black text-white shadow-md shadow-brand-primary/30 ring-1 ring-white/25'
+              : 'size-7 bg-gradient-to-br from-brand-primary to-violet-600 text-xs font-black text-white shadow-lg shadow-brand-primary/35 ring-2 ring-white/25 sm:size-8 sm:text-sm'),
           !day.isToday && 'font-medium',
         )}
       >
@@ -312,7 +310,7 @@ function CalendarCell({
             <div
               key={`${line.kind}-${line.id}`}
               className={cn(
-                'flex min-h-0 w-full items-stretch overflow-hidden rounded border border-slate-500/25 bg-slate-950/35 shadow-sm shadow-black/20',
+                'flex min-h-0 w-full items-stretch overflow-hidden rounded border border-white/10 bg-black/25 shadow-sm',
                 compact && 'rounded-sm',
                 line.kind === 'bill' && 'text-violet-200/95',
                 line.kind === 'income' && 'text-emerald-200/95',
@@ -330,8 +328,8 @@ function CalendarCell({
               />
               <span
                 className={cn(
-                  'min-w-0 flex-1 truncate text-right font-black tabular-nums leading-tight',
-                  compact ? 'py-0 px-0.5 text-[6px]' : 'py-0.5 pl-1 pr-1.5 text-[8px]',
+                  'min-w-0 flex-1 text-right font-bold tabular-nums leading-tight tracking-tight',
+                  compact ? 'px-0.5 py-0 text-[6px]' : 'px-1 py-0.5 text-[9px] sm:pr-1.5 sm:text-[10px]',
                 )}
               >
                 {formatCompactCalendarAmount(line.amount, currency)}
@@ -341,8 +339,8 @@ function CalendarCell({
           {overflow > 0 && (
             <div
               className={cn(
-                'flex w-full items-center justify-center rounded border border-dashed border-slate-500/35 bg-slate-900/60 font-black tabular-nums text-slate-300',
-                compact ? 'py-0 text-[6px] leading-none' : 'py-0.5 text-[8px] leading-none',
+                'flex w-full items-center justify-center rounded border border-dashed border-white/15 bg-brand-bg/60 font-bold tabular-nums text-white/50',
+                compact ? 'py-0 text-[6px] leading-none' : 'py-0.5 text-[9px] leading-none sm:text-[10px]',
               )}
               title={`${overflow} бусад үйл явдал`}
             >

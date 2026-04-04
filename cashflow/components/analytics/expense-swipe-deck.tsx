@@ -82,7 +82,7 @@ function SwipeableExpenseCard({
         className="pointer-events-none absolute inset-y-4 left-3 z-0 flex max-w-[42%] items-center justify-center rounded-2xl border border-sky-400/25 bg-sky-500/15 px-2 py-3 text-center"
         style={{ opacity: leftHint }}
       >
-        <span className="text-[11px] font-black uppercase leading-tight tracking-wide text-sky-100">
+        <span className="text-[9px] font-black uppercase leading-tight tracking-wide text-sky-100 sm:text-[11px]">
           Тогтмол
           <br />
           зардал
@@ -92,7 +92,7 @@ function SwipeableExpenseCard({
         className="pointer-events-none absolute inset-y-4 right-3 z-0 flex max-w-[42%] items-center justify-center rounded-2xl border border-amber-400/25 bg-amber-500/12 px-2 py-3 text-center"
         style={{ opacity: rightHint }}
       >
-        <span className="text-[11px] font-black uppercase leading-tight tracking-wide text-amber-100">
+        <span className="text-[9px] font-black uppercase leading-tight tracking-wide text-amber-100 sm:text-[11px]">
           Тогтмол биш
           <br />
           зардал
@@ -115,31 +115,31 @@ function SwipeableExpenseCard({
             'shadow-[0_24px_48px_rgba(0,0,0,0.45),inset_0_1px_0_0_rgba(255,255,255,0.08)]'
           )}
         >
-          <div className="flex items-start justify-between gap-3 px-5 pb-2 pt-5">
-            <div className="flex min-w-0 items-start gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/[0.06] text-sky-300 ring-1 ring-white/10">
-                <Wallet className="size-5" strokeWidth={2} />
+          <div className="flex items-start justify-between gap-2 px-4 pb-1.5 pt-4 sm:gap-3 sm:px-5 sm:pb-2 sm:pt-5">
+            <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-sky-300 ring-1 ring-white/10 sm:size-11 sm:rounded-2xl">
+                <Wallet className="size-[18px] sm:size-5" strokeWidth={2} />
               </span>
               <div className="min-w-0">
-                <p className="truncate text-base font-bold leading-snug text-white">
+                <p className="truncate text-[14px] font-bold leading-snug text-white sm:text-base">
                   {tx.label}
                 </p>
                 {tx.categoryHint && (
-                  <p className="mt-1 truncate text-xs text-slate-500">{tx.categoryHint}</p>
+                  <p className="mt-0.5 truncate text-[10px] text-slate-500 sm:mt-1 sm:text-xs">{tx.categoryHint}</p>
                 )}
               </div>
             </div>
-            <CreditCard className="size-5 shrink-0 text-slate-600" strokeWidth={1.5} />
+            <CreditCard className="size-[18px] shrink-0 text-slate-600 sm:size-5" strokeWidth={1.5} />
           </div>
-          <div className="px-5 pb-5 pt-1">
-            <p className="font-mono text-2xl font-black tabular-nums tracking-tight text-sky-200/95">
+          <div className="px-4 pb-4 pt-0.5 sm:px-5 sm:pb-5 sm:pt-1">
+            <p className="font-mono text-[1.35rem] font-black tabular-nums leading-none tracking-tight text-sky-200/95 sm:text-2xl">
               {formatCurrency(tx.amount, 'MNT')}
             </p>
             {tx.date && (
-              <p className="mt-2 text-xs font-medium text-slate-500">{tx.date}</p>
+              <p className="mt-1.5 text-[10px] font-medium text-slate-500 sm:mt-2 sm:text-xs">{tx.date}</p>
             )}
           </div>
-          <div className="flex justify-between border-t border-white/[0.06] px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <div className="flex justify-between gap-1 border-t border-white/[0.06] px-3 py-2 text-[8px] font-bold uppercase tracking-wider text-slate-500 sm:px-5 sm:py-3 sm:text-[10px]">
             <span className="text-sky-300/90">← чирээд тогтмол</span>
             <span className="text-amber-300/90">тогтмол биш чирээд →</span>
           </div>
@@ -189,28 +189,23 @@ export function ExpenseSwipeDeck({
     [current, onClassify]
   );
 
-  const handleButton = (classification: ExpenseClassification) => {
-    if (!current) return;
-    onClassify(current.id, classification);
-  };
-
   if (total === 0) {
     return (
-      <p className="py-8 text-center text-sm text-slate-500">Зардлын гүйлгээ алга.</p>
+      <p className="py-8 text-center text-[12px] text-slate-500 sm:text-sm">Зардлын гүйлгээ алга.</p>
     );
   }
 
   if (!current) {
     return (
-      <div className="space-y-5 py-6 text-center">
-        <p className="text-lg font-bold text-white">Бүх зардлыг ангиллаа</p>
-        <p className="text-sm text-slate-400">
+      <div className="space-y-4 py-5 text-center sm:space-y-5 sm:py-6">
+        <p className="text-[1rem] font-bold text-white sm:text-lg">Бүх зардлыг ангиллаа</p>
+        <p className="text-[11px] leading-relaxed text-slate-400 sm:text-sm">
           Доорх хураангуй шинэчлэгдсэн. Дахин swipe хийх бол товшино уу.
         </p>
         <button
           type="button"
           onClick={onRestartDeck}
-          className="rounded-full border border-white/15 bg-white/[0.06] px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/10"
+          className="rounded-full border border-white/15 bg-white/[0.06] px-5 py-2 text-[12px] font-bold text-white transition hover:bg-white/10 sm:px-6 sm:py-2.5 sm:text-sm"
         >
           Дахин эхлүүлэх
         </button>
@@ -220,13 +215,13 @@ export function ExpenseSwipeDeck({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm font-semibold text-slate-300">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+        <p className="text-[12px] font-semibold text-slate-300 sm:text-sm">
           <span className="tabular-nums text-white">{done}</span>
           <span className="text-slate-500"> / </span>
           <span className="tabular-nums text-slate-400">{total}</span>
-          <span className="ml-2 text-slate-500">ангилсан</span>
+          <span className="ml-1.5 text-[11px] text-slate-500 sm:ml-2 sm:text-inherit">ангилсан</span>
         </p>
         <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-white/[0.06] sm:ml-auto">
           <motion.div
@@ -238,7 +233,7 @@ export function ExpenseSwipeDeck({
         </div>
       </div>
 
-      <div className="relative min-h-[300px] py-2">
+      <div className="relative min-h-[210px] py-0 sm:min-h-[260px] sm:py-0.5">
         {stackPreview.map((tx, i) => (
           <div
             key={tx.id}
@@ -249,8 +244,8 @@ export function ExpenseSwipeDeck({
               opacity: 0.55 - i * 0.12,
             }}
           >
-            <div className="rounded-3xl border border-white/[0.06] bg-[#151b28]/95 p-5 shadow-lg">
-              <p className="truncate text-sm font-semibold text-slate-500">{tx.label}</p>
+            <div className="rounded-2xl border border-white/[0.06] bg-[#151b28]/95 p-3.5 shadow-lg sm:rounded-3xl sm:p-5">
+              <p className="truncate text-[11px] font-semibold text-slate-500 sm:text-sm">{tx.label}</p>
             </div>
           </div>
         ))}
@@ -260,23 +255,6 @@ export function ExpenseSwipeDeck({
         </div>
       </div>
 
-      <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:gap-4">
-        <button
-          type="button"
-          onClick={() => handleButton('fixed')}
-          className="rounded-2xl border border-sky-400/35 bg-sky-500/15 py-3 text-sm font-bold text-sky-100 shadow-[0_0_24px_rgba(56,189,248,0.12)] transition hover:bg-sky-500/25"
-        >
-          ← Тогтмол зардал
-        </button>
-        <button
-          type="button"
-          onClick={() => handleButton('variable_nonfixed')}
-          className="rounded-2xl border border-amber-400/35 bg-amber-500/12 py-3 text-sm font-bold text-amber-100 shadow-[0_0_24px_rgba(251,146,60,0.1)] transition hover:bg-amber-500/20"
-        >
-          Тогтмол биш зардал →
-        </button>
-      </div>
-
       <ExpenseLiveSummary fixedPct={fixedPct} varPct={varPct} />
     </div>
   );
@@ -284,11 +262,11 @@ export function ExpenseSwipeDeck({
 
 function ExpenseLiveSummary({ fixedPct, varPct }: { fixedPct: number; varPct: number }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+    <div className="rounded-[1rem] border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 sm:rounded-2xl sm:px-4 sm:py-2">
+      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 sm:text-[10px]">
         Шууд хураангуй
       </p>
-      <div className="mt-2 flex flex-wrap gap-4 text-sm">
+      <div className="mt-1 flex flex-wrap gap-2 text-[11px] sm:gap-3 sm:text-sm">
         <span className="text-slate-300">
           Тогтмол зардал:{' '}
           <span className="font-mono font-bold text-sky-200">{fixedPct.toFixed(0)}%</span>

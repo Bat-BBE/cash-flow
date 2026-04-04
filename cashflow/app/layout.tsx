@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { DashboardProvider } from "@/components/providers/dashboard-provider";
@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   title: "CashFlow — Санхүүгийн хянах самбар",
   description:
     "Өөрийн орлого, зарлага, зээл, төлбөрийг нэг дороос удирдах орчин үеийн самбар.",
+};
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: "#203040",
 };
 
 export default function RootLayout({

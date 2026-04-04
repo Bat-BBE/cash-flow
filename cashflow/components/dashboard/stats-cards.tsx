@@ -18,7 +18,7 @@ interface StatCardProps {
 function StatCard({ title, value, change, changePercentage, icon, color, loading }: StatCardProps) {
   if (loading) {
     return (
-      <div className="bg-brand-card rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-white/5 flex-1">
+      <div className="flex-1 rounded-[0.85rem] border border-white/5 bg-brand-card p-2.5 sm:rounded-2xl sm:p-5">
         <div className="animate-pulse">
           <div className="flex items-center justify-between mb-3">
             <div className="h-3 bg-white/5 rounded w-20" />
@@ -34,23 +34,23 @@ function StatCard({ title, value, change, changePercentage, icon, color, loading
   const isPositive = changePercentage != null ? changePercentage > 0 : null;
 
   return (
-    <div className="bg-brand-card rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-white/5 hover:border-white/10 transition-all group flex-1 min-w-0">
-      <div className="flex items-center justify-between mb-2 sm:mb-3">
-        <p className="text-[10px] sm:text-xs font-bold text-brand-muted uppercase tracking-wider group-hover:text-white transition-colors leading-tight truncate pr-2">
+    <div className="group min-w-0 flex-1 rounded-[0.85rem] border border-white/5 bg-brand-card p-2.5 transition-all hover:border-white/10 sm:rounded-2xl sm:p-5">
+      <div className="mb-1.5 flex items-center justify-between sm:mb-3">
+        <p className="truncate pr-1.5 text-[9px] font-bold uppercase tracking-wider text-brand-muted transition-colors group-hover:text-white sm:text-xs">
           {title}
         </p>
-        <span className={cn("material-symbols-outlined p-1.5 sm:p-2 rounded-lg text-base sm:text-lg shrink-0", color)}>
+        <span className={cn('material-symbols-outlined shrink-0 rounded-md p-1 text-sm sm:p-2 sm:text-lg', color)}>
           {icon}
         </span>
       </div>
 
-      <p className="text-base sm:text-xl font-black text-white mb-1 truncate">{value}</p>
+      <p className="mb-0.5 truncate text-sm font-black tabular-nums text-white sm:mb-1 sm:text-xl">{value}</p>
 
       {change && (
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex flex-wrap items-center gap-0.5 sm:gap-1">
           {changePercentage !== undefined && (
             <span className={cn(
-              "text-[10px] sm:text-xs font-bold flex items-center gap-0.5",
+              "flex items-center gap-0.5 text-[9px] font-bold sm:text-xs",
               isPositive ? 'text-emerald-400' : 'text-orange-400'
             )}>
               <span className="material-symbols-outlined text-xs">
@@ -59,7 +59,7 @@ function StatCard({ title, value, change, changePercentage, icon, color, loading
               {changePercentage > 0 ? '+' : ''}{changePercentage}%
             </span>
           )}
-          <span className="text-[10px] sm:text-xs text-brand-muted">{change}</span>
+          <span className="text-[9px] text-brand-muted sm:text-xs">{change}</span>
         </div>
       )}
     </div>
@@ -109,7 +109,7 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="flex gap-2 sm:gap-3 w-full">
+    <div className="flex w-full gap-2 sm:gap-3">
       {cards.map((card, index) => (
         <StatCard key={index} {...card} loading={loading} />
       ))}

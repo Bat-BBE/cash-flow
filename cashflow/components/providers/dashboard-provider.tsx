@@ -25,6 +25,8 @@ interface DashboardContextType {
   setSelectedMonth: (month: string) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  profileDrawerOpen: boolean;
+  setProfileDrawerOpen: (open: boolean) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>('all');
   const [selectedMonth, setSelectedMonth] = useState('Oct 2023');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
 
   return (
     <DashboardContext.Provider
@@ -54,6 +57,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setSelectedMonth,
         sidebarOpen,
         setSidebarOpen,
+        profileDrawerOpen,
+        setProfileDrawerOpen,
       }}
     >
       {children}

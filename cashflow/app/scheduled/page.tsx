@@ -74,18 +74,13 @@ export default function ScheduledPage() {
     changeMonth('next');
   };
 
-  const handleToday = () => {
-    setShowDayDetails(false);
-    goToToday();
-  };
-
   if (loading) {
     return (
-      <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
+      <DashboardShell className="bg-brand-bg" mainClassName="bg-brand-bg">
         <div className="flex flex-1 items-center justify-center px-4 py-16">
-          <div className="text-center">
-            <div className="mb-4 size-12 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
-            <p className="font-medium text-slate-400">Ачааллаж байна...</p>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="size-10 animate-spin rounded-full border-[3px] border-white/[0.08] border-t-brand-primary sm:size-11" />
+            <p className="text-[11px] font-semibold text-brand-muted sm:text-[13px]">Ачааллаж байна...</p>
           </div>
         </div>
       </DashboardShell>
@@ -94,17 +89,19 @@ export default function ScheduledPage() {
 
   return (
     <>
-      <DashboardShell className="bg-navy-deep" mainClassName="bg-navy-deep">
-        <div className="mx-auto w-full max-w-[1440px] flex-1 space-y-6 p-4 sm:p-6">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-white">
-                Санхүүгийн календарь
-              </h1>
-            </div>
+      <DashboardShell className="bg-brand-bg" mainClassName="bg-brand-bg">
+        <div className="mx-auto w-full max-w-[1400px] flex-1 space-y-3 px-3 pb-3 pt-1 sm:space-y-4 sm:px-4 sm:pb-4 sm:pt-2 md:space-y-5 md:px-6 md:py-5">
+          <div>
+            <h1 className="text-[1.125rem] font-black leading-tight tracking-tight text-white sm:text-2xl md:text-3xl">
+              Санхүүгийн календарь
+            </h1>
+            <p className="mt-0.5 max-w-xl text-[10px] leading-relaxed text-brand-muted sm:mt-1 sm:text-sm">
+              Төлбөр, орлого, зээлийн төлөлтийг сараар харах.
+            </p>
           </div>
 
-          <div className="relative grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-12">
+          <div className="relative grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-12">
+            <div className="relative lg:col-span-7">
             <Calendar
               days={calendarDays}
               currentDate={currentDate}
@@ -112,7 +109,6 @@ export default function ScheduledPage() {
               onDayClick={handleDayClick}
               onPrevMonth={handlePrevMonth}
               onNextMonth={handleNextMonth}
-              onToday={handleToday}
               onMonthPickerToggle={() => setShowMonthPicker(!showMonthPicker)}
               onGoToToday={goToToday}
             />
@@ -123,8 +119,9 @@ export default function ScheduledPage() {
               currentDate={currentDate}
               onSelectMonth={(monthIndex, year) => jumpToMonth(monthIndex, year)}
             />
+            </div>
 
-            <div className="flex flex-col gap-6 lg:col-span-5">
+            <div className="flex flex-col gap-4 sm:gap-5 lg:col-span-5">
               <BillsList
                 bills={bills}
                 onUpdateStatus={updateBillStatus}

@@ -25,7 +25,12 @@ function toQuizLang(language: Language): QuizLanguage {
   return language === 'EN' ? 'EN' : 'MN';
 }
 
-export function LoanPaydownStyleCard() {
+type LoanPaydownStyleCardProps = {
+  /** Дээд талд гарчиг тусдаа байвал дотоод гарчиг/жагсаалтыг хасна */
+  embedded?: boolean;
+};
+
+export function LoanPaydownStyleCard({ embedded = false }: LoanPaydownStyleCardProps) {
   const { language } = useDashboard();
   const L = toQuizLang(language);
 
@@ -59,16 +64,15 @@ export function LoanPaydownStyleCard() {
             ctaAgain: 'Retake the quiz',
           }
         : {
-            title: 'Зээл төлөхөд таны хэв маяг',
+            title: 'Төлөх хэв маяг',
             lead:
-              'Хэдхэн асуултаар шийдвэр гаргалтын хэвийг таньж, энэ хуудсын зөвлөмжийг танд илүү ойрхон болгоно. Энэ нь таныг “өртэй” гэж тодорхойлох биш.',
+              'Хэдхэн асуултаар таны шийдвэрийн хэвийг тодорхойлно — зөвлөмжийг танд тааруулна.',
             bullets: [
-              'Өөрийгөө ойлгож байна гэдэг нь итгэл өгнө.',
-              'Танд тохирсон аргаар төлөвлөгөөгөө тогтмол дагахад амар.',
-              'Санал болгосон стратегид илүү итгэлтэй болно.',
+              'Өөрийн хэвийг мэдэхэд төлөвлөгөөгөө барихад амар.',
+              'Стратеги сонгоход илүү итгэлтэй болно.',
             ],
-            cta: 'Зан төлөвөө тодорхойлох',
-            ctaAgain: 'Дахин асуулга өгөх',
+            cta: 'Асуулга өгөх',
+            ctaAgain: 'Дахин өгөх',
           },
     [L],
   );
@@ -125,36 +129,47 @@ export function LoanPaydownStyleCard() {
     <>
       <section
         className={cn(
-          'relative overflow-hidden rounded-3xl border border-white/[0.08]',
-          'bg-gradient-to-br from-violet-500/[0.07] via-brand-card/80 to-sky-500/[0.06]',
-          'p-6 md:p-8 shadow-xl shadow-black/20 backdrop-blur-lg',
+          'relative overflow-hidden rounded-[1.15rem] border border-white/5 sm:rounded-3xl',
+          'bg-gradient-to-br from-violet-500/[0.07] via-brand-card/90 to-sky-500/[0.06]',
+          'shadow-[0_12px_40px_rgba(0,0,0,0.22)] backdrop-blur-lg',
+          embedded ? 'p-3 sm:p-5 md:p-6' : 'p-4 sm:p-6 md:p-8',
         )}
       >
         <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-violet-500/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 size-40 rounded-full bg-sky-500/10 blur-3xl" />
 
-        <div className="relative flex flex-col gap-5 md:flex-row md:items-start md:justify-between md:gap-8">
-          <div className="min-w-0 space-y-3 flex-1">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              <span className="material-symbols-outlined text-primary text-[16px]">psychology</span>
-              {L === 'EN' ? 'Loan payoff style' : 'Зээл төлөх зан төлөв'}
-            </div>
-            <h2 className="text-xl font-black tracking-tight text-white md:text-2xl">{intro.title}</h2>
-            <p className="text-sm leading-relaxed text-slate-400">{intro.lead}</p>
-            <ul className="space-y-2 text-sm text-slate-500">
-              {intro.bullets.map((b) => (
-                <li key={b} className="flex gap-2">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary/80" />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">
+          <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
+            {!embedded ? (
+              <>
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-muted sm:gap-2 sm:px-2.5 sm:text-[10px]">
+                  <span className="material-symbols-outlined text-[14px] text-brand-primary sm:text-[15px]">psychology</span>
+                  {L === 'EN' ? 'Loan payoff style' : 'Төлөх зан'}
+                </div>
+                <h2 className="text-base font-black tracking-tight text-white sm:text-lg md:text-xl">{intro.title}</h2>
+                <p className="text-[11px] leading-relaxed text-brand-muted sm:text-[12px] md:text-sm">{intro.lead}</p>
+                <ul className="space-y-1 text-[11px] text-white/45 sm:text-[12px]">
+                  {intro.bullets.map((b) => (
+                    <li key={b} className="flex gap-1.5">
+                      <span className="mt-1 size-1 shrink-0 rounded-full bg-brand-primary/80" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-[10px] leading-relaxed text-brand-muted sm:text-[12px]">
+                {L === 'EN'
+                  ? 'Short quiz — we map how you prefer to approach debt (tips only).'
+                  : 'Хэдхэн асуултаар төлөхөд өөрийн хэвийг таньж, зөвлөмжийг тааруулна.'}
+              </p>
+            )}
           </div>
 
-          <div className="flex shrink-0 flex-col gap-3 md:w-[min(100%,280px)]">
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto md:w-[min(100%,260px)]">
             {stored && storedCopy ? (
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              <div className="rounded-2xl border border-white/5 bg-brand-bg/40 p-3 sm:p-4">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-brand-muted sm:text-[10px]">
                   {L === 'EN' ? 'Saved result' : 'Хадгалсан үр дүн'}
                 </p>
                 <p className="mt-2 text-sm font-bold leading-snug text-white">{storedCopy.title}</p>
@@ -164,12 +179,12 @@ export function LoanPaydownStyleCard() {
               type="button"
               onClick={openFresh}
               className={cn(
-                'inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-bold',
-                'bg-primary text-primary-foreground shadow-lg shadow-primary/25',
+                'inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[12px] font-bold sm:w-auto sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm',
+                'bg-brand-primary text-white shadow-md shadow-brand-primary/20',
                 'hover:opacity-95 active:scale-[0.99] transition-all',
               )}
             >
-              <span className="material-symbols-outlined text-[20px]">quiz</span>
+              <span className="material-symbols-outlined text-[18px] sm:text-[20px]">quiz</span>
               {stored ? intro.ctaAgain : intro.cta}
             </button>
           </div>

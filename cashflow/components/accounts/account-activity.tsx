@@ -128,22 +128,17 @@ export function AccountActivity({
   if (loading) {
     return (
       <div>
-        <h2 className="text-lg font-bold text-white mb-4">{t('accountActivity')}</h2>
-        <div className="bg-brand-card rounded-2xl border border-white/5 overflow-hidden">
-          <div className="animate-pulse">
-            <div className="border-b border-white/5 bg-white/5 p-4">
-              <div className="h-4 bg-white/5 rounded w-24"></div>
-            </div>
+        <h2 className="mb-3 text-[0.8125rem] font-bold text-white sm:mb-4 sm:text-[0.9375rem] md:text-lg">{t('accountActivity')}</h2>
+        <div className="overflow-hidden rounded-[1rem] border border-white/5 bg-brand-card sm:rounded-2xl">
+          <div className="animate-pulse p-3 sm:p-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-4 border-b border-white/5">
-                <div className="flex items-center gap-4">
-                  <div className="h-9 w-9 bg-white/5 rounded-xl"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-white/5 rounded w-32 mb-2"></div>
-                    <div className="h-3 bg-white/5 rounded w-20"></div>
-                  </div>
-                  <div className="h-4 bg-white/5 rounded w-24"></div>
+              <div key={i} className="flex items-center gap-3 border-b border-white/5 py-3 last:border-0">
+                <div className="h-10 w-10 rounded-xl bg-white/5" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="h-3.5 w-3/4 max-w-[12rem] rounded bg-white/5" />
+                  <div className="h-3 w-20 rounded bg-white/5" />
                 </div>
+                <div className="h-4 w-16 rounded bg-white/5" />
               </div>
             ))}
           </div>
@@ -154,62 +149,67 @@ export function AccountActivity({
 
   return (
     <div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
-        <div className="min-w-0 space-y-3">
-          <h2 className="text-lg font-bold text-white">{t('accountActivity')}</h2>
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3 py-2.5 sm:min-w-[200px] sm:justify-start sm:py-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400/90">
-                <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                {t('periodSummaryIncome')}
+      <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="min-w-0 space-y-2.5 sm:space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="text-[0.8125rem] font-bold leading-snug text-white sm:text-[0.9375rem] md:text-lg">{t('accountActivity')}</h2>
+            {filteredTransactions.length > 0 && (
+              <span className="shrink-0 text-[8px] text-white/35 sm:text-[9px] md:text-[10px] md:text-brand-muted">
+                {filteredTransactions.length} {t('transactionsCountLabel')}
               </span>
-              <span className="text-sm font-black tabular-nums text-emerald-300">
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+            <div className="flex min-h-[3rem] flex-col justify-between gap-0.5 rounded-[0.65rem] border border-emerald-500/25 bg-emerald-500/[0.08] px-2 py-1.5 sm:min-h-0 sm:min-w-[200px] sm:flex-row sm:items-center sm:justify-between sm:gap-1 sm:px-3 sm:py-2.5">
+              <span className="flex items-center gap-0.5 text-[8px] font-black uppercase leading-tight tracking-wider text-emerald-400/95 sm:gap-1.5 sm:text-[10px]">
+                <span className="material-symbols-outlined shrink-0 text-[14px] sm:text-[16px]">trending_up</span>
+                <span className="leading-tight">{t('periodSummaryIncome')}</span>
+              </span>
+              <span className="text-[10px] font-black tabular-nums leading-none text-emerald-300 sm:text-sm">
                 +{formatCurrency(periodIncomeTotal, currency)}
               </span>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/25 bg-rose-500/[0.08] px-3 py-2.5 sm:min-w-[200px] sm:justify-start sm:py-2">
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-400/90">
-                <span className="material-symbols-outlined text-[16px]">trending_down</span>
-                {t('periodSummaryExpense')}
+            <div className="flex min-h-[3rem] flex-col justify-between gap-0.5 rounded-[0.65rem] border border-rose-500/25 bg-rose-500/[0.08] px-2 py-1.5 sm:min-h-0 sm:min-w-[200px] sm:flex-row sm:items-center sm:justify-between sm:gap-1 sm:px-3 sm:py-2.5">
+              <span className="flex items-center gap-0.5 text-[8px] font-black uppercase leading-tight tracking-wider text-rose-400/95 sm:gap-1.5 sm:text-[10px]">
+                <span className="material-symbols-outlined shrink-0 text-[14px] sm:text-[16px]">trending_down</span>
+                <span className="leading-tight">{t('periodSummaryExpense')}</span>
               </span>
-              <span className="text-sm font-black tabular-nums text-rose-300">
+              <span className="text-[10px] font-black tabular-nums leading-none text-rose-300 sm:text-sm">
                 −{formatCurrency(periodExpenseTotal, currency)}
               </span>
             </div>
           </div>
         </div>
-        {filteredTransactions.length > 0 && (
-          <span className="text-[10px] text-brand-muted shrink-0">
-            {filteredTransactions.length} {t('transactionsCountLabel')}
-          </span>
-        )}
       </div>
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <div className="flex bg-brand-card p-1 rounded-lg border border-white/5">
-            {(['all', 'income', 'expense', 'transfer'] as FilterType[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={cn(
-                  'px-3 py-1.5 text-xs font-medium transition-all rounded-md',
-                  filter === f
-                    ? 'bg-brand-primary text-white'
-                    : 'text-brand-muted hover:text-white'
-                )}
-              >
-                {filterLabel(f)}
-              </button>
-            ))}
+        <div className="mb-3 space-y-2 sm:mb-4">
+          <div className="-mx-0.5 flex overflow-x-auto pb-0.5 scrollbar-none sm:mx-0 sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden">
+            <div className="inline-flex shrink-0 rounded-[0.65rem] border border-white/5 bg-black/30 p-0.5 sm:rounded-lg">
+              {(['all', 'income', 'expense', 'transfer'] as FilterType[]).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    'shrink-0 rounded-md px-1.5 py-1 text-[9px] font-semibold transition-all sm:px-3 sm:py-1.5 sm:text-xs',
+                    filter === f
+                      ? 'bg-brand-primary text-white'
+                      : 'text-brand-muted hover:text-white',
+                  )}
+                >
+                  {filterLabel(f)}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortType)}
-              className="bg-brand-card border border-white/5 rounded-lg px-3 py-1.5 text-xs text-white"
+              className="w-full rounded-lg border border-white/5 bg-brand-card px-2.5 py-1.5 text-[10px] text-white sm:w-auto sm:px-3 sm:py-1.5 sm:text-xs"
             >
               <option value="newest">{t('sortNewestFirst')}</option>
               <option value="oldest">{t('sortOldestFirst')}</option>
@@ -217,33 +217,82 @@ export function AccountActivity({
               <option value="lowest">{t('sortLowestAmount')}</option>
             </select>
 
-            <div className="relative">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 material-symbols-outlined text-xs text-brand-muted">
+            <div className="relative min-w-0 flex-1">
+              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 material-symbols-outlined text-[13px] text-brand-muted sm:left-2.5 sm:text-[14px]">
                 search
               </span>
               <input
-                type="text"
+                type="search"
                 placeholder={t('searchTransactionsPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-brand-card border border-white/5 rounded-lg pl-7 pr-3 py-1.5 text-xs text-white placeholder:text-brand-muted focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                className="w-full rounded-lg border border-white/5 bg-brand-card py-1.5 pl-7 pr-2.5 text-[10px] text-white placeholder:text-brand-muted focus:outline-none focus:ring-1 focus:ring-brand-primary sm:py-1.5 sm:pl-8 sm:pr-3 sm:text-xs"
               />
             </div>
           </div>
         </div>
       )}
 
-      {/* Transactions Table */}
-      <div className="bg-brand-card rounded-2xl border border-white/5 overflow-hidden">
+      {/* Transactions: mobile cards — desktop table */}
+      <div className="overflow-hidden rounded-[1rem] border border-white/5 bg-brand-card sm:rounded-2xl">
         {filteredTransactions.length === 0 ? (
-          <div className="p-8 text-center">
-            <span className="material-symbols-outlined text-4xl text-brand-muted mb-2">
+          <div className="px-4 py-10 text-center sm:py-12">
+            <span className="material-symbols-outlined mb-2 block text-3xl text-brand-muted sm:text-4xl">
               receipt_long
             </span>
-            <p className="text-sm text-brand-muted">{t('noTransactionsFound')}</p>
+            <p className="text-[12px] text-brand-muted sm:text-sm">{t('noTransactionsFound')}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="md:hidden">
+              <ul className="divide-y divide-white/[0.06]">
+                {filteredTransactions.map((tx) => (
+                  <li key={tx.id}>
+                    <div className="flex items-center gap-2 px-2.5 py-2 active:bg-white/[0.03] sm:gap-2.5 sm:px-3 sm:py-2.5">
+                      <div
+                        className={cn(
+                          'flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] sm:h-9 sm:w-9',
+                          tx.type === 'income'
+                            ? 'bg-emerald-500/15 text-emerald-400'
+                            : tx.type === 'expense'
+                              ? 'bg-rose-500/15 text-rose-400'
+                              : 'bg-brand-primary/10 text-brand-primary',
+                        )}
+                      >
+                        <span className="material-symbols-outlined text-[16px] sm:text-[18px]">{tx.icon}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[11px] font-semibold leading-tight text-white sm:text-[12px]">{tx.name}</p>
+                        <p className="mt-0.5 truncate text-[9px] text-white/38 sm:text-[10px]">
+                          {formatDate(tx.date)}
+                          <span className="text-white/22"> · </span>
+                          <span className={cn('inline rounded px-0.5 py-0.5 text-[8px] font-bold sm:px-1 sm:text-[9px]', getCategoryColor(tx.category))}>
+                            {tx.category}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p
+                          className={cn(
+                            'text-[11px] font-bold tabular-nums leading-tight sm:text-[12px]',
+                            tx.type === 'income'
+                              ? 'text-emerald-400'
+                              : tx.type === 'expense'
+                                ? 'text-rose-400'
+                                : 'text-brand-primary',
+                          )}
+                        >
+                          {tx.type === 'income' ? '+' : tx.type === 'expense' ? '−' : ''}
+                          {formatCurrency(Math.abs(tx.amount), currency)}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/5 bg-white/5">
@@ -326,13 +375,13 @@ export function AccountActivity({
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
 
-        {/* View All Link */}
         {filteredTransactions.length > 0 && filteredTransactions.length >= limit && (
-          <div className="p-4 text-center border-t border-white/5">
-            <button className="text-xs font-bold text-brand-primary hover:text-white transition-colors">
+          <div className="border-t border-white/5 p-3 text-center sm:p-4">
+            <button type="button" className="text-[11px] font-bold text-brand-primary transition-colors hover:text-white sm:text-xs">
               {t('viewAllTransactions')}
             </button>
           </div>

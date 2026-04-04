@@ -97,7 +97,7 @@ function DonutChart({
   const hl = highlighted ? segments.find((s) => s.category === highlighted) : null;
 
   return (
-    <div className="relative mx-auto aspect-square w-40 shrink-0 sm:w-60">
+    <div className="relative mx-auto aspect-square w-[8.25rem] shrink-0 sm:w-60">
       <svg viewBox="0 0 100 100" className="size-full" aria-hidden>
         {paths}
         <circle cx={cx} cy={cy} r={r - 1} fill="transparent" />
@@ -108,15 +108,15 @@ function DonutChart({
       >
         {hl ? (
           <>
-            <p className="max-w-full truncate text-center text-[10px] font-semibold leading-snug text-white/55 sm:text-[13px]">
+            <p className="max-w-full truncate text-center text-[9px] font-semibold leading-snug text-white/55 sm:text-[13px]">
               {hl.category}
             </p>
-            <p className="mt-1 text-base font-bold tabular-nums text-white">{hl.percentage}%</p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums text-white sm:mt-1 sm:text-base">{hl.percentage}%</p>
           </>
         ) : (
           <>
-            <p className="text-[14px] text-white/35">нийт</p>
-            <p className="mt-0.5 max-w-full truncate text-center text-[14px] font-bold tabular-nums text-white sm:text-sm">
+            <p className="text-[11px] text-white/35 sm:text-[14px]">нийт</p>
+            <p className="mt-0.5 max-w-full truncate text-center text-xs font-bold tabular-nums text-white sm:text-sm">
               {fmtCompact(total)}
             </p>
           </>
@@ -177,7 +177,7 @@ function CategoryRow({
 
         <span
           className={cn(
-            'block min-w-0 truncate text-[11px] font-medium leading-snug',
+            'block min-w-0 truncate text-[10px] font-medium leading-snug sm:text-[11px]',
             isHl ? 'text-white' : 'text-white/48',
           )}
           title={item.category}
@@ -196,7 +196,7 @@ function CategoryRow({
           </span>
         )}
 
-        <span className="shrink-0 text-right text-[11px] font-bold tabular-nums text-white">
+        <span className="shrink-0 text-right text-[10px] font-bold tabular-nums text-white sm:text-[11px]">
           {fmtCompact(item.amount)}
         </span>
 
@@ -291,7 +291,7 @@ export function SpendingChart() {
   /* ── Loading skeleton ── */
   if (loading) {
     return (
-      <div className="bg-brand-card rounded-2xl border border-white/5 p-4 sm:p-6">
+      <div className="rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
         <div className="animate-pulse space-y-3">
           <div className="h-4 w-36 rounded bg-white/5" />
           <div className="flex items-center gap-4">
@@ -313,21 +313,21 @@ export function SpendingChart() {
 
   if (!spendingData.length) {
     return (
-      <div className="bg-brand-card flex items-center gap-3 rounded-2xl border border-white/5 p-6">
-        <span className="material-symbols-outlined text-2xl text-white/15">pie_chart</span>
-        <p className="text-sm text-white/30">Зарлагын мэдээлэл байхгүй байна</p>
+      <div className="flex items-center gap-2.5 rounded-[1.15rem] border border-white/5 bg-brand-card p-4 sm:gap-3 sm:rounded-2xl sm:p-6">
+        <span className="material-symbols-outlined shrink-0 text-xl text-white/15 sm:text-2xl">pie_chart</span>
+        <p className="text-[11px] leading-snug text-white/35 sm:text-sm sm:text-white/30">Зарлагын мэдээлэл байхгүй байна</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-brand-card rounded-2xl border border-white/5 p-4 sm:p-6">
+    <div className="rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
 
       {/* ── Header ── */}
-      <div className="mb-4 flex items-start justify-between gap-2">
+      <div className="mb-3 flex items-start justify-between gap-2 sm:mb-4">
         <div className="min-w-0">
-          <h3 className="text-sm font-bold text-white">{t('spendingBreakdownTitle')}</h3>
-          <p className="mt-0.5 text-[10px] text-white/35">
+          <h3 className="text-[0.8125rem] font-semibold leading-snug tracking-tight text-white sm:text-sm sm:font-bold">{t('spendingBreakdownTitle')}</h3>
+          <p className="mt-0.5 text-[9px] text-white/35 sm:text-[10px]">
             {months === 1 ? 'Энэ сар' : `Сүүлийн ${months} сар`}
             {' · '}
             <span className="font-semibold text-white/55">{fmtCompact(totalSpent)}</span>
@@ -346,7 +346,7 @@ export function SpendingChart() {
       </div>
 
 
-      <div className="flex flex-col items-center gap-4 sm:items-start sm:gap-6">
+      <div className="flex flex-col items-center gap-3 sm:items-start sm:gap-6">
         <DonutChart
           key={donutKey}
           segments={spendingData}
@@ -376,10 +376,10 @@ export function SpendingChart() {
 
       {/* ── Over-budget alert ── */}
       {overBudget.length > 0 && (
-        <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/[0.07] px-3 py-2.5">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-sm leading-none text-rose-400">warning</span>
-            <p className="text-[11px] font-semibold text-rose-400">Хязгаар хэтэрсэн ангиллууд</p>
+        <div className="mt-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.07] px-2.5 py-2 sm:mt-4 sm:px-3 sm:py-2.5">
+          <div className="mb-1 flex items-center gap-1.5 sm:mb-1.5">
+            <span className="material-symbols-outlined text-[15px] leading-none text-rose-400 sm:text-sm">warning</span>
+            <p className="text-[10px] font-semibold leading-snug text-rose-400 sm:text-[11px]">Хязгаар хэтэрсэн ангиллууд</p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {overBudget.map(([cat, b]) => (

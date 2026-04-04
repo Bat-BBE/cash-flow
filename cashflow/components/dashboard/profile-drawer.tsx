@@ -292,7 +292,7 @@ export function ProfileDrawer({ isOpen, onClose, user }: ProfileDrawerProps) {
           'flex flex-col gap-0 overflow-hidden p-0 max-md:max-w-none',
           /* Mobile: header-ийн доор бүтэн өргөн sheet, хажуугийн илүү зайгүй */
           'max-md:fixed max-md:inset-x-0 max-md:left-0 max-md:right-0 max-md:top-16 max-md:bottom-0 max-md:h-auto',
-          'max-md:max-h-[calc(100dvh-4rem)] max-md:w-full',
+          'max-md:max-h-[calc(100dvh-4.25rem)] max-md:w-full',
           'max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none',
           'max-md:border max-md:border-white/[0.06] max-md:border-x-0 max-md:border-t-0',
           'max-md:bg-[#080612] max-md:shadow-[8px_0_40px_rgba(0,0,0,0.45)]',

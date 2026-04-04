@@ -21,7 +21,7 @@ export function LiquidityChart({ projections, summary }: LiquidityChartProps) {
   );
 
   return (
-    <div className="bg-navy-dark/40 rounded-2xl border border-white/5 p-8 shadow-2xl overflow-hidden backdrop-blur-sm">
+    <div className="overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-b from-brand-card/95 to-brand-card/75 p-6 shadow-[0_12px_40px_rgba(0,0,0,0.2)] backdrop-blur-lg sm:p-8">
       {/* Chart Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
         <div>
@@ -116,7 +116,7 @@ export function LiquidityChart({ projections, summary }: LiquidityChartProps) {
       </div>
 
       {/* Summary Cards */}
-      <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-6 p-6 bg-navy-dark/60 rounded-2xl border border-white/5">
+      <div className="mt-12 grid grid-cols-2 gap-6 rounded-2xl border border-white/5 bg-brand-bg/50 p-6 sm:grid-cols-4">
         <div>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
             Starting Balance

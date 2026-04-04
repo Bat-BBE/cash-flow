@@ -8,76 +8,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 import { cn } from '@/lib/utils';
-import { ProfileDrawer } from './profile-drawer';
-interface NavItem {
-  label: string;
-  translationKey: string;
-  icon: string;
-  href: string;
-  badge?: { count?: number; color?: string };
-  children?: NavItem[];
-}
-
-const mainNavItems: NavItem[] = [
-  { 
-    label: 'Dashboard', 
-    translationKey: 'dashboard', 
-    icon: 'dashboard', 
-    href: '/home',
-    badge: { color: 'emerald' }
-  },
-  { 
-    label: 'Accounts', 
-    translationKey: 'accounts', 
-    icon: 'account_balance_wallet', 
-    href: '/accounts',
-    badge: { count: 5, color: 'brand' }
-  },
-  { 
-    label: 'Analytics', 
-    translationKey: 'analytics', 
-    icon: 'analytics', 
-    href: '/analytics' 
-  },
-  {
-    label: 'loan',
-    translationKey: 'loan',
-    icon: 'payments',
-    href: '/payments',
-  },
-  {
-    label: 'Calendar',
-    translationKey: 'calendar',
-    icon: 'calendar_month',
-    href: '/scheduled',
-  },
-];
-
-const badgeColors: Record<string, string> = {
-  brand:   'bg-violet-500/15 text-violet-300 border-violet-500/25',
-  emerald: 'bg-emerald-500/12 text-emerald-400 border-emerald-500/20',
-  amber:   'bg-amber-500/12 text-amber-400 border-amber-500/20',
-  blue:    'bg-blue-500/12 text-blue-400 border-blue-500/20',
-  red:     'bg-red-500/12 text-red-400 border-red-500/20',
-};
-
-/* ── tiny glow dot per nav item ── */
-const itemGlows: Record<string, string> = {
-  '/home':      'from-emerald-500/20',
-  '/accounts':  'from-violet-500/20',
-  '/budgets':   'from-amber-500/20',
-  '/analytics': 'from-blue-500/20',
-};
+import { mainNavItems, badgeColors, itemGlows, type NavItem } from './nav-config';
 
 export function Sidebar() {
-  const { user, language, sidebarOpen, setSidebarOpen } = useDashboard();
+  const { user, language, setProfileDrawerOpen } = useDashboard();
   const t        = useTranslation(language);
   const pathname = usePathname();
   const router   = useRouter();
 
   const [expandedItems,      setExpandedItems]      = useState<string[]>([]);
   const [isCollapsed,        setIsCollapsed]        = useState(false);
-  const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [showUserMenu,       setShowUserMenu]       = useState(false);
   const isMobile = useIsNarrow(768);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -102,14 +42,8 @@ export function Sidebar() {
     };
   }, [showUserMenu]);
 
-  /* close sidebar when route changes on mobile */
-  useEffect(() => {
-    if (isMobile) setSidebarOpen(false);
-  }, [pathname, isMobile, setSidebarOpen]);
-
-  /** Drawer: нээлттэй үед бүрэн гарчиг; desktop: зөвхөн товчлуураар нээгдэнэ (hover-оор биш). */
-  const expanded           = isMobile ? sidebarOpen : !isCollapsed;
-  const effectiveOpen      = isMobile ? sidebarOpen : true;
+  /** Desktop: зөвхөн товчлуураар нээгдэнэ (hover-оор биш). Гар утас дээр доод tab bar ашиглана. */
+  const expanded = !isCollapsed;
 
   const toggleExpand = (href: string) =>
     setExpandedItems(prev =>
@@ -128,7 +62,6 @@ export function Sidebar() {
           href={item.href}
           onClick={(e) => {
             if (hasChildren) { e.preventDefault(); toggleExpand(item.href); }
-            if (isMobile) setSidebarOpen(false);
           }}
           className={cn(
             'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 mb-3',
@@ -223,11 +156,10 @@ export function Sidebar() {
 
   const sidebarWidth = expanded ? 'w-60' : 'w-[68px]';
 
+  if (isMobile) return null;
+
   return (
     <div className="relative flex shrink-0">
-      {/*
-        Spacer (md+): fixed sidebar flex мөрөнд зай үлдээнэ. Mobile-д drawer тул зайгүй.
-      */}
       <div
         aria-hidden
         className={cn(
@@ -237,30 +169,16 @@ export function Sidebar() {
         )}
       />
 
-      {/* Mobile overlay — header-ийн доор */}
-      {isMobile && (
-        <div
-          aria-hidden
-          className={cn(
-            'fixed inset-x-0 bottom-0 top-16 z-[35] bg-black/70 backdrop-blur-sm transition-all duration-300 lg:hidden',
-            effectiveOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
-          )}
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
       <aside
-        onMouseLeave={() => { if (!isMobile) setShowUserMenu(false); }}
+        onMouseLeave={() => setShowUserMenu(false)}
         className={cn(
-          'fixed top-16 z-40 flex min-h-0 flex-col',
+          'fixed z-40 flex min-h-0 flex-col',
+          'top-[calc(4.25rem+env(safe-area-inset-top))]',
           'bg-[#0e0c1e]/80 backdrop-blur-2xl',
-          'h-[calc(100dvh-4rem)]',
+          'h-[calc(100dvh-4.25rem-env(safe-area-inset-top))]',
           'transition-[width,transform] duration-300 ease-[cubic-bezier(.4,0,.2,1)]',
           sidebarWidth,
-          // ── Desktop: зүүн тал ──
-          !isMobile && 'left-0 border-r border-white/[0.06] translate-x-0',
-          // ── Mobile: баруун тал ──
-          isMobile && 'right-0 border-l border-white/[0.06]',
-          isMobile && (effectiveOpen ? 'translate-x-0' : 'translate-x-full'),
+          'left-0 border-r border-white/[0.06] translate-x-0',
         )}
       >
         {/* Subtle inner noise / gradient */}
@@ -269,41 +187,24 @@ export function Sidebar() {
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         </div>
 
-        {/* ── Desktop collapse toggle ── */}
-        {!isMobile && (
-          <button
-            type="button"
-            aria-label={isCollapsed ? 'Сидбарыг нээх' : 'Сидбарыг хаах'}
-            onClick={() => setIsCollapsed(v => !v)}
-            className={cn(
-              'absolute -right-3 top-8 z-10',
-              'flex h-6 w-6 items-center justify-center rounded-full',
-              'border border-white/10 bg-[#1a1830] shadow-lg',
-              'text-white/40 transition-all duration-200 hover:border-violet-500/40 hover:text-violet-400',
-            )}
-          >
-            <span className={cn(
-              'material-symbols-outlined text-[14px] transition-transform duration-300',
-              isCollapsed ? 'rotate-180' : '',
-            )}>
-              chevron_left
-            </span>
-          </button>
-        )}
-
-        {/* ── Mobile close button ── */}
-        {isMobile && effectiveOpen && (
-          <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.06] px-4">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-white/20">Цэс</span>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-white/5 hover:text-white"
-            >
-              <span className="material-symbols-outlined text-[20px]">close</span>
-            </button>
-          </div>
-        )}
+        <button
+          type="button"
+          aria-label={isCollapsed ? 'Сидбарыг нээх' : 'Сидбарыг хаах'}
+          onClick={() => setIsCollapsed(v => !v)}
+          className={cn(
+            'absolute -right-3 top-8 z-10',
+            'flex h-6 w-6 items-center justify-center rounded-full',
+            'border border-white/10 bg-[#1a1830] shadow-lg',
+            'text-white/40 transition-all duration-200 hover:border-violet-500/40 hover:text-violet-400',
+          )}
+        >
+          <span className={cn(
+            'material-symbols-outlined text-[14px] transition-transform duration-300',
+            isCollapsed ? 'rotate-180' : '',
+          )}>
+            chevron_left
+          </span>
+        </button>
 
         {/* ── Navigation ── */}
         <nav className="min-h-0 flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto px-2.5 py-5 custom-scrollbar">
@@ -361,86 +262,51 @@ export function Sidebar() {
           className={cn(
             'relative mt-auto shrink-0 border-t border-white/[0.06] bg-[#0e0c1e]/40 p-2.5',
             expanded && 'flex flex-col items-center',
-            isMobile && 'flex w-full flex-col gap-2',
           )}
         >
-          {/* Гар утас: урсгалд профайлын дээр — доош гарч дэлгэцээс харагдахгүй алдахгүй */}
-          {isMobile && showUserMenu && (
-            <div className="order-1 w-full max-w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl">
-              {[
-                { icon: 'person',   label: t('profileLabel'), action: () => { setIsProfileDrawerOpen(true); setShowUserMenu(false); } },
-                { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
-                { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
-              ].map(({ icon, label, action }) => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={action}
-                  className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors active:bg-white/10 hover:bg-white/[0.05] hover:text-white"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
-                  {label}
-                </button>
-              ))}
-              <div className="border-t border-white/[0.06]" />
+          <div
+            className={cn(
+              'absolute z-[55] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl',
+              'origin-bottom transition-all duration-200',
+              expanded
+                ? 'bottom-full left-1/2 mb-2 w-[min(calc(100%-0.75rem),13.5rem)] -translate-x-1/2'
+                : 'bottom-full left-2 right-2 mb-2',
+              showUserMenu
+                ? 'pointer-events-auto opacity-100 scale-100 translate-y-0'
+                : 'pointer-events-none opacity-0 scale-95 translate-y-2',
+            )}
+          >
+            {[
+              { icon: 'person',   label: t('profileLabel'), action: () => { setProfileDrawerOpen(true); setShowUserMenu(false); } },
+              { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
+              { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
+            ].map(({ icon, label, action }) => (
               <button
+                key={icon}
                 type="button"
-                onClick={() => { router.push('/'); setShowUserMenu(false); }}
-                className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors active:bg-rose-500/15 hover:bg-rose-500/[0.08] hover:text-rose-300"
+                onClick={action}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors hover:bg-white/[0.05] hover:text-white"
               >
-                <span className="material-symbols-outlined text-[18px]">logout</span>
-                {t('logoutLabel')}
+                <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+                {label}
               </button>
-            </div>
-          )}
-
-          {/* Desktop: absolute popup */}
-          {!isMobile && (
-            <div
-              className={cn(
-                'absolute z-[55] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl',
-                'origin-bottom transition-all duration-200',
-                expanded
-                  ? 'bottom-full left-1/2 mb-2 w-[min(calc(100%-0.75rem),13.5rem)] -translate-x-1/2'
-                  : 'bottom-full left-2 right-2 mb-2',
-                showUserMenu
-                  ? 'pointer-events-auto opacity-100 scale-100 translate-y-0'
-                  : 'pointer-events-none opacity-0 scale-95 translate-y-2',
-              )}
+            ))}
+            <div className="border-t border-white/[0.06]" />
+            <button
+              type="button"
+              onClick={() => { router.push('/'); setShowUserMenu(false); }}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors hover:bg-rose-500/[0.08] hover:text-rose-300"
             >
-              {[
-                { icon: 'person',   label: t('profileLabel'), action: () => { setIsProfileDrawerOpen(true); setShowUserMenu(false); } },
-                { icon: 'settings', label: t('settings'),     action: () => { router.push('/settings');      setShowUserMenu(false); } },
-                { icon: 'help',     label: t('support'),      action: () => { router.push('/support');       setShowUserMenu(false); } },
-              ].map(({ icon, label, action }) => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={action}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors hover:bg-white/[0.05] hover:text-white"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
-                  {label}
-                </button>
-              ))}
-              <div className="border-t border-white/[0.06]" />
-              <button
-                type="button"
-                onClick={() => { router.push('/'); setShowUserMenu(false); }}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors hover:bg-rose-500/[0.08] hover:text-rose-300"
-              >
-                <span className="material-symbols-outlined text-[18px]">logout</span>
-                {t('logoutLabel')}
-              </button>
-            </div>
-          )}
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              {t('logoutLabel')}
+            </button>
+          </div>
 
-          {/* Avatar button */}
           <button
             type="button"
             onClick={() => setShowUserMenu(v => !v)}
             className={cn(
-              'order-2 flex w-full items-center gap-3 rounded-xl p-2 transition-all duration-200',
+              'flex w-full items-center gap-3 rounded-xl p-2 transition-all duration-200',
               'hover:bg-white/[0.05]',
               showUserMenu && 'bg-white/[0.05]',
               expanded ? 'flex-col justify-center gap-1.5 py-3' : 'justify-center',
@@ -478,22 +344,6 @@ export function Sidebar() {
           </button>
         </div>
       </aside>
-
-      <ProfileDrawer
-        isOpen={isProfileDrawerOpen}
-        onClose={() => setIsProfileDrawerOpen(false)}
-        user={{
-          name:           user.name,
-          username:       user.username,
-          avatarUrl:      user.avatarUrl,
-          membershipType: user.membershipType,
-          joinedDate:     user.joinedDate,
-          score:          user.score,
-          goals:          user.goals,
-          wealthTier:     user.wealthTier,
-          bio:            user.bio,
-        }}
-      />
     </div>
   );
 }

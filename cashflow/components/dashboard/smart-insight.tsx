@@ -146,14 +146,14 @@ function parseAIInsights(text: string): AIInsightItem[] {
 /* ─── MetricBadge ────────────────────────────────────────────────── */
 function MetricBadge({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' | 'neutral' }) {
   return (
-    <div className="flex items-center gap-2 bg-white/[0.06] rounded-lg px-3 py-1.5 w-fit">
-      <span className="text-[10px] text-white/40">{label}</span>
+    <div className="flex w-fit max-w-full items-center gap-1.5 rounded-[10px] bg-white/[0.06] px-2 py-1 sm:gap-2 sm:rounded-lg sm:px-3 sm:py-1.5">
+      <span className="text-[9px] text-white/40 sm:text-[10px]">{label}</span>
       <span className={cn(
-        'text-[11px] font-bold flex items-center gap-0.5',
+        'flex items-center gap-0.5 text-[10px] font-bold tabular-nums sm:text-[11px]',
         trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-rose-400' : 'text-white',
       )}>
-        {trend === 'up'   && <span className="material-symbols-outlined text-[11px]">arrow_upward</span>}
-        {trend === 'down' && <span className="material-symbols-outlined text-[11px]">arrow_downward</span>}
+        {trend === 'up'   && <span className="material-symbols-outlined text-[10px] sm:text-[11px]">arrow_upward</span>}
+        {trend === 'down' && <span className="material-symbols-outlined text-[10px] sm:text-[11px]">arrow_downward</span>}
         {value}
       </span>
     </div>
@@ -167,33 +167,34 @@ function InsightNavCard({ insight, isActive, onClick }: {
   const s = LEVEL_STYLES[insight.level];
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
-        'w-full text-left rounded-xl border px-3 py-2.5 transition-all duration-200',
+        'w-full rounded-[0.85rem] border px-2.5 py-2 text-left transition-all duration-200 sm:rounded-xl sm:px-3 sm:py-2.5',
         isActive
           ? cn(s.card, 'ring-1 ring-white/10')
-          : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10',
+          : 'border-white/[0.06] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]',
       )}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2 sm:gap-2.5">
         <span className={cn(
-          'material-symbols-outlined text-base leading-none p-1.5 rounded-lg shrink-0',
+          'material-symbols-outlined shrink-0 rounded-lg p-1 text-[15px] leading-none sm:p-1.5 sm:text-base',
           isActive ? s.icon : 'bg-white/[0.06] text-white/40',
         )}>
           {insight.icon}
         </span>
         <p className={cn(
-          'flex-1 min-w-0 text-[11px] font-semibold truncate transition-colors',
+          'min-w-0 flex-1 truncate text-[10px] font-semibold transition-colors sm:text-[11px]',
           isActive ? 'text-white' : 'text-white/50',
         )}>
           {insight.title}
         </p>
         {insight.badge && isActive && (
-          <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full border shrink-0', s.badge)}>
+          <span className={cn('shrink-0 rounded-full border px-1 py-0.5 text-[8px] font-bold sm:px-1.5 sm:py-0.5 sm:text-[9px]', s.badge)}>
             {insight.badge}
           </span>
         )}
-        <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', isActive ? s.dot : 'bg-white/15')} />
+        <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', isActive ? s.dot : 'bg-white/15')} />
       </div>
     </button>
   );
@@ -320,11 +321,11 @@ ${summary}
   /* ── Loading skeleton ── */
   if (loading) {
     return (
-      <div className="bg-brand-card rounded-2xl border border-white/5 p-4 sm:p-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-white/5 rounded w-28" />
-          <div className="h-20 bg-white/5 rounded-xl" />
-          {[1,2,3].map(i => <div key={i} className="h-10 bg-white/5 rounded-xl" />)}
+      <div className="rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
+        <div className="animate-pulse space-y-2.5 sm:space-y-3">
+          <div className="h-3.5 w-24 rounded bg-white/5 sm:h-4 sm:w-28" />
+          <div className="h-16 rounded-[0.85rem] bg-white/5 sm:h-20 sm:rounded-xl" />
+          {[1,2,3].map(i => <div key={i} className="h-9 rounded-[0.85rem] bg-white/5 sm:h-10 sm:rounded-xl" />)}
         </div>
       </div>
     );
@@ -335,20 +336,21 @@ ${summary}
   const s       = active ? LEVEL_STYLES[active.level] : null;
 
   return (
-    <div className="bg-brand-card rounded-2xl border border-white/5 p-4 sm:p-6">
+    <div className="rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-sm text-violet-400 leading-none">psychology</span>
-          <h3 className="text-sm font-bold text-white">{t('aiInsightTitle')}</h3>
+      <div className="mb-3 flex items-start justify-between gap-2 sm:mb-4">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          <span className="material-symbols-outlined shrink-0 text-[1.05rem] leading-none text-violet-400 sm:text-sm">psychology</span>
+          <h3 className="text-[0.8125rem] font-semibold leading-snug tracking-tight text-white sm:text-sm sm:font-bold">{t('aiInsightTitle')}</h3>
         </div>
         <button
+          type="button"
           onClick={fetchInsights}
           disabled={aiLoading}
-          className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors disabled:opacity-40"
+          className="flex shrink-0 items-center gap-0.5 text-[9px] text-white/35 transition-colors hover:text-white/60 disabled:opacity-40 sm:gap-1 sm:text-[10px]"
         >
-          <span className={cn('material-symbols-outlined text-xs', aiLoading && 'animate-spin')}>
+          <span className={cn('material-symbols-outlined text-[14px] sm:text-xs', aiLoading && 'animate-spin')}>
             refresh
           </span>
           Шинэчлэх
@@ -357,10 +359,10 @@ ${summary}
 
       {/* ── AI thinking state ── */}
       {aiLoading && (
-        <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] p-4 mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-sm text-violet-400 animate-pulse">psychology</span>
-            <span className="text-[11px] text-violet-300 font-medium">AI дүн шинжилгээ хийж байна...</span>
+        <div className="mb-3 rounded-[0.85rem] border border-violet-500/20 bg-violet-500/[0.05] p-3 sm:mb-4 sm:rounded-xl sm:p-4">
+          <div className="mb-2 flex items-center gap-1.5 sm:mb-3 sm:gap-2">
+            <span className="material-symbols-outlined animate-pulse text-[1.05rem] text-violet-400 sm:text-sm">psychology</span>
+            <span className="text-[10px] font-medium leading-snug text-violet-300 sm:text-[11px]">AI дүн шинжилгээ хийж байна...</span>
           </div>
           <ThinkingDots />
         </div>
@@ -368,10 +370,10 @@ ${summary}
 
       {/* ── Error state ── */}
       {error && !aiLoading && (
-        <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.05] p-4 mb-4 flex items-center gap-3">
-          <span className="material-symbols-outlined text-rose-400 text-sm">error</span>
-          <p className="text-[11px] text-rose-300 flex-1">{error}</p>
-          <button onClick={fetchInsights} className="text-[10px] text-rose-400 hover:text-rose-300 font-bold">
+        <div className="mb-3 flex items-center gap-2 rounded-[0.85rem] border border-rose-500/20 bg-rose-500/[0.05] p-3 sm:mb-4 sm:gap-3 sm:rounded-xl sm:p-4">
+          <span className="material-symbols-outlined shrink-0 text-[1.05rem] text-rose-400 sm:text-sm">error</span>
+          <p className="min-w-0 flex-1 text-[10px] leading-relaxed text-rose-300 sm:text-[11px]">{error}</p>
+          <button type="button" onClick={fetchInsights} className="shrink-0 text-[9px] font-bold text-rose-400 hover:text-rose-300 sm:text-[10px]">
             Дахин
           </button>
         </div>
@@ -379,28 +381,28 @@ ${summary}
 
       {/* ── Active insight detail ── */}
       {!aiLoading && active && s && (
-        <div className={cn('rounded-xl border p-4 mb-4 transition-all duration-200', s.card)}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className={cn('material-symbols-outlined text-base leading-none p-1.5 rounded-lg shrink-0', s.icon)}>
+        <div className={cn('mb-3 rounded-[0.85rem] border p-3 transition-all duration-200 sm:mb-4 sm:rounded-xl sm:p-4', s.card)}>
+          <div className="mb-1.5 flex items-center gap-1.5 sm:mb-2 sm:gap-2">
+            <span className={cn('material-symbols-outlined shrink-0 rounded-lg p-1 text-[1.05rem] leading-none sm:p-1.5 sm:text-base', s.icon)}>
               {active.icon}
             </span>
-            <span className={cn('text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border', s.badge)}>
+            <span className={cn('rounded-full border px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider sm:px-1.5 sm:py-0.5 sm:text-[9px]', s.badge)}>
               {active.badge ?? LEVEL_LABELS[active.level]}
             </span>
           </div>
 
-          <h4 className="text-[13px] font-bold text-white mb-1.5 leading-snug">{active.title}</h4>
-          <p className="text-[11px] text-white/55 leading-relaxed mb-3">{active.message}</p>
+          <h4 className="mb-1 text-[12px] font-bold leading-snug text-white sm:mb-1.5 sm:text-[13px]">{active.title}</h4>
+          <p className="mb-2.5 text-[10px] leading-relaxed text-white/55 sm:mb-3 sm:text-[11px]">{active.message}</p>
 
           {active.metric && (
-            <div className="mb-3">
+            <div className="mb-2.5 sm:mb-3">
               <MetricBadge {...active.metric} />
             </div>
           )}
 
           {active.action && (
-            <button className={cn(
-              'flex items-center gap-1.5 text-[11px] font-semibold transition-colors',
+            <button type="button" className={cn(
+              'flex items-center gap-1 text-[10px] font-semibold transition-colors sm:gap-1.5 sm:text-[11px]',
               active.level === 'success'  ? 'text-emerald-400 hover:text-emerald-300' :
               active.level === 'critical' ? 'text-rose-400 hover:text-rose-300'       :
               active.level === 'warning'  ? 'text-amber-400 hover:text-amber-300'     :
@@ -408,7 +410,7 @@ ${summary}
                                             'text-violet-400 hover:text-violet-300',
             )}>
               {active.action}
-              <span className="material-symbols-outlined text-sm leading-none">arrow_forward</span>
+              <span className="material-symbols-outlined text-[1.05rem] leading-none sm:text-sm">arrow_forward</span>
             </button>
           )}
         </div>
@@ -416,7 +418,7 @@ ${summary}
 
       {/* ── Insight nav list ── */}
       {!aiLoading && insights.length > 0 && (
-        <div className="space-y-1.5">
+        <div className="space-y-1 sm:space-y-1.5">
           {insights.map((insight, i) => (
             <InsightNavCard
               key={insight.id}
@@ -430,12 +432,12 @@ ${summary}
 
       {/* ── Empty state ── */}
       {!aiLoading && !error && insights.length === 0 && (
-        <div className="flex items-center gap-3 py-2">
-          <span className="material-symbols-outlined p-2 rounded-xl text-sm bg-white/5 text-white/30 border border-white/10">lightbulb</span>
-          <p className="text-sm text-white/30">
+        <div className="flex items-start gap-2.5 py-1 sm:gap-3 sm:py-2">
+          <span className="material-symbols-outlined shrink-0 rounded-[0.85rem] border border-white/10 bg-white/5 p-1.5 text-[1.05rem] text-white/30 sm:p-2 sm:text-sm">lightbulb</span>
+          <p className="min-w-0 text-[11px] leading-relaxed text-white/35 sm:text-sm sm:text-white/30">
             Мэдэгдэл байхгүй байна.
             {showGeminiSetupHint && (
-              <span className="block mt-1 text-[10px] text-white/20 leading-relaxed">
+              <span className="mt-1 block text-[9px] leading-relaxed text-white/25 sm:text-[10px] sm:text-white/20">
                 AI зөвлөмж ашиглахын тулд .env.local дээр GEMINI_API_KEY нэмнэ үү (Google AI Studio түлхүүр). Vercel дээр ч ижил нэрээр орчны хувьсагч нэмнэ.
               </span>
             )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { useIsNarrow } from '@/hook/use-is-mobile';
 import {
   ResponsiveContainer,
   Sankey,
@@ -221,6 +222,8 @@ function SankeyDefs() {
 type NodeExtraProps = {
   displayMode: SankeyDisplayMode;
   totalInflow: number;
+  /** Mobile — жижиг SVG текст */
+  compact?: boolean;
 };
 
 function formatNodeMetric(
@@ -256,7 +259,7 @@ function nodeLabelPlacement(nodeKind: string): 'left' | 'right' | 'top' {
 }
 
 function CashflowSankeyNode(props: SankeyNodeProps & NodeExtraProps) {
-  const { x, y, width, height, payload, displayMode, totalInflow } = props;
+  const { x, y, width, height, payload, displayMode, totalInflow, compact } = props;
   const p = payload as {
     name?: string;
     nodeKind?: string;
@@ -276,8 +279,8 @@ function CashflowSankeyNode(props: SankeyNodeProps & NodeExtraProps) {
 
   const emphasis =
     nodeKind === 'totalIncome' || nodeKind === 'mainTrunk';
-  const nameSize = emphasis ? 10 : 9;
-  const metricSize = emphasis ? 11.5 : 10.5;
+  const nameSize = emphasis ? (compact ? 8.5 : 10) : compact ? 7.5 : 9;
+  const metricSize = emphasis ? (compact ? 9.5 : 11.5) : compact ? 8.5 : 10.5;
   const labelShadow = emphasis
     ? '0 1px 3px rgba(0,0,0,0.65)'
     : '0 2px 8px rgba(0,0,0,0.75)';
@@ -414,20 +417,20 @@ function SankeyTooltipContent({
   return (
     <div
       className={cn(
-        'min-w-[200px] max-w-[280px] rounded-xl border border-white/[0.12]',
-        'bg-[#121826]/[0.97] px-3.5 py-3 shadow-[0_24px_48px_rgba(0,0,0,0.55)] backdrop-blur-xl'
+        'max-w-[min(92vw,280px)] rounded-[0.85rem] border border-white/[0.12]',
+        'bg-[#121826]/[0.97] px-3 py-2.5 shadow-[0_24px_48px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:min-w-[200px] sm:max-w-[280px] sm:rounded-xl sm:px-3.5 sm:py-3'
       )}
     >
       <div
-        className="mb-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500"
+        className="mb-1 text-[8px] font-black uppercase tracking-[0.18em] text-slate-500 sm:mb-1.5 sm:text-[10px] sm:tracking-[0.2em]"
         style={{ color: accent }}
       >
         {isLink ? 'Урсгал' : 'Зангилаа'}
       </div>
-      <div className="text-[13px] font-bold leading-snug text-white">{title}</div>
+      <div className="text-[11px] font-bold leading-snug text-white sm:text-[13px]">{title}</div>
 
-      <div className="mt-3 border-t border-white/10 pt-3">
-        <p className="font-mono text-lg font-black leading-none tracking-tight text-white tabular-nums">
+      <div className="mt-2 border-t border-white/10 pt-2 sm:mt-3 sm:pt-3">
+        <p className="font-mono text-[0.95rem] font-black leading-none tracking-tight text-white tabular-nums sm:text-lg">
           {main}
         </p>
       </div>
@@ -444,7 +447,7 @@ function DisplayModeToggle({
 }) {
   return (
     <div
-      className="inline-flex rounded-2xl border border-white/[0.1] bg-[#151b28]/90 p-1 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+      className="inline-flex w-full max-w-full rounded-[1rem] border border-white/5 bg-brand-bg/90 p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] sm:w-auto sm:rounded-2xl sm:p-1"
       role="group"
       aria-label="Харуулах горим"
     >
@@ -459,7 +462,7 @@ function DisplayModeToggle({
           type="button"
           onClick={() => onChange(id)}
           className={cn(
-            'relative min-h-[40px] rounded-xl px-4 py-2 text-xs font-bold transition-all sm:px-5 sm:text-sm',
+            'relative min-h-[36px] flex-1 rounded-[0.65rem] px-2.5 py-1.5 text-[10px] font-bold transition-all sm:min-h-[40px] sm:flex-none sm:rounded-xl sm:px-5 sm:py-2 sm:text-sm',
             mode === id
               ? 'text-white shadow-[0_0_24px_rgba(112,96,240,0.35)]'
               : 'text-slate-500 hover:text-slate-300'
@@ -467,7 +470,7 @@ function DisplayModeToggle({
         >
           {mode === id && (
             <span
-              className="absolute inset-0 rounded-xl bg-gradient-to-r from-brand-primary/90 to-fuchsia-500/75 opacity-100"
+              className="absolute inset-0 rounded-[0.65rem] bg-gradient-to-r from-brand-primary/90 to-fuchsia-500/75 opacity-100 sm:rounded-xl"
               aria-hidden
             />
           )}
@@ -498,17 +501,17 @@ function SummaryChip({
   return (
     <div
       className={cn(
-        'flex min-w-[140px] flex-1 flex-col gap-1 rounded-2xl border border-white/[0.08]',
-        'bg-gradient-to-b from-white/[0.06] to-transparent px-3 py-2 sm:px-4 sm:py-2.5',
+        'flex min-w-0 flex-1 flex-col gap-0.5 rounded-[1rem] border border-white/5 sm:min-w-[140px] sm:gap-1 sm:rounded-2xl',
+        'bg-brand-card/90 bg-gradient-to-b from-white/[0.04] to-transparent px-2.5 py-2 sm:px-4 sm:py-2.5',
         'shadow-[0_0_40px_rgba(0,0,0,0.2),inset_0_1px_0_0_rgba(255,255,255,0.05)]'
       )}
     >
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+      <span className="text-[8px] font-bold uppercase tracking-wider text-brand-muted sm:text-[10px]">
         {label}
       </span>
       <span
         className={cn(
-          'font-mono text-base font-black tabular-nums tracking-tight sm:text-lg',
+          'font-mono text-sm font-black tabular-nums tracking-tight sm:text-base md:text-lg',
           accentClass
         )}
       >
@@ -523,27 +526,44 @@ type CashflowSankeySectionProps = {
   summary: CashflowSankeySummary;
 };
 
+const ZOOM_MIN = 0.7;
+const ZOOM_MAX = 1.55;
+const ZOOM_STEP = 0.1;
+function clampZoom(z: number) {
+  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
+}
+
 export function CashflowSankeySection({ sankeyData, summary }: CashflowSankeySectionProps) {
   const [displayMode, setDisplayMode] = useState<SankeyDisplayMode>('amount');
+  const [chartZoom, setChartZoom] = useState(1);
+  const narrow = useIsNarrow();
   const data = sankeyData;
   const s = summary;
   const totalInflow = s.totalInflow || 1;
+  const baseChartH = narrow ? 440 : 560;
+  const chartHeight = Math.round(baseChartH * chartZoom);
+  const sankeyMargin = narrow
+    ? { top: 6, right: 88, bottom: 10, left: 88 }
+    : { top: 12, right: 175, bottom: 16, left: 175 };
+  const chartMinWidthPx = Math.round(920 * chartZoom);
 
   return (
-    <section className="space-y-3.5 sm:space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+    <section className="space-y-3 sm:space-y-4">
+      <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-[1.0625rem] font-bold leading-snug tracking-tight text-white sm:text-2xl md:text-3xl md:font-black">
             Мөнгөн урсгалын шинжилгээ
           </h2>
-          <p className="mt-0.5 max-w-2xl text-sm leading-snug text-slate-400 sm:text-base">
+          <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-brand-muted sm:text-sm md:text-base">
             Орлого, зардал, зээлийн урсгалыг нэг дор харуулна
           </p>
         </div>
-        <DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />
+        <div className="shrink-0 lg:pl-4">
+          <DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2.5 lg:grid-cols-none">
+      <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2.5 lg:grid-cols-none">
         <SummaryChip
           label="Нийт орлого"
           amount={s.totalInflow}
@@ -576,42 +596,79 @@ export function CashflowSankeySection({ sankeyData, summary }: CashflowSankeySec
 
       <div
         className={cn(
-          'relative overflow-x-auto rounded-2xl border border-white/[0.08]',
-          'bg-[#1a2130]/95 shadow-[0_0_48px_rgba(0,0,0,0.35)] backdrop-blur-md'
+          'relative overflow-x-auto overflow-y-hidden rounded-[1.15rem] border border-white/5 sm:rounded-2xl',
+          'bg-brand-card/95 shadow-[0_0_48px_rgba(0,0,0,0.35)] backdrop-blur-md'
         )}
       >
         <div
-          className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-brand-primary/[0.05] via-transparent to-amber-500/[0.04]"
+          className="pointer-events-none absolute inset-0 rounded-[1.15rem] bg-gradient-to-br from-brand-primary/[0.06] via-transparent to-amber-500/[0.04] sm:rounded-2xl"
           aria-hidden
         />
-        <div className="relative min-h-[340px] min-w-[1120px] w-full px-3 pb-1.5 pt-2 sm:px-6 sm:pb-2 sm:pt-3">
-          <div className="mb-2.5 grid grid-cols-3 items-end gap-2 border-b border-white/[0.06] px-2 pb-2 sm:px-3">
-            <span className="text-left text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+        <div className="flex flex-wrap items-center justify-end gap-1.5 border-b border-white/[0.06] px-2 py-2 sm:px-4">
+          <span className="mr-auto text-[9px] font-semibold uppercase tracking-wider text-brand-muted sm:text-[10px]">
+            Харагдац
+          </span>
+          <button
+            type="button"
+            aria-label="Жижигрүүлэх"
+            disabled={chartZoom <= ZOOM_MIN + 0.01}
+            onClick={() => setChartZoom((z) => clampZoom(z - ZOOM_STEP))}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            −
+          </button>
+          <span className="min-w-[2.75rem] text-center font-mono text-[10px] tabular-nums text-white/80 sm:text-[11px]">
+            {Math.round(chartZoom * 100)}%
+          </span>
+          <button
+            type="button"
+            aria-label="Томруулах"
+            disabled={chartZoom >= ZOOM_MAX - 0.01}
+            onClick={() => setChartZoom((z) => clampZoom(z + ZOOM_STEP))}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => setChartZoom(1)}
+            className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-brand-muted transition hover:bg-white/10 hover:text-white sm:px-3 sm:text-[10px]"
+          >
+            100%
+          </button>
+        </div>
+        <div
+          className="relative px-2 pb-1 pt-1.5 sm:min-h-[300px] sm:px-6 sm:pb-2 sm:pt-3"
+          style={{ width: chartMinWidthPx, minHeight: chartHeight + 36 }}
+        >
+          <div className="mb-2 grid grid-cols-3 items-end gap-1 border-b border-white/[0.06] px-1 pb-1.5 sm:mb-2.5 sm:gap-2 sm:px-2 sm:pb-2 md:px-3">
+            <span className="text-left text-[8px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[10px] sm:tracking-[0.22em]">
               Орлого
             </span>
-            <span className="text-center text-[10px] font-bold uppercase tracking-[0.28em] text-violet-200/95">
+            <span className="text-center text-[8px] font-bold uppercase tracking-[0.12em] text-violet-200/95 sm:text-[10px] sm:tracking-[0.28em]">
               Төвийн урсгал
             </span>
-            <span className="text-right text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+            <span className="text-right text-[8px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-[10px] sm:tracking-[0.22em]">
               Гаралт
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={560}>
+          <ResponsiveContainer width="100%" height={chartHeight}>
             <Sankey
               data={data}
-              nodePadding={36}
-              nodeWidth={12}
+              nodePadding={narrow ? 26 : 36}
+              nodeWidth={narrow ? 10 : 12}
               linkCurvature={0.54}
               iterations={240}
               sort
               verticalAlign="justify"
               align="justify"
-              margin={{ top: 12, right: 175, bottom: 16, left: 175 }}
+              margin={sankeyMargin}
               node={(nodeProps) => (
                 <CashflowSankeyNode
                   {...nodeProps}
                   displayMode={displayMode}
                   totalInflow={totalInflow}
+                  compact={narrow}
                 />
               )}
               link={(linkProps) => <CashflowSankeyLink {...linkProps} />}
@@ -632,31 +689,31 @@ export function CashflowSankeySection({ sankeyData, summary }: CashflowSankeySec
           </ResponsiveContainer>
         </div>
 
-        <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-white/[0.06] px-4 py-2.5 sm:px-6">
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-t border-white/[0.06] px-3 py-2 sm:gap-x-5 sm:gap-y-2 sm:px-6 sm:py-2.5">
+          <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-500 sm:gap-2 sm:text-[10px]">
             <span className="size-2.5 rounded-sm bg-sky-400/85 ring-1 ring-white/10" />
             Орлого
           </span>
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-500 sm:gap-2 sm:text-[10px]">
             <span className="size-2.5 rounded-sm bg-violet-400/80 ring-1 ring-white/10" />
             Төвлөрөл
           </span>
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-500 sm:gap-2 sm:text-[10px]">
             <span className="size-2.5 rounded-sm bg-amber-400/85 ring-1 ring-white/10" />
             Зардал
           </span>
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-500 sm:gap-2 sm:text-[10px]">
             <span className="size-2.5 rounded-sm bg-fuchsia-400/85 ring-1 ring-white/10" />
             Зээл
           </span>
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-wider text-slate-500 sm:gap-2 sm:text-[10px]">
             <span className="size-2.5 rounded-sm bg-teal-400/85 ring-1 ring-white/10" />
             Үлдэгдэл
           </span>
         </div>
       </div>
 
-      <p className="mt-0 text-center text-[10px] leading-tight text-slate-600 sm:text-left">
+      <p className="mt-0 px-1 text-center text-[9px] leading-snug text-brand-muted sm:px-0 sm:text-left sm:text-[10px]">
         {displayMode === 'percentage'
           ? 'Хувь: нийт орлого (Нийт мөнгөн урсгал)-ын суурьтай.'
           : 'Дүн: бүгдийг ₮-ээр харуулна.'}

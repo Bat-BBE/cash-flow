@@ -65,11 +65,11 @@ function MetricCard({
   label, value, sub, subUp,
 }: { label: string; value: string; sub?: string; subUp?: boolean }) {
   return (
-    <div className="bg-white/[0.04] rounded-xl px-3 py-2.5 flex flex-col gap-0.5">
-      <p className="text-[9px] text-white/40 font-semibold uppercase tracking-wider leading-snug">{label}</p>
-      <p className="text-[13px] font-bold text-white leading-tight tabular-nums">{value}</p>
+    <div className="flex flex-col gap-0.5 rounded-[10px] bg-white/[0.04] px-2 py-2 sm:rounded-xl sm:px-3 sm:py-2.5">
+      <p className="text-[8px] font-semibold uppercase leading-snug tracking-wider text-white/40 sm:text-[9px]">{label}</p>
+      <p className="text-[11px] font-bold leading-tight tabular-nums text-white sm:text-[13px]">{value}</p>
       {sub && (
-        <p className={cn('text-[10px] font-semibold', subUp ? 'text-emerald-400' : 'text-rose-400')}>
+        <p className={cn('text-[9px] font-semibold sm:text-[10px]', subUp ? 'text-emerald-400' : 'text-rose-400')}>
           {sub}
         </p>
       )}
@@ -151,7 +151,7 @@ export function TrendChart() {
   /* ── Loading ── */
   if (loading) {
     return (
-      <div className="bg-brand-card rounded-2xl border border-white/5 p-4 sm:p-6">
+      <div className="rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
         <div className="animate-pulse space-y-3">
           <div className="h-5 bg-white/5 rounded w-40" />
           <div className="grid grid-cols-3 gap-2">
@@ -167,24 +167,24 @@ export function TrendChart() {
   const yAxisWidth = narrow ? 42 : 52;
 
   return (
-    <div className="bg-brand-card rounded-2xl border border-white/5 p-4 sm:p-6 overflow-hidden">
+    <div className="overflow-hidden rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-2 mb-4">
+      <div className="mb-3 flex items-start justify-between gap-2 sm:mb-4">
         <div className="min-w-0">
-          <h3 className="text-sm font-bold text-white">Орлого / Зарлага трэнд</h3>
-          <p className="text-[10px] text-white/40 mt-0.5">
+          <h3 className="text-[0.8125rem] font-semibold leading-snug tracking-tight text-white sm:text-sm sm:font-bold">Орлого / Зарлага трэнд</h3>
+          <p className="mt-0.5 text-[9px] leading-relaxed text-white/40 sm:text-[10px]">
             {trendData.length} сарын бодит + дараагийн 3 сарын таамаглал
           </p>
         </div>
-        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20">
+        <span className="shrink-0 rounded-full border border-violet-500/20 bg-violet-500/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-violet-400 sm:px-2 sm:py-1 sm:text-[9px]">
           * таамаглал
         </span>
       </div>
 
       {/* ── Metric cards — always 3 columns ── */}
       {metrics && (
-        <div className="grid grid-cols-3 gap-1.5 mb-4">
+        <div className="mb-3 grid grid-cols-3 gap-1 sm:gap-1.5 sm:mb-4">
           <MetricCard
             label="Дундаж орлого"
             value={fmtCompact(metrics.avgInc) + '₮'}
@@ -203,7 +203,7 @@ export function TrendChart() {
       )}
 
       {/* ── Metric filter tabs ── */}
-      <div className="flex gap-1.5 mb-4 overflow-x-auto pb-0.5 -mx-1 px-1 [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-0.5 mb-3 flex gap-1 overflow-x-auto pb-0.5 px-0.5 sm:mb-4 sm:gap-1.5 [&::-webkit-scrollbar]:hidden">
         {([
           ['all',      'Бүгд'],
           ['income',   'Орлого'],
@@ -215,7 +215,7 @@ export function TrendChart() {
             key={id}
             onClick={() => setMetric(id)}
             className={cn(
-              'shrink-0 px-3 py-1.5 text-[11px] font-semibold rounded-full whitespace-nowrap border transition-all touch-manipulation min-h-[36px] sm:min-h-0',
+              'min-h-[34px] shrink-0 touch-manipulation rounded-full border px-2.5 py-1.5 text-[10px] font-semibold whitespace-nowrap transition-all sm:min-h-0 sm:px-3 sm:text-[11px]',
               metric === id
                 ? 'bg-white text-[#0c0a1e] border-transparent'
                 : 'bg-white/[0.04] text-white/50 border-white/10 hover:bg-white/[0.08] hover:text-white/70',
@@ -227,7 +227,7 @@ export function TrendChart() {
       </div>
 
       {/* ── Chart ── */}
-      <div className="h-[200px] sm:h-[240px] w-full">
+      <div className="h-[175px] w-full sm:h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
@@ -340,23 +340,23 @@ export function TrendChart() {
       </div>
 
       {/* ── Legend ── */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-3 pt-3 border-t border-white/5">
+      <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 border-t border-white/5 pt-2.5 sm:mt-3 sm:gap-x-3 sm:gap-y-1.5 sm:pt-3">
         {showIncome && (
-          <div className="flex items-center gap-1.5 text-[10px] text-white/50">
+          <div className="flex items-center gap-1 text-[9px] text-white/50 sm:gap-1.5 sm:text-[10px]">
             <div className="w-2.5 h-2.5 rounded-sm bg-emerald-400 shrink-0" />Орлого
           </div>
         )}
         {showExpenses && (
-          <div className="flex items-center gap-1.5 text-[10px] text-white/50">
+          <div className="flex items-center gap-1 text-[9px] text-white/50 sm:gap-1.5 sm:text-[10px]">
             <div className="w-2.5 h-2.5 rounded-sm bg-red-400 shrink-0" />Зарлага
           </div>
         )}
         {showSavings && (
-          <div className="flex items-center gap-1.5 text-[10px] text-white/50">
+          <div className="flex items-center gap-1 text-[9px] text-white/50 sm:gap-1.5 sm:text-[10px]">
             <div className="w-2.5 h-2.5 rounded-sm bg-indigo-400 shrink-0" />Хуримтлал
           </div>
         )}
-        <div className="flex items-center gap-1.5 text-[10px] text-white/35 ml-auto">
+        <div className="ml-auto flex items-center gap-1 text-[9px] text-white/35 sm:gap-1.5 sm:text-[10px]">
           <div className="w-5 border-t-2 border-dashed border-white/25" />
           Таамаглал
         </div>
@@ -364,8 +364,8 @@ export function TrendChart() {
 
       {/* ── Forecast insight ── */}
       {metrics && forecastInsight && (
-        <div className="mt-3 rounded-xl bg-violet-500/[0.08] border border-violet-500/20 px-3 py-2.5">
-          <p className="text-[11px] text-white/60 leading-relaxed">
+        <div className="mt-2.5 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] px-2.5 py-2 sm:mt-3 sm:px-3 sm:py-2.5">
+          <p className="text-[10px] leading-relaxed text-white/60 sm:text-[11px]">
             <span className="text-violet-400 font-semibold">Дараагийн 3 сарын таамаглал: </span>
             Орлого дундажаар{' '}
             <span className="text-white font-semibold">{fmtCompact(forecastInsight.incAvg)}₮</span>

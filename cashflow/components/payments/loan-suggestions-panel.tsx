@@ -10,6 +10,13 @@ import {
 } from '@/lib/loan-suggestions';
 import { addMonthsUTC, formatCurrency, parseDateInputUTC } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 /** Mongolian: "1 жил 3 сар" from total months */
 function formatDurationMn(totalMonths: number): string {
@@ -88,10 +95,6 @@ export function LoanSuggestionsPanel({
     () => PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.bump ?? 0,
     [paymentMethod],
   );
-  const paymentMethodIndex = useMemo(
-    () => Math.max(0, PAYMENT_METHODS.findIndex((m) => m.id === paymentMethod)),
-    [paymentMethod],
-  );
 
   const referenceDate = useMemo(() => {
     if (!referenceDateISO) return null;
@@ -142,49 +145,80 @@ export function LoanSuggestionsPanel({
   const showPriorityUI = result.strategy !== 'minimal';
   const extraVsBasePayment = result.totalSuggested - result.minimumTotalFromJson;
 
-  return (
-    <section className="bg-brand-card/60 rounded-3xl border border-white/5 p-6 md:p-7 shadow-xl shadow-black/20 backdrop-blur-lg">
-      <div className="flex flex-col gap-4 mb-4">
+  const selectTriggerClass =
+    'h-9 w-full border-white/10 bg-brand-bg/55 text-left text-[11px] text-white hover:bg-white/[0.06] focus:ring-2 focus:ring-brand-primary/30 sm:h-10 sm:text-xs';
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
-          {STRATEGY_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActive(tab.id)}
-              className={cn('px-3 py-3 rounded-2xl text-xs font-bold border transition-all w-full', (() => {
-                if (active !== tab.id) {
-                  return 'bg-brand-card/50 text-slate-400 border-white/10 hover:text-white hover:border-white/20';
-                }
-                return [
-                  'bg-gradient-to-r from-brand-primary/25 to-brand-primary/10',
-                  'text-white',
-                  'border-primary/40',
-                  'ring-1 ring-primary/20',
-                  'shadow-lg',
-                  'shadow-[0_12px_30px_-10px_rgba(112,96,240,0.45)]',
-                ].join(' ');
-              })())}
-            >
-              <span className="block">{tab.shortLabel}</span>
-              <span className="block text-[10px] font-medium opacity-80 mt-0.5">
-                {tab.hint}
-              </span>
-            </button>
-          ))}
+  return (
+    <section className="rounded-[1.15rem] border border-white/5 bg-gradient-to-b from-brand-card/95 to-brand-card/75 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.22)] backdrop-blur-lg sm:rounded-3xl sm:p-6 md:p-7">
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:mb-4 sm:grid-cols-2 sm:gap-3">
+        <div className="min-w-0 space-y-1">
+          <label className="block text-[9px] font-bold uppercase tracking-wide text-brand-muted sm:text-[10px]">
+            Төлөх дараалал
+          </label>
+          <Select
+            value={active}
+            onValueChange={(v) => setActive(v as SuggestionStrategyId)}
+          >
+            <SelectTrigger className={selectTriggerClass}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-white/10 bg-brand-card text-white">
+              {STRATEGY_TABS.map((tab) => (
+                <SelectItem
+                  key={tab.id}
+                  value={tab.id}
+                  title={tab.hint}
+                  className="text-xs focus:bg-white/10 focus:text-white"
+                >
+                  {tab.shortLabel}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[9px] leading-snug text-brand-muted/90 sm:text-[10px]">
+            {STRATEGY_TABS.find((t) => t.id === active)?.hint}
+          </p>
         </div>
+
+        {userProfile && userProfile.monthlyIncome > 0 ? (
+          <div className="min-w-0 space-y-1">
+            <label className="block text-[9px] font-bold uppercase tracking-wide text-brand-muted sm:text-[10px]">
+              Сарын төлбөрийн түвшин
+            </label>
+            <Select
+              value={paymentMethod}
+              onValueChange={(v) => setPaymentMethod(v as PaymentMethodId)}
+            >
+              <SelectTrigger className={selectTriggerClass}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="border-white/10 bg-brand-card text-white">
+                {PAYMENT_METHODS.map((method) => (
+                  <SelectItem
+                    key={method.id}
+                    value={method.id}
+                    title={method.hint}
+                    className="text-xs focus:bg-white/10 focus:text-white"
+                  >
+                    {method.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[9px] leading-snug text-brand-muted/90 sm:text-[10px]">
+              {PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.hint}
+            </p>
+          </div>
+        ) : null}
       </div>
 
-      
-
-      <div className="rounded-2xl border border-white/5 bg-brand-card/60 p-4 space-y-4">
-        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 md:text-right">
+      <div className="space-y-3 rounded-[1rem] border border-white/5 bg-brand-bg/40 p-3 sm:space-y-4 sm:rounded-2xl sm:p-4">
+        <p className="mb-0 text-[10px] font-bold uppercase tracking-wider text-brand-muted sm:mb-1 sm:text-xs md:text-right">
           Төлбөрийн горим
         </p>
-        {/* One row: extra vs base + payment bump (Одоогийн / +2% / +4%) */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
-          <div className="flex min-w-0 flex-1 flex-col justify-center rounded-xl border border-white/10 bg-brand-card/50 p-3 sm:p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:text-xs">
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-stretch md:gap-3">
+          <div className="flex min-w-0 flex-1 flex-col justify-center rounded-xl border border-white/5 bg-brand-card/50 p-3 sm:p-4">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-brand-muted sm:text-[10px] md:text-xs">
               Сарын суурь төлөх дүнтэй харьцуулбал 
             </p>
             <p
@@ -194,45 +228,13 @@ export function LoanSuggestionsPanel({
                   ? 'text-emerald-400'
                   : extraVsBasePayment < 0
                     ? 'text-amber-400'
-                    : 'text-slate-300',
+                    : 'text-white/80',
               )}
             >
               {extraVsBasePayment > 0 ? '+' : ''}
               {formatCurrency(extraVsBasePayment, currency)}
             </p>
           </div>
-
-          {userProfile && userProfile.monthlyIncome > 0 && (
-            <div className="flex w-full shrink-0 flex-col md:w-[min(100%,440px)] md:self-stretch">
-              {/* Outer shell matches left card height; control + pill live in a fixed-height inner track */}
-              <div className="flex h-full min-h-0 flex-col justify-center rounded-2xl border border-white/10 bg-brand-card/40 p-1.5 sm:p-2">
-                <div className="relative w-full">
-                  <div
-                    className="pointer-events-none absolute top-1.5 bottom-1.5 w-1/3 rounded-xl border border-primary/40 bg-primary/20 shadow-lg shadow-primary/20 transition-transform duration-200 sm:top-2 sm:bottom-2"
-                    style={{ transform: `translateX(${paymentMethodIndex * 100}%)` }}
-                  />
-                  <div className="relative grid h-14 grid-cols-3 gap-1 sm:h-[3.75rem] sm:gap-1.5">
-                    {PAYMENT_METHODS.map((method) => {
-                      const isActive = paymentMethod === method.id;
-                      return (
-                        <button
-                          key={method.id}
-                          type="button"
-                          onClick={() => setPaymentMethod(method.id)}
-                          className={cn(
-                            'z-10 flex h-full min-h-0 w-full items-center justify-center whitespace-nowrap rounded-xl px-1 text-sm font-black tracking-tight transition-colors sm:px-3 sm:text-base',
-                            isActive ? 'text-primary' : 'text-slate-400 hover:text-white',
-                          )}
-                        >
-                          {method.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {result.warnings.length > 0 && (
@@ -250,17 +252,17 @@ export function LoanSuggestionsPanel({
 
         <div className="space-y-2">
           <div className="flex flex-col gap-0.5 sm:flex-row sm:items-end sm:justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-brand-muted sm:text-xs">
               Зээлийн санал
             </p>
           </div>
 
-          <div className="space-y-3 max-h-[min(420px,55vh)] overflow-y-auto pr-1 custom-scrollbar">
+          <div className="custom-scrollbar max-h-[min(380px,50vh)] space-y-2 overflow-y-auto pr-1 sm:max-h-[min(420px,55vh)] sm:space-y-3">
             {result.perLoan.map((row, idx) => (
               <div
                 key={row.loanId}
                 className={cn(
-                  'rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent p-4 shadow-sm transition-colors',
+                  'rounded-xl border border-white/5 bg-gradient-to-b from-brand-card/80 to-brand-card/50 p-3 shadow-sm transition-colors sm:rounded-2xl sm:p-4',
                   showPriorityUI && idx === 0 &&
                     'border-emerald-400/35 bg-emerald-500/[0.07] ring-1 ring-emerald-400/15',
                 )}
@@ -275,7 +277,7 @@ export function LoanSuggestionsPanel({
                       )}
                       <h3 className="text-sm font-bold leading-snug text-white">{row.loanName}</h3>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-slate-500">
+                    <p className="text-[10px] leading-relaxed text-brand-muted sm:text-[11px]">
                       Суурь төлөлт: {formatCurrency(row.scheduledMonthly, currency)}
                       {row.overdueExtraThisMonth > 0 && (
                         <>
@@ -321,16 +323,16 @@ export function LoanSuggestionsPanel({
                           ? 'text-emerald-300/95'
                           : row.interestSavings < 0
                             ? 'text-amber-300/90'
-                            : 'text-slate-500',
+                            : 'text-brand-muted',
                       )}
                     >
-                      <span className="font-semibold text-slate-400">Хүүд төлөх хэмнэлт: </span>
+                      <span className="font-semibold text-white/45">Хүүд төлөх хэмнэлт: </span>
                       {formatCurrency(row.interestSavings, currency)}
                     </p>
                   )}
 
                   {(row.payoffMonthsMinimal != null || row.payoffMonthsSuggested != null) && (
-                    <div className="flex flex-col gap-0.5 text-[11px] text-slate-500 sm:flex-row sm:flex-wrap sm:gap-x-3 sm:gap-y-0.5">
+                    <div className="flex flex-col gap-0.5 text-[10px] text-brand-muted sm:flex-row sm:flex-wrap sm:gap-x-3 sm:gap-y-0.5 sm:text-[11px]">
                       {row.payoffMonthsMinimal != null && (
                         <span>
                           Суурь төлөвлөгөө: ~{formatApproxPayoffMonthsMn(row.payoffMonthsMinimal)}
@@ -342,7 +344,7 @@ export function LoanSuggestionsPanel({
                         </span>
                       )}
                       {referenceDate && row.payoffMonthsSuggested != null && (
-                        <span className="text-slate-400">
+                        <span className="text-white/50">
                           Тойм огноо:{' '}
                           {formatDateMnUTC(
                             addMonthsUTC(referenceDate, row.payoffMonthsSuggested),

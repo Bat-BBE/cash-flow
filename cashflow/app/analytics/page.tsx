@@ -27,8 +27,8 @@ export default function AnalyticsPage() {
   );
 
   return (
-    <DashboardShell className="bg-[#1a1f2e]" mainClassName="bg-[#1a1f2e]">
-      <div className="flex-1 px-4 py-3 sm:px-5 sm:py-4 md:px-6 md:py-5">
+    <DashboardShell className="bg-brand-bg" mainClassName="bg-brand-bg">
+      <div className="mx-auto w-full max-w-[1400px] flex-1 space-y-3 px-3 pb-3 pt-1 sm:space-y-4 sm:px-4 sm:pb-4 sm:pt-2 md:space-y-5 md:px-6 md:py-5">
         <CashflowSankeySection sankeyData={sankeyData} summary={summary} />
         <TransactionClassificationSection
           transactions={transactions}

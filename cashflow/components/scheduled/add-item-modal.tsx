@@ -82,9 +82,9 @@ export function AddItemModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0D1525] border border-white/[0.08] text-white sm:max-w-md rounded-3xl shadow-2xl">
+      <DialogContent className="max-h-[min(92dvh,640px)] overflow-y-auto rounded-2xl border border-white/10 bg-brand-card text-white shadow-2xl sm:max-w-md sm:rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-black text-white flex items-center gap-2.5">
+          <DialogTitle className="flex items-center gap-2.5 text-base font-black text-white sm:text-lg">
             <div className={cn(
               'w-8 h-8 rounded-xl flex items-center justify-center',
               isBill ? 'bg-rose-500/15' : 'bg-emerald-500/15',
@@ -104,20 +104,20 @@ export function AddItemModal({
 
           {/* Нэр */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.14em]">
+            <label className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">
               {isBill ? 'Төлбөрийн нэр' : 'Орлогын эх үүсвэр'}
             </label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={isBill ? 'Жн: Цахилгааны төлбөр' : 'Жн: Сарын цалин'}
-              className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 rounded-xl focus:border-indigo-500/50 focus:ring-0"
+              className="rounded-xl border-white/10 bg-brand-bg/50 text-white placeholder:text-white/25 focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20"
             />
           </div>
 
           {/* Дүн */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.14em]">
+            <label className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">
               Дүн (₮)
             </label>
             <div className="relative">
@@ -127,7 +127,7 @@ export function AddItemModal({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0"
-                className="pl-8 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 rounded-xl focus:border-indigo-500/50 focus:ring-0"
+                className="rounded-xl border-white/10 bg-brand-bg/50 pl-8 text-white placeholder:text-white/25 focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20"
                 step="1"
               />
             </div>
@@ -135,27 +135,27 @@ export function AddItemModal({
 
           {/* Огноо */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.14em]">
+            <label className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">
               Огноо
             </label>
             <Input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="bg-white/[0.04] border-white/[0.08] text-white rounded-xl focus:border-indigo-500/50 focus:ring-0 [color-scheme:dark]"
+              className="rounded-xl border-white/10 bg-brand-bg/50 text-white [color-scheme:dark] focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20"
             />
           </div>
 
           {/* Ангилал */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.14em]">
+            <label className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">
               Ангилал
             </label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white rounded-xl focus:ring-0">
+              <SelectTrigger className="rounded-xl border-white/10 bg-brand-bg/50 text-white focus:ring-2 focus:ring-brand-primary/20">
                 <SelectValue placeholder="Ангилал сонгох" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0D1525] border-white/[0.08] text-white rounded-2xl">
+              <SelectContent className="rounded-2xl border-white/10 bg-brand-card text-white">
                 {categories.map((cat) => (
                   <SelectItem key={cat} value={cat} className="hover:bg-white/[0.05] rounded-xl focus:bg-white/[0.05]">
                     {cat}
@@ -167,7 +167,7 @@ export function AddItemModal({
 
           {/* Дүрс */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.14em]">
+            <label className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">
               Дүрс
             </label>
             <div className="grid grid-cols-7 gap-1.5">
@@ -194,14 +194,14 @@ export function AddItemModal({
           {/* Статус — зөвхөн төлбөрт */}
           {isBill && (
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.14em]">
+              <label className="text-[10px] font-bold uppercase tracking-wide text-brand-muted">
                 Статус
               </label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="bg-white/[0.04] border-white/[0.08] text-white rounded-xl focus:ring-0">
+                <SelectTrigger className="rounded-xl border-white/10 bg-brand-bg/50 text-white focus:ring-2 focus:ring-brand-primary/20">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0D1525] border-white/[0.08] text-white rounded-2xl">
+                <SelectContent className="rounded-2xl border-white/10 bg-brand-card text-white">
                   {Object.entries(BILL_STATUS_LABELS).map(([val, label]) => (
                     <SelectItem key={val} value={val} className="hover:bg-white/[0.05] rounded-xl focus:bg-white/[0.05]">
                       {label}

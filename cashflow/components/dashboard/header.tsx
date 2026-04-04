@@ -4,10 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useDashboard } from '@/components/providers/dashboard-provider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/translations';
 import { cn } from '@/lib/utils';
 import { AddTransactionModal } from '@/components/transactions/add-transaction-modal';
 import { createPortal } from 'react-dom';
+import type { Language } from '@/lib/types';
 
 const PAGE_TITLE: Record<string, string> = {
   '/home':               'Хянах самбар',
@@ -212,28 +215,79 @@ function NotifPanel({
       'bg-[#0c0f1a]',
       'shadow-[0_8px_48px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.04)]',
       'overflow-hidden',
-      // ← animate-in орлуулсан
       'transition-all duration-200 ease-out',
     )}>
       {panelContent}
     </div>
   );
+}
 
-  /* ── Desktop: dropdown ── */
-  return (
-    <div className={cn(
-      'absolute right-0 top-full mt-2 z-[60]',
-      'w-[340px]',
-      'rounded-2xl border border-white/[0.08]',
-      // Solid dark background — overlay үгүй
-      'bg-[#0c0f1a]',
-      'shadow-[0_8px_48px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.04)]',
-      'overflow-hidden',
-      // Fade + slide animation
-      'animate-in fade-in-0 slide-in-from-top-2 duration-200',
-    )}>
-      {panelContent}
-    </div>
+function MobileAccountSheet({
+  open,
+  onClose,
+  language,
+}: {
+  open: boolean;
+  onClose: () => void;
+  language: Language;
+}) {
+  const t = useTranslation(language);
+  const router = useRouter();
+  const { user, setProfileDrawerOpen } = useDashboard();
+
+  if (!open || typeof document === 'undefined') return null;
+
+  return createPortal(
+    <>
+      <div
+        className="fixed inset-0 z-[78] bg-black/60 backdrop-blur-[2px]"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div
+        className={cn(
+          'fixed bottom-0 left-0 right-0 z-[79]',
+          'rounded-t-3xl border-t border-white/[0.08] bg-[#0c0f1a]',
+          'shadow-[0_-8px_40px_rgba(0,0,0,0.7)]',
+          'translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
+        )}
+      >
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="h-1 w-10 rounded-full bg-white/15" />
+        </div>
+        <p className="px-4 pb-2 text-center text-[10px] font-black uppercase tracking-widest text-white/25">
+          {user.name ?? 'Account'}
+        </p>
+        <div className="max-h-[55vh] overflow-y-auto pb-2">
+          {[
+            { icon: 'person' as const,   label: t('profileLabel'), action: () => { setProfileDrawerOpen(true); onClose(); } },
+            { icon: 'settings' as const, label: t('settings'),     action: () => { router.push('/settings'); onClose(); } },
+            { icon: 'help' as const,     label: t('support'),      action: () => { router.push('/support'); onClose(); } },
+          ].map(({ icon, label, action }) => (
+            <button
+              key={icon}
+              type="button"
+              onClick={action}
+              className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors active:bg-white/10 hover:bg-white/[0.05] hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+              {label}
+            </button>
+          ))}
+          <div className="mx-4 border-t border-white/[0.06]" />
+          <button
+            type="button"
+            onClick={() => { router.push('/'); onClose(); }}
+            className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors active:bg-rose-500/15 hover:bg-rose-500/[0.08] hover:text-rose-300"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            {t('logoutLabel')}
+          </button>
+        </div>
+        <div className="h-[env(safe-area-inset-bottom)]" />
+      </div>
+    </>,
+    document.body,
   );
 }
 
@@ -248,7 +302,7 @@ export interface HeaderProps {
 
 export function Header({ onAddTransaction, accounts = [], categories = [] }: HeaderProps) {
   const pathname = usePathname();
-  const { language, setSidebarOpen } = useDashboard();
+  const { language, user } = useDashboard();
   const t = useTranslation(language);
   const { title: pageTitle, icon: pageIcon } = titleForPath(pathname);
 
@@ -256,6 +310,7 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
   const [showNotif,    setShowNotif]    = useState(false);
   const [notifs,       setNotifs]       = useState<NotifItem[]>(INITIAL_NOTIFS);
   const [isMobile,     setIsMobile]     = useState(false);
+  const [showAccountSheet, setShowAccountSheet] = useState(false);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const unread   = notifs.filter(n => !n.read).length;
@@ -286,24 +341,25 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
   return (
     <>
       <header className={cn(
-        'fixed inset-x-0 top-0 z-50 h-16 w-full',
-        'flex items-center gap-2 px-3 sm:px-5',
+        'fixed inset-x-0 top-0 z-50 w-full',
+        'pt-[env(safe-area-inset-top)]',
         'border-b border-white/[0.06]',
-        'bg-[#07090f]/90 backdrop-blur-3xl',
-        'before:absolute before:inset-x-0 before:top-0 before:h-px',
-        'before:bg-gradient-to-r before:from-transparent before:via-violet-500/30 before:to-transparent',
+        'bg-brand-bg/92 backdrop-blur-xl backdrop-saturate-125',
+        'shadow-[0_4px_22px_rgba(15,23,42,0.22)]',
+        'before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-px',
+        'before:bg-gradient-to-r before:from-transparent before:via-violet-400/35 before:to-transparent',
       )}>
+        <div className="flex h-[3.75rem] items-center gap-1.5 px-2.5 sm:gap-2 md:h-[4.25rem] md:gap-2 md:px-5">
 
         {/* ── LEFT ── */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
           {/* Desktop logo */}
-          <div className="hidden md:flex items-center gap-3 shrink-0">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-xl bg-violet-500/20 blur-xl" />
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.05]">
-                <img src="/logo.png" alt="CashFlow" className="h-6 w-6 object-contain" />
-              </div>
-            </div>
+          <div className="hidden shrink-0 items-center gap-2.5 md:flex">
+            <img
+              src="/logo.png"
+              alt="CashFlow"
+              className="h-12 w-12 shrink-0 object-contain opacity-95"
+            />
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-violet-400/80">CashFlow</p>
           </div>
           <div className="hidden md:block h-5 w-px bg-white/[0.08] mx-1" />
@@ -314,38 +370,37 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
             <h1 className="text-[13px] font-bold text-white/70 tracking-wide">{pageTitle}</h1>
           </div>
 
-          {/* Mobile logo */}
-          <Link href="/home" className="md:hidden shrink-0 flex items-center gap-2">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.05]">
-              <img src="/logo.png" alt="" className="h-5 w-5 object-contain" />
-            </div>
-            <span className="text-[12px] font-black uppercase tracking-[0.18em] text-violet-400/80">CashFlow</span>
+          {/* Mobile logo — хүрээгүй */}
+          <Link href="/home" className="flex shrink-0 items-center gap-1.5 md:hidden">
+            <img src="/logo.png" alt="" className="h-10 w-8 shrink-0 object-contain opacity-95" />
+            <span className="hidden min-[360px]:inline text-[10px] font-black uppercase tracking-[0.2em] text-violet-400/75">CashFlow</span>
           </Link>
-          <div className="md:hidden flex items-center gap-1.5 min-w-0">
-            <div className="h-3.5 w-px bg-white/[0.1]" />
-            <span className="text-[12px] font-semibold text-white/40 truncate">{pageTitle}</span>
+          <div className="md:hidden flex min-w-0 items-center gap-1.5">
+            <div className="hidden min-[360px]:block h-3 w-px shrink-0 bg-white/[0.08]" />
+            <span className="truncate text-[11px] font-semibold leading-tight text-white/45">{pageTitle}</span>
           </div>
         </div>
 
         {/* ── RIGHT ── */}
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1 md:gap-2">
 
           {/* Add transaction */}
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
             className={cn(
-              'group relative flex h-9 items-center gap-1.5 overflow-hidden rounded-xl px-3',
+              'group relative flex shrink-0 items-center justify-center overflow-hidden rounded-md md:rounded-lg',
+              'h-7 w-7 md:h-8 md:w-auto md:gap-1 md:px-2.5',
               'bg-gradient-to-r from-violet-600 to-indigo-600',
-              'border border-violet-500/40',
-              'shadow-[0_0_16px_rgba(139,92,246,0.35)]',
-              'text-[11px] sm:text-[12px] font-black text-white',
-              'transition-all duration-200 hover:shadow-[0_0_24px_rgba(139,92,246,0.55)] hover:scale-[1.02] active:scale-[0.98]',
+              'border border-violet-500/35',
+              'shadow-[0_2px_10px_rgba(124,58,237,0.3)]',
+              'text-[9px] font-black text-white md:text-[11px]',
+              'transition-all duration-200 active:scale-[0.96] md:hover:shadow-[0_3px_16px_rgba(124,58,237,0.4)] md:hover:scale-[1.02]',
             )}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-            <span className="material-symbols-outlined text-[17px] leading-none font-bold relative z-10">add</span>
-            <span className="hidden sm:inline relative z-10">{t('addTransaction')}</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0 -translate-x-full transition-transform duration-500 group-hover:translate-x-full" />
+            <span className="material-symbols-outlined relative z-10 text-[16px] leading-none md:text-[15px]">add</span>
+            <span className="relative z-10 hidden md:inline">{t('addTransaction')}</span>
           </button>
 
           {/* Notification */}
@@ -354,16 +409,16 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
               type="button"
               onClick={() => setShowNotif(v => !v)}
               className={cn(
-                'relative flex h-9 w-9 items-center justify-center rounded-xl',
-                'border border-white/[0.08] bg-white/[0.04]',
-                'text-white/40 transition-all hover:bg-white/[0.08] hover:text-white/70',
-                showNotif && 'bg-white/[0.08] text-white/70 border-white/[0.14]',
+                'relative flex h-7 w-7 items-center justify-center rounded-md md:h-8 md:w-8 md:rounded-lg',
+                'border border-white/[0.07] bg-white/[0.035]',
+                'text-white/38 transition-colors hover:bg-white/[0.07] hover:text-white/65',
+                showNotif && 'border-white/[0.12] bg-white/[0.07] text-white/75',
               )}
               aria-label="Мэдэгдэл"
             >
-              <span className="material-symbols-outlined text-[19px] leading-none">notifications</span>
+              <span className="material-symbols-outlined text-[16px] leading-none md:text-[17px]">notifications</span>
               {unread > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-violet-400 ring-1 ring-[#07090f]" />
+                <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-violet-400 ring-2 ring-brand-bg" />
               )}
             </button>
 
@@ -378,21 +433,34 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
             )}
           </div>
 
-          {/* Mobile menu */}
+          {/* Mobile: профайл — доод tab bar үндсэн навигац */}
           <button
             type="button"
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => setShowAccountSheet(true)}
             className={cn(
-              'md:hidden flex h-9 w-9 items-center justify-center rounded-xl',
-              'border border-white/[0.08] bg-white/[0.04]',
-              'text-white/50 transition-all hover:bg-white/[0.08] hover:text-white',
+              'relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full md:hidden',
+              'ring-1 ring-white/[0.14] ring-offset-[1.5px] ring-offset-brand-bg',
+              'transition-transform active:scale-95',
             )}
-            aria-label="Цэс нээх"
+            aria-label={t('profileLabel')}
           >
-            <span className="material-symbols-outlined text-[21px] leading-none">menu</span>
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={user.avatarUrl} alt={user.name ?? ''} />
+              <AvatarFallback className="bg-gradient-to-br from-violet-600 to-violet-800 text-[9px] font-bold text-white">
+                {user.name?.charAt(0) ?? 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="absolute -bottom-px -right-px h-[5px] w-[5px] rounded-full bg-emerald-500 ring-[1.5px] ring-brand-bg" />
           </button>
         </div>
+        </div>
       </header>
+
+      <MobileAccountSheet
+        open={showAccountSheet}
+        onClose={() => setShowAccountSheet(false)}
+        language={language}
+      />
 
       <AddTransactionModal
         isOpen={showAddModal}

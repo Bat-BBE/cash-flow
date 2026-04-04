@@ -87,28 +87,29 @@ export function BillsList({
   }, [billsUpcoming, loansUpcoming]);
 
   return (
-    <div className="bg-card-surface rounded-2xl border border-white/5 flex-1 flex flex-col shadow-2xl">
-      <div className="p-5 border-b border-white/5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-1 flex-col rounded-[1.15rem] border border-white/5 bg-gradient-to-b from-brand-card/95 to-brand-card/75 shadow-[0_12px_40px_rgba(0,0,0,0.2)] sm:rounded-2xl">
+      <div className="flex flex-col gap-1 border-b border-white/5 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <h4 className="font-bold flex items-center gap-2 text-white">
-            <span className="material-symbols-outlined text-red-400">outbound</span>
+          <h4 className="flex items-center gap-2 text-[13px] font-bold text-white sm:text-base">
+            <span className="material-symbols-outlined text-[20px] text-violet-400 sm:text-[22px]">outbound</span>
             Зарлага
           </h4>
+          <p className="mt-0.5 text-[10px] text-brand-muted sm:text-[11px]">Ирэх төлбөр, зээл</p>
         </div>
         {overdueUpcomingCount > 0 && (
-          <span className="bg-red-500/10 text-red-400 text-[10px] uppercase tracking-widest font-black px-2.5 py-1 rounded-full border border-red-500/20 shrink-0">
-            {overdueUpcomingCount} Overdue
+          <span className="shrink-0 rounded-full border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-red-300 sm:px-2.5 sm:text-[10px]">
+            {overdueUpcomingCount} хэтэрсэн
           </span>
         )}
       </div>
 
-      <div className="p-4 space-y-3 overflow-y-auto max-h-[min(480px,52vh)] scrollbar-hide">
+      <div className="scrollbar-hide max-h-[min(420px,50vh)] space-y-2.5 overflow-y-auto p-3 sm:max-h-[min(480px,52vh)] sm:space-y-3 sm:p-4">
         {mergedRows.length === 0 ? (
-          <div className="text-center py-8">
-            <span className="material-symbols-outlined text-4xl text-slate-600 mb-2">
+          <div className="py-8 text-center">
+            <span className="material-symbols-outlined mb-2 text-4xl text-white/15">
               check_circle
             </span>
-            <p className="text-sm text-slate-500">No upcoming bills or loan payments</p>
+            <p className="text-[12px] text-brand-muted sm:text-sm">Ирэх төлбөр, зээлийн төлөлт алга</p>
           </div>
         ) : (
           mergedRows.map((row) => {
@@ -122,10 +123,10 @@ export function BillsList({
                 <div
                   key={bill.id}
                   className={cn(
-                    'group rounded-xl border p-4 transition-all',
+                    'group rounded-xl border p-3 transition-all sm:p-4',
                     isOverdue
-                      ? 'border-red-500/20 bg-navy-dark/60 hover:bg-red-500/[0.04]'
-                      : 'border-violet-500/15 bg-navy-dark/60 hover:bg-violet-500/[0.05]',
+                      ? 'border-red-500/20 bg-brand-bg/50 hover:bg-red-500/[0.06]'
+                      : 'border-violet-500/15 bg-brand-bg/40 hover:bg-violet-500/[0.06]',
                   )}
                 >
                   <div className="flex justify-between items-start">
@@ -195,7 +196,7 @@ export function BillsList({
                               Update
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-[#1e2533] border-slate-700 text-white">
+                          <DropdownMenuContent className="border-white/10 bg-brand-card text-white">
                             <DropdownMenuItem
                               onClick={() => onUpdateStatus(bill.id, 'paid')}
                               className="hover:bg-white/5 cursor-pointer"
@@ -238,7 +239,7 @@ export function BillsList({
             return (
               <div
                 key={lp.listKey}
-                className="group p-4 bg-navy-dark/60 rounded-xl border border-yellow-500/20 hover:bg-yellow-500/[0.06] transition-all"
+                className="group rounded-xl border border-yellow-500/25 bg-brand-bg/45 p-3 transition-all hover:bg-yellow-500/[0.07] sm:p-4"
               >
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex items-center gap-4 min-w-0">
