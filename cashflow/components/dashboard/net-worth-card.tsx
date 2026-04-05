@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useId, useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -30,24 +30,30 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
-/** Сонгосон хугацааны орлого / зарлагын харьцаа — гялалзсан донат */
+/** Сонгосон хугацааны орлого / зарлагын харьцаа — цэвэрхэн донат */
 function BalanceFlowDonut({ income, expense, loading }: { income: number; expense: number; loading: boolean }) {
+  const uid = useId().replace(/:/g, '');
+  const idIncome = `dw-income-${uid}`;
+  const idExpense = `dw-expense-${uid}`;
+  const idNeutral = `dw-neutral-${uid}`;
+
   const data = useMemo(() => {
     const sum = income + expense;
     if (sum <= 0) {
-      return [{ name: 'empty', value: 1, fill: 'url(#donutNeutral)' }];
+      return [{ name: 'empty', value: 1, fill: `url(#${idNeutral})` }];
     }
     return [
-      { name: 'Орлого', value: income, fill: 'url(#donutIncome)' },
-      { name: 'Зарлага', value: expense, fill: 'url(#donutExpense)' },
+      { name: 'Орлого', value: income, fill: `url(#${idIncome})` },
+      { name: 'Зарлага', value: expense, fill: `url(#${idExpense})` },
     ];
-  }, [income, expense]);
+  }, [income, expense, idIncome, idExpense, idNeutral]);
 
   const total = income + expense;
+  const incomePct = total > 0 ? Math.round((income / total) * 100) : 0;
 
   if (loading) {
     return (
-      <div className="flex h-[5.25rem] w-[5.25rem] shrink-0 items-center justify-center rounded-full bg-white/[0.03] sm:h-28 sm:w-28">
+      <div className="flex h-[5.25rem] w-[5.25rem] shrink-0 items-center justify-center rounded-full bg-white/[0.03] ring-1 ring-white/[0.06] sm:h-28 sm:w-28">
         <Loader2 className="h-6 w-6 animate-spin text-violet-400/80" />
       </div>
     );
@@ -55,25 +61,26 @@ function BalanceFlowDonut({ income, expense, loading }: { income: number; expens
 
   return (
     <div
-      className="relative h-[5.25rem] w-[5.25rem] shrink-0 drop-shadow-[0_0_24px_rgba(139,92,246,0.22)] sm:h-28 sm:w-28 sm:drop-shadow-[0_0_32px_rgba(139,92,246,0.28)]"
+      className="relative h-[5.25rem] w-[5.25rem] shrink-0 sm:h-28 sm:w-28"
       aria-hidden
     >
+      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/10 via-transparent to-emerald-500/5 blur-[1px]" />
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
           <defs>
-            <linearGradient id="donutIncome" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#6ee7b7" stopOpacity={1} />
-              <stop offset="55%" stopColor="#34d399" stopOpacity={1} />
-              <stop offset="100%" stopColor="#047857" stopOpacity={0.95} />
+            <linearGradient id={idIncome} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#5eead4" stopOpacity={1} />
+              <stop offset="45%" stopColor="#34d399" stopOpacity={1} />
+              <stop offset="100%" stopColor="#059669" stopOpacity={0.92} />
             </linearGradient>
-            <linearGradient id="donutExpense" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#fecaca" stopOpacity={1} />
+            <linearGradient id={idExpense} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity={1} />
               <stop offset="50%" stopColor="#f87171" stopOpacity={1} />
-              <stop offset="100%" stopColor="#b91c1c" stopOpacity={0.95} />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity={0.9} />
             </linearGradient>
-            <linearGradient id="donutNeutral" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.14)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.05)" />
+            <linearGradient id={idNeutral} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(148,163,184,0.2)" />
+              <stop offset="100%" stopColor="rgba(148,163,184,0.06)" />
             </linearGradient>
           </defs>
           <Pie
@@ -82,14 +89,15 @@ function BalanceFlowDonut({ income, expense, loading }: { income: number; expens
             nameKey="name"
             cx="50%"
             cy="50%"
-            innerRadius="62%"
-            outerRadius="100%"
-            paddingAngle={total > 0 ? 2.5 : 0}
-            stroke="rgba(12,10,30,0.85)"
-            strokeWidth={1}
-            cornerRadius={6}
+            innerRadius="56%"
+            outerRadius="92%"
+            paddingAngle={total > 0 ? 1.25 : 0}
+            stroke="rgb(43,53,80)"
+            strokeWidth={total > 0 ? 2 : 0}
+            cornerRadius={0}
             isAnimationActive
-            animationDuration={900}
+            animationDuration={750}
+            animationEasing="ease-out"
           >
             {data.map((entry, i) => (
               <Cell key={`cell-${i}`} fill={entry.fill} />
@@ -97,12 +105,19 @@ function BalanceFlowDonut({ income, expense, loading }: { income: number; expens
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <span className="material-symbols-outlined text-[1.35rem] text-white/25 sm:text-[1.5rem]">donut_large</span>
-        {total > 0 && (
-          <span className="text-[8px] font-bold uppercase tracking-wider text-white/35 sm:text-[9px]">
-            урсгал
-          </span>
+      <div className="pointer-events-none absolute left-1/2 top-1/2 flex h-[56%] w-[56%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-[#1e2638]/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)] ring-1 ring-white/[0.06] backdrop-blur-sm">
+        {total > 0 ? (
+          <>
+            <span className="text-[1.1rem] font-black tabular-nums leading-none tracking-tight text-white sm:text-xl">
+              {incomePct}
+              <span className="text-[0.65em] font-bold text-white/45">%</span>
+            </span>
+            <span className="mt-0.5 max-w-[4.5rem] text-center text-[7px] font-semibold uppercase leading-tight tracking-wide text-emerald-400/85 sm:text-[8px]">
+              орлого
+            </span>
+          </>
+        ) : (
+          <span className="text-[10px] font-medium text-white/25">—</span>
         )}
       </div>
     </div>
@@ -110,6 +125,7 @@ function BalanceFlowDonut({ income, expense, loading }: { income: number; expens
 }
 
 export function NetWorthCard() {
+  const areaFillId = `nw-area-fill-${useId().replace(/:/g, '')}`;
   // Context-оос авна → бүх dashboard component ижил months ашиглана
   const { chartData, rawTxs, loading, months, setMonths, totalIncome, totalExpenses } = useDashboardData();
 
@@ -181,28 +197,80 @@ export function NetWorthCard() {
 
         <Separator className="bg-white/[0.06]" />
 
-        <div className="h-[7.5rem] w-full sm:h-44">
+        <div className="relative h-[8rem] w-full overflow-hidden rounded-xl sm:h-[11rem]">
           {loading ? (
             <div className="flex h-full items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-violet-400" /></div>
           ) : chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top:4, right:4, left:-28, bottom:0 }}>
-                <defs>
-                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor={trendColor} stopOpacity={0.3} />
-                    <stop offset="85%"  stopColor={trendColor} stopOpacity={0.03} />
-                    <stop offset="100%" stopColor={trendColor} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="label" tick={{ fill:'rgba(255,255,255,0.28)',fontSize:9,fontWeight:600 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fill:'rgba(255,255,255,0.20)',fontSize:9 }} tickLine={false} axisLine={false} width={36}
-                  tickFormatter={(v:number)=>v>=1_000_000?`${(v/1_000_000).toFixed(1)}М`:v>=1_000?`${(v/1_000).toFixed(0)}к`:`${v}`} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke:'rgba(255,255,255,0.1)',strokeWidth:1,strokeDasharray:'4 4' }} />
-                <Area type="monotone" dataKey="value" stroke={trendColor} strokeWidth={2.2} fill="url(#areaGrad)" dot={false}
-                  activeDot={{ r:5,fill:trendColor,stroke:'#0c0a1e',strokeWidth:2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1a2033]/80 to-transparent" />
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 2, left: 2, bottom: 2 }}>
+                  <defs>
+                    <linearGradient id={areaFillId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={trendColor} stopOpacity={0.42} />
+                      <stop offset="35%" stopColor={trendColor} stopOpacity={0.14} />
+                      <stop offset="75%" stopColor={trendColor} stopOpacity={0.02} />
+                      <stop offset="100%" stopColor={trendColor} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="5 6" stroke="rgba(255,255,255,0.045)" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{
+                      fill: 'rgba(255,255,255,0.38)',
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval="preserveStartEnd"
+                    dy={4}
+                  />
+                  <YAxis
+                    tick={{
+                      fill: 'rgba(255,255,255,0.28)',
+                      fontSize: 10,
+                      fontWeight: 500,
+                    }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={42}
+                    tickFormatter={(v: number) =>
+                      v >= 1_000_000
+                        ? `${(v / 1_000_000).toFixed(1)}М`
+                        : v >= 1_000
+                          ? `${(v / 1_000).toFixed(0)}к`
+                          : `${v}`
+                    }
+                  />
+                  <Tooltip
+                    content={<ChartTooltip />}
+                    cursor={{
+                      stroke: 'rgba(255,255,255,0.12)',
+                      strokeWidth: 1,
+                      strokeDasharray: '4 4',
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke={trendColor}
+                    strokeWidth={2.5}
+                    fill={`url(#${areaFillId})`}
+                    dot={false}
+                    activeDot={{
+                      r: 5,
+                      fill: trendColor,
+                      stroke: 'rgb(26,32,56)',
+                      strokeWidth: 2.5,
+                      style: { filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.15))' },
+                    }}
+                    animationDuration={600}
+                    animationEasing="ease-out"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </>
           ) : (
             <div className="flex h-full items-center justify-center text-xs text-white/30">Графикт хангалттай өгөгдөл алга</div>
           )}

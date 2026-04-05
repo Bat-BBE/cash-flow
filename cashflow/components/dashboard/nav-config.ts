@@ -7,6 +7,10 @@ export interface NavItem {
   children?: NavItem[];
 }
 
+/**
+ * Дараалал: өдөр тутмын урсгал → хуримтлал → тайлан → зээл.
+ * (Sidebar + mobile footer хоёуланд ижил.)
+ */
 export const mainNavItems: NavItem[] = [
   {
     label: 'Dashboard',
@@ -23,6 +27,18 @@ export const mainNavItems: NavItem[] = [
     badge: { count: 5, color: 'brand' },
   },
   {
+    label: 'Calendar',
+    translationKey: 'calendar',
+    icon: 'calendar_month',
+    href: '/scheduled',
+  },
+  {
+    label: 'Savings',
+    translationKey: 'savingsNav',
+    icon: 'savings',
+    href: '/savings',
+  },
+  {
     label: 'Analytics',
     translationKey: 'analytics',
     icon: 'analytics',
@@ -33,12 +49,6 @@ export const mainNavItems: NavItem[] = [
     translationKey: 'loan',
     icon: 'payments',
     href: '/payments',
-  },
-  {
-    label: 'Calendar',
-    translationKey: 'calendar',
-    icon: 'calendar_month',
-    href: '/scheduled',
   },
 ];
 
@@ -53,6 +63,9 @@ export const badgeColors: Record<string, string> = {
 export const itemGlows: Record<string, string> = {
   '/home': 'from-emerald-500/20',
   '/accounts': 'from-violet-500/20',
-  '/budgets': 'from-amber-500/20',
+  '/scheduled': 'from-sky-500/20',
+  '/savings': 'from-teal-500/20',
   '/analytics': 'from-blue-500/20',
+  '/payments': 'from-amber-500/20',
+  '/budgets': 'from-amber-500/20',
 };

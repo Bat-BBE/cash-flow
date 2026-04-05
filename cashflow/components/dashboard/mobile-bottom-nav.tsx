@@ -32,12 +32,22 @@ export function MobileBottomNav() {
       )}
       aria-label="Үндсэн цэс"
     >
+      {/* Олон таб: шахахгүйн тулд хэвтээ гүйлгээтэй; жижиг дэлгэц дээр чиглэлээс хамааран гүйлгэнэ */}
       <div
         className={cn(
-          'mx-auto flex w-full max-w-2xl items-end justify-between',
-          'min-h-[2.65rem] gap-1 px-2 py-2 sm:px-3',
+          'mx-auto w-full max-w-2xl',
+          'overflow-x-auto overflow-y-hidden overscroll-x-contain',
+          'scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          'snap-x snap-mandatory scroll-px-3',
+          'touch-pan-x',
         )}
       >
+        <div
+          className={cn(
+            'flex min-h-[2.65rem] w-max min-w-full items-end justify-center gap-1 px-2 py-2 sm:gap-1.5 sm:px-3',
+            'sm:justify-between',
+          )}
+        >
         {mainNavItems.map((item) => {
           const active = isNavActive(pathname, item.href);
           return (
@@ -46,7 +56,7 @@ export function MobileBottomNav() {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'group relative flex min-w-0 flex-1 flex-col items-center justify-end gap-1',
+                'group relative flex w-[3.65rem] shrink-0 snap-center flex-col items-center justify-end gap-0.5 sm:w-auto sm:min-w-0 sm:flex-1',
                 'outline-none [-webkit-tap-highlight-color:transparent]',
                 'transition-transform duration-150 active:scale-[0.97]',
               )}
@@ -91,7 +101,7 @@ export function MobileBottomNav() {
 
               <span
                 className={cn(
-                  'max-w-full truncate px-0.5 text-center text-[8px] font-medium leading-tight tracking-wide transition-colors duration-300 sm:text-[8.5px]',
+                  'line-clamp-2 max-w-full break-words px-0.5 text-center text-[7.5px] font-medium leading-[1.1] tracking-wide transition-colors duration-300 sm:text-[8px] min-[400px]:text-[8.5px]',
                   active ? 'font-semibold text-white/88' : 'text-white/32',
                 )}
               >
@@ -113,6 +123,7 @@ export function MobileBottomNav() {
             </Link>
           );
         })}
+        </div>
       </div>
     </nav>
   );

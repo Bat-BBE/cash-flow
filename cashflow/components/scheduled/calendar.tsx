@@ -2,7 +2,11 @@
 'use client';
 
 import { CalendarDay } from './types';
-import { cn, formatCompactCalendarAmount, formatCurrency } from '@/lib/utils';
+import {
+  cn,
+  formatCompactCalendarAmountInline,
+  formatCurrency,
+} from '@/lib/utils';
 import { formatMnMonthYear, MN_WEEKDAY_LABELS } from '@/lib/calendar-locale-mn';
 
 interface CalendarProps {
@@ -132,7 +136,7 @@ export function Calendar({
             key={day}
             className={cn(
               'calendar-cell bg-brand-card/80 text-center font-bold tracking-wide text-brand-muted',
-              isSidebar ? 'py-1.5 text-[7px]' : 'py-2.5 text-[10px] sm:py-3.5 sm:text-[11px]',
+              isSidebar ? 'py-1 text-[7px]' : 'py-2 text-[10px] sm:py-2.5 sm:text-[11px]',
             )}
           >
             {day}
@@ -140,9 +144,9 @@ export function Calendar({
         ))}
 
         {/* Calendar days */}
-        {days.map((day, index) => (
+        {days.map((day) => (
           <CalendarCell
-          key={day.date.getTime()}
+            key={day.date.getTime()}
             day={day}
             currency={currency}
             compact={isSidebar}
@@ -206,9 +210,6 @@ function CalendarLegend({ compact }: { compact?: boolean }) {
   );
 }
 
-/** Max amount rows shown; if more exist, a +N row hints at the rest. */
-const MAX_CALENDAR_LINES = 2;
-
 type CalendarLineKind = 'bill' | 'income' | 'loan';
 
 interface CalendarLine {
@@ -231,6 +232,44 @@ function buildCalendarLines(day: CalendarDay): CalendarLine[] {
   return lines;
 }
 
+interface DayKindSegment {
+  kind: CalendarLineKind;
+  total: number;
+  count: number;
+}
+
+function buildDayKindSegments(day: CalendarDay): DayKindSegment[] {
+  const bill = day.bills.reduce((s, b) => s + b.amount, 0);
+  const income = day.income.reduce((s, i) => s + i.amount, 0);
+  const loan = (day.loanPayments ?? []).reduce((s, l) => s + l.amount, 0);
+  const segments: DayKindSegment[] = [];
+  if (bill > 0) segments.push({ kind: 'bill', total: bill, count: day.bills.length });
+  if (income > 0) segments.push({ kind: 'income', total: income, count: day.income.length });
+  if (loan > 0) segments.push({ kind: 'loan', total: loan, count: (day.loanPayments ?? []).length });
+  return segments;
+}
+
+const SEGMENT_STYLES: Record<
+  CalendarLineKind,
+  { dot: string; chip: string; text: string }
+> = {
+  bill: {
+    dot: 'bg-violet-400',
+    chip: 'bg-violet-500/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]',
+    text: 'text-violet-100/95',
+  },
+  income: {
+    dot: 'bg-emerald-400',
+    chip: 'bg-emerald-500/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]',
+    text: 'text-emerald-100/95',
+  },
+  loan: {
+    dot: 'bg-yellow-400',
+    chip: 'bg-yellow-500/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]',
+    text: 'text-yellow-100/95',
+  },
+};
+
 function CalendarCell({
   day,
   currency,
@@ -243,19 +282,15 @@ function CalendarCell({
   onClick: () => void;
 }) {
   const lines = buildCalendarLines(day);
+  const segments = buildDayKindSegments(day);
   const hasEvents = lines.length > 0;
-  const visible = lines.slice(0, MAX_CALENDAR_LINES);
-  const overflow = lines.length - visible.length;
 
   const tooltip = hasEvents
-    ? [
-        ...lines.map((l) => {
+    ? lines
+        .map((l) => {
           const label = l.kind === 'bill' ? 'Төлбөр' : l.kind === 'income' ? 'Орлого' : 'Зээл';
           return `${label}: ${formatCurrency(l.amount, currency)}`;
-        }),
-        overflow > 0 ? `ба ${overflow} бусад` : '',
-      ]
-        .filter(Boolean)
+        })
         .join(' · ')
     : undefined;
 
@@ -274,7 +309,9 @@ function CalendarCell({
       aria-label={`Select ${day.year}-${day.month + 1}-${day.day}`}
       className={cn(
         'calendar-cell relative flex min-h-0 cursor-pointer flex-col overflow-hidden font-medium transition-all',
-        compact ? 'h-[4.25rem] p-1 text-[10px]' : 'min-h-[6.25rem] h-[7.25rem] p-1.5 text-xs sm:h-28 sm:min-h-0 sm:p-2.5',
+        compact
+          ? 'h-[3rem] p-0.5 text-[10px]'
+          : 'min-h-0 h-[3.875rem] p-0.5 sm:h-[4.125rem] sm:p-1',
         day.isCurrentMonth
           ? 'text-white/80 hover:bg-white/[0.05]'
           : 'bg-brand-bg/25 text-white/25',
@@ -287,66 +324,58 @@ function CalendarCell({
       <span
         className={cn(
           'inline-flex shrink-0 items-center justify-center rounded-full',
-          compact ? 'size-5 text-[10px]' : 'size-7',
+          compact ? 'size-[1rem] text-[8px]' : 'size-5 text-[10px] sm:size-[1.375rem] sm:text-[11px]',
           day.isToday &&
             (compact
-              ? 'size-6 bg-gradient-to-br from-brand-primary to-violet-600 font-black text-white shadow-md shadow-brand-primary/30 ring-1 ring-white/25'
-              : 'size-7 bg-gradient-to-br from-brand-primary to-violet-600 text-xs font-black text-white shadow-lg shadow-brand-primary/35 ring-2 ring-white/25 sm:size-8 sm:text-sm'),
+              ? 'size-[1.125rem] bg-gradient-to-br from-brand-primary to-violet-600 font-black text-white shadow-md shadow-brand-primary/30 ring-1 ring-white/25'
+              : 'size-6 bg-gradient-to-br from-brand-primary to-violet-600 font-black text-white shadow-lg shadow-brand-primary/35 ring-2 ring-white/25 sm:size-7 sm:text-xs'),
           !day.isToday && 'font-medium',
         )}
       >
         {day.day}
       </span>
 
-      {/* Үйл явдлын мөр: төрөл + дүн (богино формат) */}
-      {hasEvents && (
-        <div
-          className={cn(
-            'mt-auto flex min-h-0 flex-col overflow-hidden',
-            compact ? 'gap-0.5 pt-0.5' : 'gap-1 pt-1',
-          )}
-        >
-          {visible.map((line) => (
-            <div
-              key={`${line.kind}-${line.id}`}
-              className={cn(
-                'flex min-h-0 w-full items-stretch overflow-hidden rounded border border-white/10 bg-black/25 shadow-sm',
-                compact && 'rounded-sm',
-                line.kind === 'bill' && 'text-violet-200/95',
-                line.kind === 'income' && 'text-emerald-200/95',
-                line.kind === 'loan' && 'text-yellow-200/95',
-              )}
-            >
-              <span
-                className={cn(
-                  'w-0.5 shrink-0',
-                  line.kind === 'bill' && 'bg-violet-400/75',
-                  line.kind === 'income' && 'bg-emerald-400/70',
-                  line.kind === 'loan' && 'bg-yellow-400/75',
-                )}
-                aria-hidden
-              />
-              <span
-                className={cn(
-                  'min-w-0 flex-1 text-right font-bold tabular-nums leading-tight tracking-tight',
-                  compact ? 'px-0.5 py-0 text-[6px]' : 'px-1 py-0.5 text-[9px] sm:pr-1.5 sm:text-[10px]',
-                )}
-              >
-                {formatCompactCalendarAmount(line.amount, currency)}
-              </span>
-            </div>
-          ))}
-          {overflow > 0 && (
-            <div
-              className={cn(
-                'flex w-full items-center justify-center rounded border border-dashed border-white/15 bg-brand-bg/60 font-bold tabular-nums text-white/50',
-                compact ? 'py-0 text-[6px] leading-none' : 'py-0.5 text-[9px] leading-none sm:text-[10px]',
-              )}
-              title={`${overflow} бусад үйл явдал`}
-            >
-              +{overflow}
-            </div>
-          )}
+      {/* Нэг мөр: төрөл тус бүрийн нийлбэр (товч формат) */}
+      {hasEvents && segments.length > 0 && (
+        <div className={cn('mt-auto min-h-0 w-full min-w-0 pt-px', compact && 'pt-0')}>
+          <div
+            className={cn(
+              'flex min-h-0 w-full min-w-0 items-stretch overflow-hidden rounded border border-white/[0.07] bg-gradient-to-b from-black/[0.28] to-black/[0.38] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] backdrop-blur-[2px]',
+              compact ? 'gap-px p-px' : 'gap-px p-px sm:gap-0.5 sm:p-0.5',
+            )}
+          >
+            {segments.map((seg) => {
+              const st = SEGMENT_STYLES[seg.kind];
+              const fullLabel =
+                seg.kind === 'bill' ? 'Төлбөр' : seg.kind === 'income' ? 'Орлого' : 'Зээл';
+              const title = `${fullLabel}${seg.count > 1 ? ` (${seg.count})` : ''}: ${formatCurrency(seg.total, currency)}`;
+              return (
+                <div
+                  key={seg.kind}
+                  title={title}
+                  className={cn(
+                    'flex min-h-0 min-w-0 flex-1 items-center justify-center gap-0.5 rounded-md border border-white/[0.06] tabular-nums',
+                    st.chip,
+                    compact ? 'px-0.5 py-px' : 'px-0.5 py-px sm:px-1 sm:py-0.5',
+                  )}
+                >
+                  <span
+                    className={cn('shrink-0 rounded-full ring-1 ring-black/20', st.dot, compact ? 'h-1 w-1' : 'h-1 w-1 sm:h-1.5 sm:w-1.5')}
+                    aria-hidden
+                  />
+                  <span
+                    className={cn(
+                      'min-w-0 max-w-full truncate text-center font-bold leading-none tracking-tight',
+                      st.text,
+                      compact ? 'text-[7px]' : 'text-[9px] sm:text-[10px]',
+                    )}
+                  >
+                    {formatCompactCalendarAmountInline(seg.total, currency)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

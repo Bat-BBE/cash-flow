@@ -34,6 +34,27 @@ export function formatCompactCalendarAmount(amount: number, currency: string = '
   return formatCurrency(amount, currency);
 }
 
+/**
+ * MNT: same compact rules as formatCompactCalendarAmount but without a trailing " ₮"
+ * (one currency mark per row of segments). Non-MNT falls back to formatCurrency.
+ */
+export function formatCompactCalendarAmountInline(amount: number, currency: string = 'MNT'): string {
+  if (currency === 'MNT') {
+    const a = Math.abs(amount);
+    const sign = amount < 0 ? '-' : '';
+    if (a >= 1_000_000) {
+      const v = a / 1_000_000;
+      const rounded = v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
+      return `${sign}${rounded}M`;
+    }
+    if (a >= 1_000) {
+      return `${sign}${Math.round(a / 1_000)}k`;
+    }
+    return `${sign}${Math.round(amount)}`;
+  }
+  return formatCurrency(amount, currency);
+}
+
 export function formatCurrency(amount: number, currency: string = 'MNT'): string {
   if (currency === 'MNT') {
     return formatMnt(amount);

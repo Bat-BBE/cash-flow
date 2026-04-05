@@ -172,7 +172,7 @@ export function Sidebar() {
       <aside
         onMouseLeave={() => setShowUserMenu(false)}
         className={cn(
-          'fixed z-40 flex min-h-0 flex-col',
+          'fixed z-40 flex min-h-0 flex-col overflow-visible',
           'top-[calc(4.25rem+env(safe-area-inset-top))]',
           'bg-[#0e0c1e]/80 backdrop-blur-2xl',
           'h-[calc(100dvh-4.25rem-env(safe-area-inset-top))]',
@@ -266,14 +266,14 @@ export function Sidebar() {
         >
           <div
             className={cn(
-              'absolute z-[55] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#131220]/98 shadow-2xl backdrop-blur-2xl',
-              'origin-bottom transition-all duration-200',
+              'absolute z-[56] overflow-hidden rounded-2xl border border-white/[0.09] bg-[#12151f]/98 shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl',
+              'origin-top transition-all duration-200',
               expanded
-                ? 'bottom-full left-1/2 mb-2 w-[min(calc(100%-0.75rem),13.5rem)] -translate-x-1/2'
-                : 'bottom-full left-2 right-2 mb-2',
+                ? 'top-full left-1/2 mt-2 w-[min(calc(100%-0.75rem),13.5rem)] -translate-x-1/2'
+                : 'top-full left-2 right-2 mt-2',
               showUserMenu
                 ? 'pointer-events-auto opacity-100 scale-100 translate-y-0'
-                : 'pointer-events-none opacity-0 scale-95 translate-y-2',
+                : 'pointer-events-none opacity-0 scale-95 -translate-y-1',
             )}
           >
             {[
@@ -285,9 +285,9 @@ export function Sidebar() {
                 key={icon}
                 type="button"
                 onClick={action}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors hover:bg-white/[0.05] hover:text-white"
+                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[12px] font-medium text-white/75 transition-colors hover:bg-white/[0.06] hover:text-white"
               >
-                <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+                <span className="material-symbols-outlined text-[17px] text-violet-400/65">{icon}</span>
                 {label}
               </button>
             ))}
@@ -295,9 +295,9 @@ export function Sidebar() {
             <button
               type="button"
               onClick={() => { router.push('/'); setShowUserMenu(false); }}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors hover:bg-rose-500/[0.08] hover:text-rose-300"
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[12px] font-medium text-rose-400/85 transition-colors hover:bg-rose-500/[0.08] hover:text-rose-300"
             >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <span className="material-symbols-outlined text-[17px]">logout</span>
               {t('logoutLabel')}
             </button>
           </div>

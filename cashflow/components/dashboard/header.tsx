@@ -21,6 +21,7 @@ const PAGE_TITLE: Record<string, string> = {
   '/payments/plan':      'Төлөвлөгөө',
   '/payments/simulator': 'Тооцоолуур',
   '/scheduled':          'Хуваарь',
+  '/savings':            'Хадгаламж',
   '/settings':           'Тохиргоо',
   '/support':            'Тусламж',
 };
@@ -34,6 +35,7 @@ const PAGE_ICONS: Record<string, string> = {
   '/payments/plan':      'event_note',
   '/payments/simulator': 'calculate',
   '/scheduled':          'calendar_month',
+  '/savings':            'savings',
   '/settings':           'settings',
   '/support':            'help_center',
 };
@@ -74,12 +76,19 @@ function NotifPanel({
   const panelContent = (
     <>
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.07]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center">
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-between border-b border-white/[0.07]',
+          isMobile ? 'px-3 py-2.5' : 'px-4 py-3.5',
+        )}
+      >
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-violet-500/25 bg-violet-500/15">
             <span className="material-symbols-outlined text-[14px] text-violet-400">notifications</span>
           </div>
-          <span className="text-[13px] font-black text-white">Мэдэгдэл</span>
+          <span className={cn('font-semibold text-white', isMobile ? 'text-[12px]' : 'text-[13px] font-black')}>
+            Мэдэгдэл
+          </span>
           {unread > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-violet-500/20 border border-violet-500/30 text-violet-300 leading-none">
               {unread} шинэ
@@ -105,7 +114,13 @@ function NotifPanel({
       </div>
 
       {/* ── List ── */}
-      <div className="overflow-y-auto" style={{ maxHeight: isMobile ? '65vh' : '380px' }}>
+      <div
+        className={cn(
+          'overflow-y-auto',
+          isMobile && 'min-h-0 flex-1',
+        )}
+        style={!isMobile ? { maxHeight: '380px' } : undefined}
+      >
         {notifs.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-12">
             <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center">
@@ -120,7 +135,8 @@ function NotifPanel({
                 key={n.id}
                 onClick={() => onRead(n.id)}
                 className={cn(
-                  'w-full flex items-start gap-3 px-4 py-3.5 text-left transition-all',
+                  'w-full flex items-start text-left transition-all',
+                  isMobile ? 'gap-2.5 px-3 py-3' : 'gap-3 px-4 py-3.5',
                   'hover:bg-white/[0.05] active:bg-white/[0.08]',
                   !n.read && 'bg-white/[0.025]',
                 )}
@@ -137,7 +153,7 @@ function NotifPanel({
                     </span>
                   </div>
                   {!n.read && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-violet-400 border-2 border-[#0c0f1a]" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-[#12151f] bg-violet-400" />
                   )}
                 </div>
 
@@ -166,8 +182,13 @@ function NotifPanel({
       </div>
 
       {/* ── Footer ── */}
-      <div className="px-4 py-3 border-t border-white/[0.07]">
-        <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-bold text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all">
+      <div className={cn('shrink-0 border-t border-white/[0.07]', isMobile ? 'px-3 py-2' : 'px-4 py-3')}>
+        <button
+          type="button"
+          className={cn(
+            'flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[10px] font-semibold text-white/35 transition-all hover:bg-white/[0.04] hover:text-white/65 sm:text-[11px]',
+          )}
+        >
           <span className="material-symbols-outlined text-[14px]">open_in_new</span>
           Бүгдийг харах
         </button>
@@ -175,35 +196,33 @@ function NotifPanel({
     </>
   );
 
-  /* ── Mobile: bottom sheet ── */
+  /* ── Mobile: dropdown under header (профайл цэсний адил — доод tab/footer биш) ── */
   if (isMobile) {
     return createPortal(
       <>
-        {/* Backdrop */}
         <div
-          className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-[2px]"
+          className="fixed inset-0 z-[80] bg-black/45 backdrop-blur-[1px]"
+          style={{ top: 'calc(3.75rem + env(safe-area-inset-top))' }}
           onClick={onClose}
+          aria-hidden
         />
-
-        {/* Sheet */}
-        <div className={cn(
-          'fixed bottom-0 left-0 right-0 z-[81]',
-          'rounded-t-3xl border-t border-white/[0.08]',
-          'bg-[#0c0f1a]',
-          'shadow-[0_-8px_40px_rgba(0,0,0,0.7)]',
-
-          // ✅ animation
-          'translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
-        )}>
-          <div className="flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 rounded-full bg-white/15" />
-          </div>
-
+        <div
+          className={cn(
+            'fixed z-[81] flex max-h-[min(72vh,calc(100dvh-4.75rem))] flex-col overflow-hidden',
+            'left-2 right-2 sm:left-auto sm:right-3 sm:w-[min(22rem,calc(100vw-1rem))]',
+            'top-[calc(3.75rem+env(safe-area-inset-top)+6px)]',
+            'rounded-2xl border border-white/[0.09]',
+            'bg-[#12151f]/98 pb-[env(safe-area-inset-bottom)] shadow-[0_16px_48px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]',
+            'backdrop-blur-xl',
+            'animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200',
+          )}
+          role="dialog"
+          aria-label="Мэдэгдэл"
+        >
           {panelContent}
-          <div className="h-[env(safe-area-inset-bottom)]" />
         </div>
       </>,
-      document.body // 🔥 ЭНЭ ЧУХАЛ
+      document.body,
     );
   }
   /* ── Desktop: dropdown ── */
@@ -239,26 +258,28 @@ function MobileAccountSheet({
 
   return createPortal(
     <>
+      {/* Доод биш — аватарын доор, header-ээс доош */}
       <div
-        className="fixed inset-0 z-[78] bg-black/60 backdrop-blur-[2px]"
+        className="fixed inset-0 z-[78] bg-black/45 backdrop-blur-[1px]"
+        style={{ top: 'calc(3.75rem + env(safe-area-inset-top))' }}
         onClick={onClose}
         aria-hidden
       />
       <div
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-[79]',
-          'rounded-t-3xl border-t border-white/[0.08] bg-[#0c0f1a]',
-          'shadow-[0_-8px_40px_rgba(0,0,0,0.7)]',
-          'translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
+          'fixed z-[79] w-[min(17.5rem,calc(100vw-1rem))]',
+          'right-2 sm:right-3',
+          'top-[calc(3.75rem+env(safe-area-inset-top)+6px)]',
+          'overflow-hidden rounded-2xl border border-white/[0.09]',
+          'bg-[#12151f]/98 shadow-[0_16px_48px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)]',
+          'backdrop-blur-xl',
         )}
+        role="menu"
       >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-white/15" />
-        </div>
-        <p className="px-4 pb-2 text-center text-[10px] font-black uppercase tracking-widest text-white/25">
+        <p className="border-b border-white/[0.06] px-3 py-2 text-center text-[9px] font-semibold uppercase tracking-[0.12em] text-white/35">
           {user.name ?? 'Account'}
         </p>
-        <div className="max-h-[55vh] overflow-y-auto pb-2">
+        <div className="py-1">
           {[
             { icon: 'person' as const,   label: t('profileLabel'), action: () => { setProfileDrawerOpen(true); onClose(); } },
             { icon: 'settings' as const, label: t('settings'),     action: () => { router.push('/settings'); onClose(); } },
@@ -267,24 +288,25 @@ function MobileAccountSheet({
             <button
               key={icon}
               type="button"
+              role="menuitem"
               onClick={action}
-              className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-white/70 transition-colors active:bg-white/10 hover:bg-white/[0.05] hover:text-white"
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[12px] font-medium text-white/75 transition-colors active:bg-white/10 hover:bg-white/[0.06] hover:text-white"
             >
-              <span className="material-symbols-outlined text-[18px] text-white/30">{icon}</span>
+              <span className="material-symbols-outlined text-[17px] text-violet-400/70">{icon}</span>
               {label}
             </button>
           ))}
-          <div className="mx-4 border-t border-white/[0.06]" />
+          <div className="mx-2 border-t border-white/[0.06]" />
           <button
             type="button"
+            role="menuitem"
             onClick={() => { router.push('/'); onClose(); }}
-            className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[13px] text-rose-400/80 transition-colors active:bg-rose-500/15 hover:bg-rose-500/[0.08] hover:text-rose-300"
+            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[12px] font-medium text-rose-400/85 transition-colors active:bg-rose-500/15 hover:bg-rose-500/[0.08] hover:text-rose-300"
           >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
+            <span className="material-symbols-outlined text-[17px]">logout</span>
             {t('logoutLabel')}
           </button>
         </div>
-        <div className="h-[env(safe-area-inset-bottom)]" />
       </div>
     </>,
     document.body,
@@ -407,7 +429,10 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
           <div ref={notifRef} className="relative">
             <button
               type="button"
-              onClick={() => setShowNotif(v => !v)}
+              onClick={() => {
+                setShowAccountSheet(false);
+                setShowNotif(v => !v);
+              }}
               className={cn(
                 'relative flex h-7 w-7 items-center justify-center rounded-md md:h-8 md:w-8 md:rounded-lg',
                 'border border-white/[0.07] bg-white/[0.035]',
@@ -436,7 +461,10 @@ export function Header({ onAddTransaction, accounts = [], categories = [] }: Hea
           {/* Mobile: профайл — доод tab bar үндсэн навигац */}
           <button
             type="button"
-            onClick={() => setShowAccountSheet(true)}
+            onClick={() => {
+              setShowNotif(false);
+              setShowAccountSheet(true);
+            }}
             className={cn(
               'relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full md:hidden',
               'ring-1 ring-white/[0.14] ring-offset-[1.5px] ring-offset-brand-bg',

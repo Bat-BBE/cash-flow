@@ -5,9 +5,7 @@ import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { useScheduledCalendar } from '@/contexts/scheduled-calendar-context';
 import { Calendar } from '@/components/scheduled/calendar';
 import { MonthPicker } from '@/components/scheduled/month-picker';
-import { BillsList } from '@/components/scheduled/bills-list';
-import { IncomeList } from '@/components/scheduled/income-list';
-import { LiquidityChart } from '@/components/scheduled/liquidity-chart';
+import { ScheduledMonthOverview } from '@/components/scheduled/month-overview';
 import { AddItemModal } from '@/components/scheduled/add-item-modal';
 import { DayDetailsModal } from '@/components/scheduled/day-details-modal';
 import { formatDateForInputLocal } from '@/lib/utils';
@@ -15,11 +13,7 @@ import type { CalendarDay } from '@/components/scheduled/types';
 
 export default function ScheduledPage() {
   const {
-    bills,
-    incomes,
     calendarDays,
-    projections,
-    summary,
     loading,
     currentDate,
     showMonthPicker,
@@ -29,10 +23,7 @@ export default function ScheduledPage() {
     goToToday,
     selectedDate,
     setSelectedDate,
-    updateBillStatus,
-    deleteBill,
     loanCurrency,
-    upcomingLoanPayments,
     addBill,
     addIncome,
   } = useScheduledCalendar();
@@ -100,8 +91,7 @@ export default function ScheduledPage() {
             </p>
           </div>
 
-          <div className="relative grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-12">
-            <div className="relative lg:col-span-7">
+          <div className="relative">
             <Calendar
               days={calendarDays}
               currentDate={currentDate}
@@ -119,22 +109,15 @@ export default function ScheduledPage() {
               currentDate={currentDate}
               onSelectMonth={(monthIndex, year) => jumpToMonth(monthIndex, year)}
             />
-            </div>
-
-            <div className="flex flex-col gap-4 sm:gap-5 lg:col-span-5">
-              <BillsList
-                bills={bills}
-                onUpdateStatus={updateBillStatus}
-                onDelete={deleteBill}
-                upcomingLoanPayments={upcomingLoanPayments}
-                currency={loanCurrency}
-              />
-
-              <IncomeList incomes={incomes} currency={loanCurrency} />
-            </div>
           </div>
 
-          {/* <LiquidityChart projections={projections} summary={summary} /> */}
+          <ScheduledMonthOverview
+            currentDate={currentDate}
+            calendarDays={calendarDays}
+            currency={loanCurrency}
+            onAddBill={() => handleAddClick('bill')}
+            onAddIncome={() => handleAddClick('income')}
+          />
         </div>
       </DashboardShell>
 

@@ -17,7 +17,7 @@ function Card({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-6 backdrop-blur-sm md:p-8',
+        'relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 backdrop-blur-sm sm:p-5 md:p-6',
         className,
       )}
     >
@@ -34,9 +34,9 @@ function Card({
 /** Section label */
 function SectionHeading({ title, description }: { title: string; description: string }) {
   return (
-    <div className="mb-6 space-y-1">
-      <h2 className="text-[15px] font-bold tracking-tight text-white">{title}</h2>
-      <p className="text-[12px] leading-relaxed text-white/35">{description}</p>
+    <div className="mb-4 space-y-0.5 sm:mb-5">
+      <h2 className="text-[12px] font-semibold uppercase tracking-wide text-slate-500 sm:text-[13px]">{title}</h2>
+      <p className="text-[10px] leading-relaxed text-slate-500/90 sm:text-[11px]">{description}</p>
     </div>
   );
 }
@@ -51,7 +51,7 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-white/25">
+      <label className="block text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500">
         {label}
       </label>
       {children}
@@ -60,7 +60,7 @@ function Field({
 }
 
 const inputCls =
-  'w-full rounded-xl border border-white/[0.08] bg-black/30 px-3.5 py-2.5 text-sm text-white/80 placeholder:text-white/20 transition-all duration-200 outline-none focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/10 hover:border-white/[0.12]';
+  'w-full rounded-xl border border-white/[0.08] bg-black/30 px-3 py-2 text-[13px] text-white/85 placeholder:text-white/25 transition-all duration-200 outline-none focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/10 hover:border-white/[0.12]';
 
 /** Toggle pill button — on / off */
 function TogglePill({
@@ -79,7 +79,7 @@ function TogglePill({
       type="button"
       onClick={onToggle}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition-all duration-200',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-all duration-200',
         active
           ? 'border-emerald-500/35 bg-emerald-500/[0.1] text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.1)]'
           : 'border-white/[0.08] bg-white/[0.04] text-white/35 hover:border-white/15 hover:text-white/55',
@@ -119,7 +119,7 @@ function ActionPill({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition-all duration-200',
+        'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-all duration-200',
         variantCls,
       )}
     >
@@ -140,10 +140,10 @@ function PrefRow({
   control: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] p-3.5 transition-colors hover:border-white/[0.07] sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0">
+    <div className="flex flex-col gap-2.5 rounded-xl border border-white/[0.04] bg-white/[0.02] p-3 transition-colors hover:border-white/[0.07] sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0">
       <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-white/80">{title}</p>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-white/30">{description}</p>
+        <p className="text-[12px] font-medium text-white/85">{title}</p>
+        <p className="mt-0.5 text-[10px] leading-relaxed text-slate-500 sm:text-[11px]">{description}</p>
       </div>
       <div className="shrink-0">{control}</div>
     </div>
@@ -171,26 +171,25 @@ export default function SettingsPage() {
   useEffect(() => { const t = setTimeout(() => setVisible(true), 60); return () => clearTimeout(t); }, []);
 
   return (
-    <DashboardShell>
+    <DashboardShell className="bg-brand-bg" mainClassName="bg-brand-bg">
       <div
         className={cn(
-          'mx-auto w-full max-w-[1100px] space-y-6 px-3 pb-12 pt-3 transition-all duration-700 sm:px-5 sm:pt-2 md:space-y-8 md:px-8 md:pb-14',
-          visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3',
+          'mx-auto w-full max-w-[1100px] space-y-4 px-3 pb-4 pt-2 transition-all duration-500 sm:space-y-5 sm:px-4 sm:pb-6 sm:pt-3 md:space-y-6 md:px-6 md:pb-10',
+          visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
         )}
       >
 
         {/* ── Page header ── */}
-        <header className="relative space-y-1.5 border-b border-white/[0.05] pb-6">
+        <header className="relative space-y-1 border-b border-white/[0.05] pb-4 sm:pb-5">
           {/* decorative glow */}
           <div
             className="pointer-events-none absolute -top-6 left-0 h-24 w-48 opacity-20 blur-3xl"
             style={{ background: 'radial-gradient(circle, #f59e0b, transparent 70%)' }}
           />
-          {/* <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-400/60">CashFlow</p> */}
-          <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">
+          <h1 className="text-lg font-bold tracking-tight text-white sm:text-xl">
             Тохиргоо
           </h1>
-          <p className="max-w-xl text-[13px] leading-relaxed text-white/35">
+          <p className="max-w-xl text-[10px] leading-relaxed text-slate-500 sm:text-[11px]">
             Хувийн мэдээлэл, хэрэглээний тохиргоо, нууцлалыг нэг дороос удирдана.
           </p>
         </header>
@@ -204,7 +203,7 @@ export default function SettingsPage() {
             description="Нэр, имэйл, зураг таны CashFlow дээр хэрхэн харагдахыг тохируулна."
           />
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
             {/* left col */}
             <div className="space-y-4">
               <Field label="Бүтэн нэр">
@@ -237,10 +236,10 @@ export default function SettingsPage() {
                 <span className="material-symbols-outlined text-base text-emerald-400">verified_user</span>
               </div>
               <div>
-                <p className="text-[13px] font-bold text-white/80">
+                <p className="text-[12px] font-semibold text-white/85">
                   {(user.membershipType || 'PREMIUM').toUpperCase()} гишүүн
                 </p>
-                <p className="text-[11px] text-white/30">
+                <p className="text-[10px] text-slate-500">
                   Нэгдсэн: {user.joinedDate || 'саяхан'} · Профайл дүн шинжилгээнд нөлөөлнө
                 </p>
               </div>
@@ -250,14 +249,14 @@ export default function SettingsPage() {
             <div className="flex gap-2.5">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-[12px] font-bold text-white/40 transition-all hover:border-white/15 hover:text-white/70"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-[11px] font-semibold text-white/45 transition-all hover:border-white/15 hover:text-white/75"
               >
                 <span className="material-symbols-outlined text-[15px]">refresh</span>
                 Буцаах
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.1] px-4 py-2.5 text-[12px] font-bold text-amber-300 shadow-[0_0_16px_rgba(245,158,11,0.1)] transition-all hover:border-amber-400/50 hover:bg-amber-500/[0.16] hover:text-amber-200"
+                className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.1] px-3 py-2 text-[11px] font-semibold text-amber-200/95 shadow-[0_0_16px_rgba(245,158,11,0.1)] transition-all hover:border-amber-400/50 hover:bg-amber-500/[0.16] hover:text-amber-100"
               >
                 <span className="material-symbols-outlined text-[15px]">save</span>
                 Хадгалах
@@ -365,8 +364,8 @@ export default function SettingsPage() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[13px] font-semibold text-white/70">Бүртгэл устгах</p>
-              <p className="mt-0.5 text-[11px] text-white/30">
+              <p className="text-[12px] font-medium text-white/75">Бүртгэл устгах</p>
+              <p className="mt-0.5 text-[10px] text-slate-500 sm:text-[11px]">
                 Таны бүх өгөгдөл, тохиргоо бүрмөсөн устана.
               </p>
             </div>
