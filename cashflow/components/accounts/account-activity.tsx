@@ -115,12 +115,12 @@ export function AccountActivity({
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      'INVESTMENT': 'text-brand-primary bg-brand-primary/10',
-      'TRANSFER': 'text-blue-400 bg-blue-400/10',
-      'SAVINGS': 'text-emerald-400 bg-emerald-400/10',
-      'SHOPPING': 'text-amber-400 bg-amber-400/10',
-      'INCOME': 'text-success bg-success/10',
-      'ENTERTAINMENT': 'text-purple-400 bg-purple-400/10'
+      INVESTMENT: 'text-brand-primary bg-brand-primary/10',
+      TRANSFER: 'text-sky-400 bg-sky-400/10',
+      SAVINGS: 'text-teal-400 bg-teal-400/10',
+      SHOPPING: 'text-amber-400 bg-amber-400/10',
+      INCOME: 'text-emerald-400 bg-emerald-500/12',
+      ENTERTAINMENT: 'text-purple-400 bg-purple-400/10',
     };
     return colors[category] || 'text-brand-muted bg-white/5';
   };
@@ -154,16 +154,28 @@ export function AccountActivity({
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
-        <div className="space-y-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+        <div className="min-w-0 space-y-3">
           <h2 className="text-lg font-bold text-white">{t('accountActivity')}</h2>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums">
-            <span className="text-emerald-400 font-bold">
-              {t('periodSummaryIncome')}: {formatCurrency(periodIncomeTotal, currency)}
-            </span>
-            <span className="text-red-400 font-bold">
-              {t('periodSummaryExpense')}: {formatCurrency(periodExpenseTotal, currency)}
-            </span>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3 py-2.5 sm:min-w-[200px] sm:justify-start sm:py-2">
+              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400/90">
+                <span className="material-symbols-outlined text-[16px]">trending_up</span>
+                {t('periodSummaryIncome')}
+              </span>
+              <span className="text-sm font-black tabular-nums text-emerald-300">
+                +{formatCurrency(periodIncomeTotal, currency)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/25 bg-rose-500/[0.08] px-3 py-2.5 sm:min-w-[200px] sm:justify-start sm:py-2">
+              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-400/90">
+                <span className="material-symbols-outlined text-[16px]">trending_down</span>
+                {t('periodSummaryExpense')}
+              </span>
+              <span className="text-sm font-black tabular-nums text-rose-300">
+                −{formatCurrency(periodExpenseTotal, currency)}
+              </span>
+            </div>
           </div>
         </div>
         {filteredTransactions.length > 0 && (
@@ -260,14 +272,16 @@ export function AccountActivity({
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "h-9 w-9 rounded-xl flex items-center justify-center",
-                          tx.type === 'income' 
-                            ? 'bg-success/10 text-success'
-                            : tx.type === 'expense'
-                            ? 'bg-red-500/10 text-red-400'
-                            : 'bg-brand-primary/10 text-brand-primary'
-                        )}>
+                        <div
+                          className={cn(
+                            'flex h-9 w-9 items-center justify-center rounded-xl',
+                            tx.type === 'income'
+                              ? 'bg-emerald-500/15 text-emerald-400'
+                              : tx.type === 'expense'
+                                ? 'bg-rose-500/15 text-rose-400'
+                                : 'bg-brand-primary/10 text-brand-primary',
+                          )}
+                        >
                           <span className="material-symbols-outlined text-xl">{tx.icon}</span>
                         </div>
                         <div>
@@ -290,13 +304,17 @@ export function AccountActivity({
                         {tx.category}
                       </span>
                     </td>
-                    <td className={cn(
-                      'px-6 py-4 text-right font-bold whitespace-nowrap',
-                      tx.type === 'income' ? 'text-success' : 
-                      tx.type === 'expense' ? 'text-red-400' : 'text-brand-primary'
-                    )}>
-                      {tx.type === 'income' ? '+' : 
-                       tx.type === 'expense' ? '-' : ''}
+                    <td
+                      className={cn(
+                        'px-6 py-4 text-right text-[15px] font-black tabular-nums whitespace-nowrap',
+                        tx.type === 'income'
+                          ? 'text-emerald-400'
+                          : tx.type === 'expense'
+                            ? 'text-rose-400'
+                            : 'text-brand-primary',
+                      )}
+                    >
+                      {tx.type === 'income' ? '+' : tx.type === 'expense' ? '−' : ''}
                       {formatCurrency(Math.abs(tx.amount), currency)}
                     </td>
                     <td className="px-6 py-4 text-right">

@@ -1,122 +1,40 @@
 'use client';
 
-import { useState } from 'react';
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
-import { useDashboard } from '@/components/providers/dashboard-provider';
-import { useTranslation } from '@/lib/translations';
-import { useAnalyticsData } from '@/hook/use-analytics-data';
-
-import { AnalyticsHeader } from '@/components/analytics/analytics-header';
-import { AnalyticsStats } from '@/components/analytics/analytics-stats';
-import { AnalyticsChart } from '@/components/analytics/analytics-chart';
-import { AnalyticsGallery } from '@/components/analytics/analytics-gallery';
-import { AnalyticsInsights } from '@/components/analytics/analytics-insights';
-import { AnalyticsFooter } from '@/components/analytics/analytics-footer';
+import { useMemo, useState } from 'react';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
+import { CashflowSankeySection } from '@/components/analytics/cashflow-sankey';
+import { TransactionClassificationSection } from '@/components/analytics/transaction-classification-section';
+import {
+  buildSankeyFromTransactions,
+  cloneInitialTransactions,
+  deriveCashflowSummary,
+  type AnalysisTransaction,
+} from '@/lib/analytics/analysis-flow-model';
 
 export default function AnalyticsPage() {
-  const { language } = useDashboard();
-  const t = useTranslation(language);
-  const [period, setPeriod] = useState('6M');
-  const [lastUpdated] = useState(new Date());
-  
-  const { data, insights, loading, totals } = useAnalyticsData(period);
+  const [transactions, setTransactions] = useState<AnalysisTransaction[]>(
+    cloneInitialTransactions,
+  );
 
-  const handleExport = () => {
-    console.log('Exporting PDF...');
-  };
+  const sankeyData = useMemo(
+    () => buildSankeyFromTransactions(transactions),
+    [transactions],
+  );
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
-  const handleSync = () => {
-    console.log('Syncing data...');
-  };
-
-  const handleCardClick = (cardId: string) => {
-    console.log(`Opening ${cardId}...`);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex bg-[#1a1f2e]">
-        <Sidebar />
-        <main className="flex-1 min-h-screen flex flex-col bg-[#1a1f2e]">
-          <Header />
-          <div className="flex-1 flex items-center justify-center px-4">
-            <div className="text-center">
-              <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-              <p className="text-slate-400 font-medium">Loading analytics...</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const summary = useMemo(
+    () => deriveCashflowSummary(transactions),
+    [transactions],
+  );
 
   return (
-    <div className="min-h-screen flex bg-[#1a1f2e]">
-      <Sidebar />
-      
-      <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-[#1a1f2e]">
-        <Header />
-        
-        <div className="flex-1 p-4 sm:p-6 md:p-8 custom-scrollbar space-y-8">
-
-          <AnalyticsHeader
-            period={period}
-            onPeriodChange={setPeriod}
-            onExport={handleExport}
-            totalMonths={totals.monthsCount}
-          />
-
-          <AnalyticsStats
-            totalIncome={totals.totalIncome}
-            totalExpense={totals.totalExpense}
-            totalSavings={totals.totalSavings}
-            savingsRate={totals.savingsRate}
-            incomeChange={totals.incomeChange}
-            expenseChange={totals.expenseChange}
-          />
-
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 items-start">
-            <div className="xl:col-span-8 space-y-6 md:space-y-8">
-
-              <AnalyticsChart
-                data={data}
-                totalIncome={totals.totalIncome}
-                totalExpense={totals.totalExpense}
-                totalSavings={totals.totalSavings}
-                savingsRate={totals.savingsRate}
-                maxValue={totals.maxValue}
-                activeMonth={data[data.length - 1]?.month}
-              />
-
-              <AnalyticsGallery
-                totalSavings={totals.totalSavings}
-                savingsRate={totals.savingsRate}
-                onCardClick={handleCardClick}
-              />
-              
-            </div>
-
-            <div className="xl:col-span-4">
-              <AnalyticsInsights
-                insights={insights}
-                portfolioVelocity={parseFloat(totals.portfolioVelocity.toFixed(2))}
-              />
-            </div>
-          </div>
-          
-          <AnalyticsFooter
-            lastUpdated={lastUpdated}
-            onRefresh={handleRefresh}
-            onSync={handleSync}
-          />
-          
-        </div>
-      </main>
-    </div>
+    <DashboardShell className="bg-[#1a1f2e]" mainClassName="bg-[#1a1f2e]">
+      <div className="flex-1 px-4 py-3 sm:px-5 sm:py-4 md:px-6 md:py-5">
+        <CashflowSankeySection sankeyData={sankeyData} summary={summary} />
+        <TransactionClassificationSection
+          transactions={transactions}
+          setTransactions={setTransactions}
+        />
+      </div>
+    </DashboardShell>
   );
 }

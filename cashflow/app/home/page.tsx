@@ -1,7 +1,6 @@
 'use client';
 
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Header } from '@/components/dashboard/header';
+import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { NetWorthCard } from '@/components/dashboard/net-worth-card';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { TransactionsTable } from '@/components/dashboard/transactions-table';
@@ -14,13 +13,8 @@ import { DashboardDataProvider } from '@/contexts/dashboard-data-context';
 export default function DashboardPage() {
   return (
     <DashboardDataProvider>
-      <div className="min-h-screen flex bg-brand-bg">
-        <Sidebar />
-
-        <main className="flex-1 min-h-screen overflow-y-auto custom-scrollbar flex flex-col bg-brand-bg">
-          <Header />
-
-          <div className="p-3 sm:p-4 md:p-8 space-y-6 md:space-y-8 max-w-[1400px] mx-auto w-full">
+      <DashboardShell>
+        <div className="mx-auto w-full max-w-[1400px] space-y-6 p-3 sm:p-4 md:space-y-8 md:p-8">
             <section className="grid grid-cols-1 gap-4 md:gap-8">
               <NetWorthCard />
               <StatsCards />
@@ -29,17 +23,16 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8 items-start">
               <div className="xl:col-span-2 space-y-4 md:space-y-6">
                 <TransactionsTable />
+                <SpendingChart />
               </div>
 
               <aside className="space-y-4 md:space-y-8">
-                <SpendingChart />
+                <TrendChart />s
                 <SmartInsight />
-                <TrendChart />
               </aside>
             </div>
           </div>
-        </main>
-      </div>
+      </DashboardShell>
     </DashboardDataProvider>
   );
 }

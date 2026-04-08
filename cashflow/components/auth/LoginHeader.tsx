@@ -1,5 +1,5 @@
 import React from "react";
-import Icon from "@/components/ui/Icon";
+import { BrandLogo } from "@/components/dashboard/brand-logo";
 
 interface LoginHeaderProps {
   title?: string;
@@ -13,8 +13,8 @@ const LoginHeader = ({
   return (
     <div className="flex flex-col items-center">
       <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(109,91,255,0.3)] mx-auto">
-          <img src="/logo.png" alt="CashFlow Logo" className="relative w-12 h-12 rounded-xl" /> 
+        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(109,91,255,0.3)] mx-auto p-2">
+          <BrandLogo size="md" maxWidthClassName="max-w-[3.5rem]" />
         </div>
       </div>
       <div className="mb-2 text-center">
