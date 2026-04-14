@@ -8,7 +8,10 @@ import {
   createContext, useContext, useState,
   useEffect, useCallback, type ReactNode,
 } from 'react';
-import { ref, get, push, set, update } from 'firebase/database';
+import {
+  ref, get, push, set, update, onValue,
+  type DataSnapshot,
+} from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFirebaseDb } from '@/lib/firebase';
 import { getFirebaseStorage, storagePathForUpload } from '@/lib/firebase-storage';
@@ -35,6 +38,48 @@ export type RawTx = {
   debit: number; credit: number; closingBalance: number | null;
   description: string; counterAccount: string | null;
 };
+
+/** Firebase-аас ирэх тоо/текст тогтворгүй тул нэг мөр болгоно */
+function toNum(v: unknown): number {
+  if (v == null || v === '') return 0;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+  const s = String(v).replace(/\s/g, '').replace(/,/g, '');
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeRawTxFromDb(row: unknown): RawTx | null {
+  if (row == null || typeof row !== 'object') return null;
+  const r = row as Record<string, unknown>;
+  const dateRaw = r.date;
+  if (dateRaw == null) return null;
+  const date = String(dateRaw).trim();
+  if (!date || date === 'Нийт дүн:' || /нийт\s*дүн/i.test(date)) return null;
+
+  return {
+    date,
+    branch: r.branch != null && r.branch !== '' ? Number(r.branch) : null,
+    openingBalance:
+      r.openingBalance != null && r.openingBalance !== '' ? toNum(r.openingBalance) : null,
+    debit: toNum(r.debit),
+    credit: toNum(r.credit),
+    closingBalance:
+      r.closingBalance != null && r.closingBalance !== '' ? toNum(r.closingBalance) : null,
+    description: r.description != null ? String(r.description) : '',
+    counterAccount: r.counterAccount != null ? String(r.counterAccount) : null,
+  };
+}
+
+function snapshotToRawTxList(snap: DataSnapshot): RawTx[] {
+  if (!snap.exists()) return [];
+  const val = snap.val() as Record<string, unknown>;
+  const out: RawTx[] = [];
+  for (const row of Object.values(val)) {
+    const t = normalizeRawTxFromDb(row);
+    if (t) out.push(t);
+  }
+  return out;
+}
 
 /* ─── Category mapping ───────────────────────────────────────────── */
 type CategoryRule = { keywords: string[]; category: string; icon: string; color: string };
@@ -398,6 +443,8 @@ function buildTrendData(txs: RawTx[], range: TimeRange): TrendData[] {
 /* ─── Context type ───────────────────────────────────────────────── */
 type DashboardDataCtx = {
   loading:      boolean;
+  /** Realtime DB унших алдаа (зөвшөөрөл, сүлжээ, тохиргоо) */
+  dataError:    string | null;
   timeRange:    TimeRange;
   setTimeRange: (r: TimeRange) => void;
   rawTxs:       RawTx[];
@@ -429,8 +476,8 @@ type DashboardDataCtx = {
   setBudgetLimit:    (category: string, monthlyLimit: number) => void;
   /** Баримт файл — Storage руу */
   uploadTransactionFile: (file: File) => Promise<{ imported: number; warnings: string[] }>;
-  refreshData:       () => void;
-  fetchData:         () => void;
+  refreshData:       () => Promise<void>;
+  fetchData:         () => Promise<void>;
 };
 
 const DashboardDataContext = createContext<DashboardDataCtx | null>(null);
@@ -448,6 +495,7 @@ export function DashboardDataProvider({ children, userId = DEFAULT_USER_ID }: { 
   const [spendingData, setSpendingData] = useState<SpendingData[]>([]);
   const [insights,     setInsights]     = useState<Insight[]>([]);
   const [trendData,    setTrendData]    = useState<TrendData[]>([]);
+  const [dataError,    setDataError]    = useState<string | null>(null);
 
   const recompute = useCallback((txs: RawTx[], r: TimeRange) => {
     setNetWorth(buildNetWorth(txs));
@@ -469,23 +517,58 @@ export function DashboardDataProvider({ children, userId = DEFAULT_USER_ID }: { 
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setDataError(null);
     try {
       const snap = await get(ref(getFirebaseDb(), `users/${userId}/transactions`));
-      if (!snap.exists()) {
-        setRawTxs([]);
-        return;
-      }
-      const txs: RawTx[] = Object.values(snap.val() as Record<string, RawTx>)
-        .filter((t) => t.date && t.date !== 'Нийт дүн:');
-      setRawTxs(txs);
+      setRawTxs(snapshotToRawTxList(snap));
     } catch (err) {
-      console.error('[DashboardDataProvider]', err);
+      console.error('[DashboardDataProvider] get', err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'Өгөгдөл татахад алдаа гарлаа.';
+      setDataError(msg);
+      setRawTxs([]);
     } finally {
       setLoading(false);
     }
   }, [userId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+    try {
+      const db = getFirebaseDb();
+      const txRef = ref(db, `users/${userId}/transactions`);
+      setLoading(true);
+      setDataError(null);
+      unsub = onValue(
+        txRef,
+        (snap) => {
+          setRawTxs(snapshotToRawTxList(snap));
+          setDataError(null);
+          setLoading(false);
+        },
+        (err) => {
+          console.error('[DashboardDataProvider] onValue', err);
+          setDataError(err.message);
+          setRawTxs([]);
+          setLoading(false);
+        },
+      );
+    } catch (e) {
+      console.error('[DashboardDataProvider]', e);
+      setDataError(
+        e instanceof Error
+          ? e.message
+          : 'Firebase тохиргоо шалгана уу (.env.local, Realtime Database URL).',
+      );
+      setRawTxs([]);
+      setLoading(false);
+    }
+    return () => {
+      unsub?.();
+    };
+  }, [userId]);
 
   useEffect(() => {
     try {
@@ -532,8 +615,7 @@ export function DashboardDataProvider({ children, userId = DEFAULT_USER_ID }: { 
     };
     const newRef = push(ref(db, `users/${userId}/transactions`));
     await set(newRef, raw);
-    await fetchData();
-  }, [userId, fetchData]);
+  }, [userId]);
 
   const uploadTransactionFile = useCallback(async (file: File) => {
     const { rows, warnings, error } = await parseBankStatementToRawTxs(file);
@@ -571,9 +653,8 @@ export function DashboardDataProvider({ children, userId = DEFAULT_USER_ID }: { 
       /* Storage алдаатай ч гүйлгээ аль хэдийн RTDB-д орсон */
     }
 
-    await fetchData();
     return { imported: rows.length, warnings };
-  }, [userId, fetchData]);
+  }, [userId]);
 
   const updateBudgetSpent = useCallback((category: string, amount: number) => {
     setBudgets((prev) => prev.map((b) => b.category===category ? {...b, spent:b.spent+amount} : b));
@@ -594,7 +675,7 @@ export function DashboardDataProvider({ children, userId = DEFAULT_USER_ID }: { 
 
   return (
     <DashboardDataContext.Provider value={{
-      loading, timeRange, setTimeRange, rawTxs, chartData, incomeExpenseChartData, incomeBreakdownData,
+      loading, dataError, timeRange, setTimeRange, rawTxs, chartData, incomeExpenseChartData, incomeBreakdownData,
       netWorth, stats, transactions, budgets, spendingData, insights, trendData,
       totalIncome, totalExpenses,
       privacyMasked, togglePrivacyMask,

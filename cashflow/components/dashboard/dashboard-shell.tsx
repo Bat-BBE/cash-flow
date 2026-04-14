@@ -9,6 +9,7 @@ import { ProfileDrawer } from '@/components/dashboard/profile-drawer';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 import { DashboardDataProvider } from '@/contexts/dashboard-data-context';
 import { AiChatbotFab } from '@/components/dashboard/ai-chatbot-fab';
+import { FirebaseDataBanner } from '@/components/dashboard/firebase-data-banner';
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -54,6 +55,7 @@ export function DashboardShell({ children, className, mainClassName }: Dashboard
             mainClassName,
           )}
         >
+          <FirebaseDataBanner />
           {children}
         </main>
       </div>
