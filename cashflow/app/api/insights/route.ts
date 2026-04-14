@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt } = await req.json();
+    const body = await req.json();
+    const { prompt, userMessage } = body as { prompt?: string; userMessage?: string };
     const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
@@ -12,13 +13,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let textPrompt = typeof prompt === 'string' ? prompt : '';
+    if (typeof userMessage === 'string' && userMessage.trim()) {
+      textPrompt =
+        `Та CashFlow аппын санхүүгийн AI туслах. Доорх өгөгдөлд үндэслэн хэрэглэгчийн асуултад хариулна уу.\n` +
+        `Хариултыг монгол хэлээр, 2–6 өгүүлбэр, тодорхой тоо баримт ашиглан бич. Markdown блок, JSON биш, зөвхөн энгийн текст.\n\n` +
+        `--- Санхүүгийн өгөгдөл ---\n${textPrompt}\n\n--- Хэрэглэгчийн асуулт ---\n${userMessage.trim()}`;
+    }
+
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts: [{ text: textPrompt }] }],
           generationConfig: { temperature: 0.7, maxOutputTokens: 1000 },
         }),
       },

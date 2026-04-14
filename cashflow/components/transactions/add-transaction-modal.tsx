@@ -22,7 +22,7 @@ import { DEFAULT_LANGUAGE } from '@/lib/types';
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (transaction: unknown) => void;
+  onAdd: (transaction: unknown) => void | Promise<void>;
   accounts: string[];
   categories: string[];
 }
@@ -228,7 +228,9 @@ function FileDropZone({ file, onFile }: { file: File | null; onFile: (f: File | 
           <p className="text-[13px] font-semibold text-white/80">
             {dragging ? 'Энд тавина уу' : 'Дарж сонгох эсвэл чирж оруулах'}
           </p>
-          <p className="text-[12px] text-white/45">PDF · CSV · Excel · Зураг</p>
+          <p className="text-[12px] text-white/45">
+            Банкны хуулга: Excel (.xlsx) эсвэл CSV — автоматаар уншина
+          </p>
         </div>
       )}
     </div>
@@ -290,19 +292,25 @@ export function AddTransactionModal({
       ? !!amount?.trim() && !!category && !!account
       : !!file;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (mode === 'manual') {
-      onAdd({
-        date,
-        category,
-        account,
-        description,
-        amount: parseFloat(amount),
-        type,
-        status: 'completed',
-      });
+      const amt = parseFloat(amount);
+      if (!Number.isFinite(amt) || amt <= 0) return;
+      await Promise.resolve(
+        onAdd({
+          name: description.trim() || String(category),
+          date,
+          category,
+          account,
+          description,
+          amount: amt,
+          type,
+          status: 'completed',
+        }),
+      );
     } else {
-      onAdd({ file, type: 'file_import' });
+      if (!file) return;
+      await Promise.resolve(onAdd({ file, type: 'file_import' }));
     }
     reset();
     onClose();

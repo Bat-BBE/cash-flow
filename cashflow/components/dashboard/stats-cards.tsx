@@ -66,43 +66,27 @@ function StatCard({ title, value, change, changePercentage, icon, color, loading
   );
 }
 
+const MASK = '••••••••';
+
 export function StatsCards() {
-  const { stats, loading, months, rawTxs } = useDashboardData();
+  const { stats, loading, privacyMasked } = useDashboardData();
   const { language } = useDashboard();
   const t = useTranslation(language);
-
-  const now = new Date();
-  const cutoff = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
-
-  const filtered = rawTxs.filter(tx => new Date(tx.date) >= cutoff);
-  const totalIncome   = Math.round(filtered.reduce((s, t) => s + t.credit, 0));
-  const totalExpenses = Math.round(filtered.reduce((s, t) => s + Math.abs(t.debit), 0));
-
-  const prevCutoff = new Date(now.getFullYear(), now.getMonth() - months * 2 + 1, 1);
-  const prevPeriod = rawTxs.filter(tx => {
-    const d = new Date(tx.date);
-    return d >= prevCutoff && d < cutoff;
-  });
-  const prevIncome   = Math.round(prevPeriod.reduce((s, t) => s + t.credit, 0));
-  const prevExpenses = Math.round(prevPeriod.reduce((s, t) => s + Math.abs(t.debit), 0));
-
-  const pct = (cur: number, prev: number) =>
-    prev === 0 ? 0 : Math.round(((cur - prev) / prev) * 1000) / 10;
 
   const cards = [
     {
       title: t('statTotalIncome'),
-      value: stats ? formatCurrency(totalIncome, 'MNT') : '0 ₮',
+      value: stats ? (privacyMasked ? MASK : formatCurrency(stats.income.total, 'MNT')) : '0 ₮',
       change: t('vsLastMonthCompare'),
-      changePercentage: pct(totalIncome, prevIncome),
+      changePercentage: stats && !privacyMasked ? stats.income.changePercentage : undefined,
       icon: 'trending_up',
       color: 'bg-emerald-500/10 text-emerald-400',
     },
     {
       title: t('statTotalExpenses'),
-      value: stats ? formatCurrency(totalExpenses, 'MNT') : '0 ₮',
+      value: stats ? (privacyMasked ? MASK : formatCurrency(stats.expenses.total, 'MNT')) : '0 ₮',
       change: t('vsLastMonthCompare'),
-      changePercentage: pct(totalExpenses, prevExpenses),
+      changePercentage: stats && !privacyMasked ? stats.expenses.changePercentage : undefined,
       icon: 'trending_down',
       color: 'bg-orange-500/10 text-orange-400',
     },

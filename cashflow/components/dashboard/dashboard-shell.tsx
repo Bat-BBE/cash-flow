@@ -7,6 +7,8 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { MobileBottomNav } from '@/components/dashboard/mobile-bottom-nav';
 import { ProfileDrawer } from '@/components/dashboard/profile-drawer';
 import { useDashboard } from '@/components/providers/dashboard-provider';
+import { DashboardDataProvider } from '@/contexts/dashboard-data-context';
+import { AiChatbotFab } from '@/components/dashboard/ai-chatbot-fab';
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -39,6 +41,7 @@ function DashboardProfileDrawer() {
 
 export function DashboardShell({ children, className, mainClassName }: DashboardShellProps) {
   return (
+    <DashboardDataProvider>
     <div className={cn('flex min-h-screen min-h-[100dvh] flex-col bg-brand-bg', className)}>
       <Header />
       <div className="flex min-h-0 flex-1 items-stretch pt-[calc(3.75rem+env(safe-area-inset-top))] md:pt-[calc(4.25rem+env(safe-area-inset-top))]">
@@ -55,7 +58,9 @@ export function DashboardShell({ children, className, mainClassName }: Dashboard
         </main>
       </div>
       <MobileBottomNav />
+      <AiChatbotFab />
       <DashboardProfileDrawer />
     </div>
+    </DashboardDataProvider>
   );
 }

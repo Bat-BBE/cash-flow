@@ -7,8 +7,10 @@ import { useDashboardData } from '@/contexts/dashboard-data-context';
 import { useDashboard } from '@/components/providers/dashboard-provider';
 import { useTranslation } from '@/lib/translations';
 
+const MASK = '••••••••';
+
 export function BudgetCards() {
-  const { budgets, loading } = useDashboardData();
+  const { budgets, loading, privacyMasked } = useDashboardData();
   const { language } = useDashboard();
   const t = useTranslation(language);
 
@@ -68,11 +70,11 @@ export function BudgetCards() {
                 </div>
                 <div className="text-right">
                   <span className="text-sm font-bold text-white">
-                    {formatCurrency(budget.spent, 'MNT')}
+                    {privacyMasked ? MASK : formatCurrency(budget.spent, 'MNT')}
                   </span>
                   <span className="text-xs text-brand-muted mx-1">/</span>
                   <span className="text-xs text-brand-muted">
-                    {formatCurrency(budget.limit, 'MNT')}
+                    {privacyMasked ? MASK : formatCurrency(budget.limit, 'MNT')}
                   </span>
                 </div>
               </div>

@@ -15,8 +15,10 @@ const STATUS_LABELS: Record<string, string> = {
   failed:    'Амжилтгүй',
 };
 
+const MASK = '••••••••';
+
 export function TransactionsTable() {
-  const { transactions, loading } = useDashboardData();
+  const { transactions, loading, privacyMasked } = useDashboardData();
   const { language } = useDashboard();
   const t = useTranslation(language);
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
@@ -155,7 +157,8 @@ export function TransactionsTable() {
                     "text-[11px] font-bold leading-tight tabular-nums sm:text-sm",
                     tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'
                   )}>
-                    {tx.type === 'income' ? '+' : '−'}{formatCurrency(tx.amount, 'MNT')}
+                    {tx.type === 'income' ? '+' : '−'}
+                    {privacyMasked ? MASK : formatCurrency(tx.amount, 'MNT')}
                   </p>
                   <p className="mt-0.5 text-[9px] leading-tight text-brand-muted sm:text-xs">
                     {formatDate(tx.date)}

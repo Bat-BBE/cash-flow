@@ -5,14 +5,10 @@ import { NetWorthCard } from '@/components/dashboard/net-worth-card';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { TransactionsTable } from '@/components/dashboard/transactions-table';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
-import { SmartInsight } from '@/components/dashboard/smart-insight';
 import { TrendChart } from '@/components/dashboard/trend-chart';
-// import { DashboardProvider } from '@/components/providers/dashboard-provider';
-import { DashboardDataProvider } from '@/contexts/dashboard-data-context';
 
 export default function DashboardPage() {
   return (
-    <DashboardDataProvider>
       <DashboardShell>
         <div className="mx-auto w-full max-w-[1400px] space-y-4 px-3 pb-1 pt-1 sm:space-y-6 sm:p-4 md:space-y-8 md:p-8">
             <section className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-8">
@@ -28,11 +24,9 @@ export default function DashboardPage() {
 
               <aside className="space-y-4 sm:space-y-5 md:space-y-8">
                 <TrendChart />
-                <SmartInsight />
               </aside>
             </div>
           </div>
       </DashboardShell>
-    </DashboardDataProvider>
   );
 }

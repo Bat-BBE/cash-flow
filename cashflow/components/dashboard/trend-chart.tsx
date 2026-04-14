@@ -36,7 +36,9 @@ function forecast(reg: { slope: number; intercept: number }, idx: number): numbe
 }
 
 /* ─── Custom tooltip ─────────────────────────────────────────────── */
-function ChartTooltip({ active, payload, label }: any) {
+const MASK = '••••••••';
+
+function ChartTooltip({ active, payload, label, masked }: any) {
   if (!active || !payload?.length) return null;
   const isForecast = label?.endsWith('*');
   return (
@@ -52,7 +54,7 @@ function ChartTooltip({ active, payload, label }: any) {
               <span className="inline-block w-2 h-2 rounded-sm shrink-0" style={{ background: p.color }} />
               <span className="truncate max-w-[80px]">{p.name}</span>
             </span>
-            <span className="font-bold text-white tabular-nums">{fmtCompact(Number(p.value))}₮</span>
+            <span className="font-bold text-white tabular-nums">{masked ? MASK : `${fmtCompact(Number(p.value))}₮`}</span>
           </div>
         ) : null
       )}
@@ -60,15 +62,14 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
-/* ─── Metric card ────────────────────────────────────────────────── */
 function MetricCard({
-  label, value, sub, subUp,
-}: { label: string; value: string; sub?: string; subUp?: boolean }) {
+  label, value, sub, subUp, masked,
+}: { label: string; value: string; sub?: string; subUp?: boolean; masked?: boolean }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-[10px] bg-white/[0.04] px-2 py-2 sm:rounded-xl sm:px-3 sm:py-2.5">
       <p className="text-[8px] font-semibold uppercase leading-snug tracking-wider text-white/40 sm:text-[9px]">{label}</p>
-      <p className="text-[11px] font-bold leading-tight tabular-nums text-white sm:text-[13px]">{value}</p>
-      {sub && (
+      <p className="text-[11px] font-bold leading-tight tabular-nums text-white sm:text-[13px]">{masked ? MASK : value}</p>
+      {sub && !masked && (
         <p className={cn('text-[9px] font-semibold sm:text-[10px]', subUp ? 'text-emerald-400' : 'text-rose-400')}>
           {sub}
         </p>
@@ -77,21 +78,33 @@ function MetricCard({
   );
 }
 
-/* ─── Main component ─────────────────────────────────────────────── */
 type Metric = 'all' | 'income' | 'expenses' | 'savings';
 
 export function TrendChart() {
-  const { trendData, loading }  = useDashboardData();
+  const { trendData, loading, timeRange, privacyMasked }  = useDashboardData();
   const narrow                   = useIsNarrow();
   const [metric, setMetric]      = useState<Metric>('all');
 
-  /* ── Таамаглал тооцоолол ── */
-  const { chartData, forecastStart, metrics } = useMemo(() => {
-    if (!trendData.length) return { chartData: [], forecastStart: '', metrics: null };
+  const { chartData, forecastStart, metrics, showForecast } = useMemo(() => {
+    if (!trendData.length) return { chartData: [], forecastStart: '', metrics: null, showForecast: false };
 
     const incomes   = trendData.map(d => d.income);
     const expenses  = trendData.map(d => d.expenses);
     const savings   = trendData.map(d => d.savings);
+
+    const avgInc  = Math.round(incomes.reduce((a, b) => a + b, 0) / incomes.length);
+    const avgExp  = Math.round(expenses.reduce((a, b) => a + b, 0) / expenses.length);
+    const skipForecast = timeRange === '7d' || trendData.length < 4;
+
+    if (skipForecast) {
+      const totalSav = Math.round(savings.reduce((a, b) => a + b, 0));
+      return {
+        chartData: trendData.map(d => ({ ...d, isForecast: false })),
+        forecastStart: '',
+        showForecast: false,
+        metrics: { avgInc, avgExp, nextInc: totalSav, nextExp: 0, nextSav: totalSav, mode: 'short' as const },
+      };
+    }
 
     const regI = linReg(incomes);
     const regE = linReg(expenses);
@@ -121,8 +134,6 @@ export function TrendChart() {
       ...foreMonths,
     ];
 
-    const avgInc  = Math.round(incomes.reduce((a, b) => a + b, 0) / incomes.length);
-    const avgExp  = Math.round(expenses.reduce((a, b) => a + b, 0) / expenses.length);
     const nextInc = foreMonths[0].income;
     const nextExp = foreMonths[0].expenses;
     const nextSav = foreMonths[0].savings;
@@ -130,19 +141,20 @@ export function TrendChart() {
     return {
       chartData:     combined,
       forecastStart: foreMonths[0].month,
-      metrics:       { avgInc, avgExp, nextInc, nextExp, nextSav },
+      showForecast: true,
+      metrics:       { avgInc, avgExp, nextInc, nextExp, nextSav, mode: 'full' as const },
     };
-  }, [trendData]);
+  }, [trendData, timeRange]);
 
   const forecastInsight = useMemo(() => {
-    if (!trendData.length) return null;
+    if (!trendData.length || timeRange === '7d' || trendData.length < 4) return null;
     const regI = linReg(trendData.map((d) => d.income));
     const regE = linReg(trendData.map((d) => d.expenses));
     const n = trendData.length;
     const avg3 = (reg: { slope: number; intercept: number }) =>
       Math.round([0, 1, 2].reduce((s, i) => s + forecast(reg, n + i), 0) / 3);
     return { incAvg: avg3(regI), expAvg: avg3(regE) };
-  }, [trendData]);
+  }, [trendData, timeRange]);
 
   const showIncome   = metric === 'all' || metric === 'income';
   const showExpenses = metric === 'all' || metric === 'expenses';
@@ -163,23 +175,30 @@ export function TrendChart() {
     );
   }
 
-  /* ── Y-axis width: fixed so labels don't overflow ── */
   const yAxisWidth = narrow ? 42 : 52;
 
   return (
-    <div className="overflow-hidden rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
+    <div className="overflow-hidden rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6 mb-8">
 
       {/* ── Header ── */}
       <div className="mb-3 flex items-start justify-between gap-2 sm:mb-4">
         <div className="min-w-0">
           <h3 className="text-[0.8125rem] font-semibold leading-snug tracking-tight text-white sm:text-sm sm:font-bold">Орлого / Зарлага трэнд</h3>
           <p className="mt-0.5 text-[9px] leading-relaxed text-white/40 sm:text-[10px]">
-            {trendData.length} сарын бодит + дараагийн 3 сарын таамаглал
+            {showForecast
+              ? `${trendData.length} цэгийн бодит + дараагийн 3 сарын таамаглал`
+              : timeRange === '7d'
+                ? 'Сүүлийн 7 хоногийн бодит (таамаглалгүй)'
+                : timeRange === '1q'
+                  ? 'Энэ улирлын 3 сар (таамаглалгүй)'
+                  : 'Таамаглал харуулахад хангалттай цэг байхгүй'}
           </p>
         </div>
+        {showForecast && (
         <span className="shrink-0 rounded-full border border-violet-500/20 bg-violet-500/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-violet-400 sm:px-2 sm:py-1 sm:text-[9px]">
           * таамаглал
         </span>
+        )}
       </div>
 
       {/* ── Metric cards — always 3 columns ── */}
@@ -188,16 +207,19 @@ export function TrendChart() {
           <MetricCard
             label="Дундаж орлого"
             value={fmtCompact(metrics.avgInc) + '₮'}
+            masked={privacyMasked}
           />
           <MetricCard
             label="Дундаж зарлага"
             value={fmtCompact(metrics.avgExp) + '₮'}
+            masked={privacyMasked}
           />
           <MetricCard
-            label="Дараагийн сар"
-            value={fmtCompact(metrics.nextInc) + '₮'}
-            sub={metrics.nextInc >= metrics.avgInc ? '↑ өсөх' : '↓ буурах'}
-            subUp={metrics.nextInc >= metrics.avgInc}
+            label={metrics.mode === 'short' ? 'Нийт хуримтлал' : 'Дараагийн сар'}
+            value={fmtCompact(metrics.mode === 'short' ? metrics.nextSav : metrics.nextInc) + '₮'}
+            sub={metrics.mode === 'short' ? undefined : (metrics.nextInc >= metrics.avgInc ? '↑ өсөх' : '↓ буурах')}
+            subUp={metrics.mode === 'short' ? undefined : metrics.nextInc >= metrics.avgInc}
+            masked={privacyMasked}
           />
         </div>
       )}
@@ -257,11 +279,12 @@ export function TrendChart() {
               tickFormatter={fmtCompact}
             />
             <Tooltip
-              content={<ChartTooltip />}
+              content={<ChartTooltip masked={privacyMasked} />}
               cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1, strokeDasharray: '4 4' }}
             />
 
             {/* Таамаглал эхлэх шугам */}
+            {showForecast && forecastStart && (
             <ReferenceLine
               x={forecastStart}
               stroke="rgba(139,92,246,0.45)"
@@ -275,6 +298,7 @@ export function TrendChart() {
                 }
               }
             />
+            )}
 
             {/* Орлого */}
             {showIncome && (
@@ -286,7 +310,7 @@ export function TrendChart() {
                 connectNulls={false}
               />
             )}
-            {showIncome && (
+            {showForecast && showIncome && (
               <Line name="Орлого*" type="monotone"
                 dataKey={(d) => d.isForecast ? d.income : undefined}
                 stroke="#34d399" strokeWidth={2} strokeDasharray="5 4"
@@ -306,7 +330,7 @@ export function TrendChart() {
                 connectNulls={false}
               />
             )}
-            {showExpenses && (
+            {showForecast && showExpenses && (
               <Line name="Зарлага*" type="monotone"
                 dataKey={(d) => d.isForecast ? d.expenses : undefined}
                 stroke="#f87171" strokeWidth={2} strokeDasharray="5 4"
@@ -326,7 +350,7 @@ export function TrendChart() {
                 connectNulls={false}
               />
             )}
-            {showSavings && (
+            {showForecast && showSavings && (
               <Line name="Хуримтлал*" type="monotone"
                 dataKey={(d) => d.isForecast ? d.savings : undefined}
                 stroke="#818cf8" strokeWidth={2} strokeDasharray="5 4"
@@ -356,21 +380,23 @@ export function TrendChart() {
             <div className="w-2.5 h-2.5 rounded-sm bg-indigo-400 shrink-0" />Хуримтлал
           </div>
         )}
+        {showForecast && (
         <div className="ml-auto flex items-center gap-1 text-[9px] text-white/35 sm:gap-1.5 sm:text-[10px]">
           <div className="w-5 border-t-2 border-dashed border-white/25" />
           Таамаглал
         </div>
+        )}
       </div>
 
       {/* ── Forecast insight ── */}
-      {metrics && forecastInsight && (
+      {metrics && forecastInsight && showForecast && (
         <div className="mt-2.5 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] px-2.5 py-2 sm:mt-3 sm:px-3 sm:py-2.5">
           <p className="text-[10px] leading-relaxed text-white/60 sm:text-[11px]">
             <span className="text-violet-400 font-semibold">Дараагийн 3 сарын таамаглал: </span>
             Орлого дундажаар{' '}
-            <span className="text-white font-semibold">{fmtCompact(forecastInsight.incAvg)}₮</span>
+            <span className="text-white font-semibold">{privacyMasked ? MASK : `${fmtCompact(forecastInsight.incAvg)}₮`}</span>
             , зарлага{' '}
-            <span className="text-white font-semibold">{fmtCompact(forecastInsight.expAvg)}₮</span>{' '}
+            <span className="text-white font-semibold">{privacyMasked ? MASK : `${fmtCompact(forecastInsight.expAvg)}₮`}</span>{' '}
             байхаар тооцооллоо.
           </p>
         </div>

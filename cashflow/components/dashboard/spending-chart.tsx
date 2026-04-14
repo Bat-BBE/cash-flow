@@ -14,10 +14,14 @@ import {
   SelectTrigger, SelectValue,
 }                                                from '@/components/ui/select';
 import { useDashboardData }                      from '@/contexts/dashboard-data-context';
+import { timeRangeLabelMn, budgetLimitMultiplier } from '@/lib/dashboard-time-range';
 import { useDashboard }                          from '@/components/providers/dashboard-provider';
 import { useTranslation }                        from '@/lib/translations';
 
-function fmtCompact(v: number): string {
+const MASK = '••••••••';
+
+function fmtCompact(v: number, masked?: boolean): string {
+  if (masked) return MASK;
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}сая₮`;
   if (v >= 1_000)     return `${Math.round(v / 1_000)}мян₮`;
   return `${v}₮`;
@@ -26,10 +30,11 @@ function fmtCompact(v: number): string {
 interface Seg { category: string; amount: number; color: string; percentage: number }
 
 function DonutChart({
-  segments, total, highlighted, onHover,
+  segments, total, highlighted, onHover, privacyMasked,
 }: {
   segments: Seg[]; total: number;
   highlighted: string | null; onHover: (c: string | null) => void;
+  privacyMasked?: boolean;
 }) {
   const [prog, setProgress] = useState(0);
   const rafRef = useRef<number>(0);
@@ -111,13 +116,15 @@ function DonutChart({
             <p className="max-w-full truncate text-center text-[9px] font-semibold leading-snug text-white/55 sm:text-[13px]">
               {hl.category}
             </p>
-            <p className="mt-0.5 text-sm font-bold tabular-nums text-white sm:mt-1 sm:text-base">{hl.percentage}%</p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums text-white sm:mt-1 sm:text-base">
+              {privacyMasked ? MASK : `${hl.percentage}%`}
+            </p>
           </>
         ) : (
           <>
             <p className="text-[11px] text-white/35 sm:text-[14px]">нийт</p>
             <p className="mt-0.5 max-w-full truncate text-center text-xs font-bold tabular-nums text-white sm:text-sm">
-              {fmtCompact(total)}
+              {fmtCompact(total, privacyMasked)}
             </p>
           </>
         )}
@@ -127,7 +134,7 @@ function DonutChart({
 }
 
 function CategoryRow({
-  item, pct, budget, isHl, onEnter, onLeave, onTapToggle, narrow,
+  item, pct, budget, isHl, onEnter, onLeave, onTapToggle, narrow, privacyMasked,
 }: {
   item:        Seg;
   pct:         number;
@@ -137,6 +144,7 @@ function CategoryRow({
   onLeave:     () => void;
   onTapToggle: () => void;
   narrow:      boolean;
+  privacyMasked?: boolean;
 }) {
   const isOver = !!budget && budget.bpct >= 100;
   const isNear = !!budget && budget.bpct >= 80 && budget.bpct < 100;
@@ -197,7 +205,7 @@ function CategoryRow({
         )}
 
         <span className="shrink-0 text-right text-[10px] font-bold tabular-nums text-white sm:text-[11px]">
-          {fmtCompact(item.amount)}
+          {fmtCompact(item.amount, privacyMasked)}
         </span>
 
         <span className="shrink-0 text-right text-[10px] tabular-nums text-white/28">
@@ -229,7 +237,7 @@ function CategoryRow({
             />
           </div>
           <span className="shrink-0 text-[9px] tabular-nums leading-none text-white/28">
-            {fmtCompact(budget.spent)} / {fmtCompact(budget.limit)}
+            {fmtCompact(budget.spent, privacyMasked)} / {fmtCompact(budget.limit, privacyMasked)}
           </span>
         </div>
       )}
@@ -238,8 +246,19 @@ function CategoryRow({
 }
 
 /* ─── Main component ─────────────────────────────────────────────── */
+type BreakdownMode = 'expense' | 'income';
+
 export function SpendingChart() {
-  const { spendingData, loading, budgets, months, setBudgetLimit } = useDashboardData();
+  const {
+    spendingData,
+    incomeBreakdownData,
+    loading,
+    budgets,
+    timeRange,
+    setBudgetLimit,
+    privacyMasked,
+  } = useDashboardData();
+  const [breakdownMode, setBreakdownMode] = useState<BreakdownMode>('expense');
   const { language } = useDashboard();
   const t            = useTranslation(language);
   const narrow       = useIsNarrow();
@@ -258,12 +277,15 @@ export function SpendingChart() {
     if (!adjustOpen || !adjCat) return;
     const b = budgets.find((x) => x.category === adjCat);
     if (!b) return;
-    setAdjInput(String(Math.round(b.limit / Math.max(months, 1))));
-  }, [adjustOpen, adjCat, budgets, months]);
+    const mult = budgetLimitMultiplier(timeRange);
+    setAdjInput(String(Math.round(b.limit / Math.max(mult, 1e-6))));
+  }, [adjustOpen, adjCat, budgets, timeRange]);
+
+  const activeData = breakdownMode === 'expense' ? spendingData : incomeBreakdownData;
 
   const totalSpent = useMemo(
-    () => spendingData.reduce((s, d) => s + d.amount, 0),
-    [spendingData],
+    () => activeData.reduce((s, d) => s + d.amount, 0),
+    [activeData],
   );
 
   const budgetMap = useMemo(() => {
@@ -284,8 +306,8 @@ export function SpendingChart() {
   );
 
   const donutKey = useMemo(
-    () => spendingData.map((s) => `${s.category}:${s.amount}`).join('|'),
-    [spendingData],
+    () => activeData.map((s) => `${s.category}:${s.amount}`).join('|'),
+    [activeData],
   );
 
   /* ── Loading skeleton ── */
@@ -311,11 +333,11 @@ export function SpendingChart() {
     );
   }
 
-  if (!spendingData.length) {
+  if (!spendingData.length && !incomeBreakdownData.length) {
     return (
       <div className="flex items-center gap-2.5 rounded-[1.15rem] border border-white/5 bg-brand-card p-4 sm:gap-3 sm:rounded-2xl sm:p-6">
         <span className="material-symbols-outlined shrink-0 text-xl text-white/15 sm:text-2xl">pie_chart</span>
-        <p className="text-[11px] leading-snug text-white/35 sm:text-sm sm:text-white/30">Зарлагын мэдээлэл байхгүй байна</p>
+        <p className="text-[11px] leading-snug text-white/35 sm:text-sm sm:text-white/30">Зарлага / орлогын задралд өгөгдөл байхгүй</p>
       </div>
     );
   }
@@ -324,14 +346,36 @@ export function SpendingChart() {
     <div className="rounded-[1.15rem] border border-white/5 bg-brand-card p-3.5 sm:rounded-2xl sm:p-6">
 
       {/* ── Header ── */}
-      <div className="mb-3 flex items-start justify-between gap-2 sm:mb-4">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2 sm:mb-4">
         <div className="min-w-0">
-          <h3 className="text-[0.8125rem] font-semibold leading-snug tracking-tight text-white sm:text-sm sm:font-bold">{t('spendingBreakdownTitle')}</h3>
+          <h3 className="text-[0.8125rem] font-semibold leading-snug tracking-tight text-white sm:text-sm sm:font-bold">
+            {breakdownMode === 'expense' ? t('spendingBreakdownTitle') : 'Орлогын задрал'}
+          </h3>
           <p className="mt-0.5 text-[9px] text-white/35 sm:text-[10px]">
-            {months === 1 ? 'Энэ сар' : `Сүүлийн ${months} сар`}
+            {timeRangeLabelMn(timeRange)}
             {' · '}
-            <span className="font-semibold text-white/55">{fmtCompact(totalSpent)}</span>
+            <span className="font-semibold text-white/55">{fmtCompact(totalSpent, privacyMasked)}</span>
           </p>
+        </div>
+
+        <div className="flex shrink-0 gap-1 rounded-full border border-white/[0.08] bg-black/25 p-0.5">
+          {(['expense', 'income'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setBreakdownMode(m)}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-[9px] font-semibold transition-all sm:px-3 sm:text-[10px]',
+                breakdownMode === m
+                  ? m === 'expense'
+                    ? 'bg-rose-500/25 text-rose-200'
+                    : 'bg-emerald-500/25 text-emerald-200'
+                  : 'text-white/40 hover:text-white/65',
+              )}
+            >
+              {m === 'expense' ? 'Зарлага' : 'Орлого'}
+            </button>
+          ))}
         </div>
 
         {/* ✅ Budget button — restored, wired to dialog */}
@@ -346,24 +390,31 @@ export function SpendingChart() {
       </div>
 
 
+      {activeData.length === 0 ? (
+        <p className="py-6 text-center text-[11px] text-white/35">
+          {breakdownMode === 'income' ? 'Орлогын мэдээлэл байхгүй' : 'Зарлагын мэдээлэл байхгүй'}
+        </p>
+      ) : (
       <div className="flex flex-col items-center gap-3 sm:items-start sm:gap-6">
         <DonutChart
           key={donutKey}
-          segments={spendingData}
+          segments={activeData}
           total={totalSpent}
           highlighted={hovered}
           onHover={setHovered}
+          privacyMasked={privacyMasked}
         />
 
         <div className="w-full min-w-0 flex-1 space-y-0.5">
-          {spendingData.map((item) => (
+          {activeData.map((item) => (
             <CategoryRow
               key={item.category}
               item={item}
               pct={totalSpent > 0 ? (item.amount / totalSpent) * 100 : 0}
-              budget={budgetMap[item.category] ?? null}
+              budget={breakdownMode === 'expense' ? budgetMap[item.category] ?? null : null}
               isHl={hovered === item.category}
               narrow={narrow}
+              privacyMasked={privacyMasked}
               onEnter={() => { if (!narrow) setHovered(item.category); }}
               onLeave={() => { if (!narrow) setHovered(null); }}
               onTapToggle={() =>
@@ -373,9 +424,10 @@ export function SpendingChart() {
           ))}
         </div>
       </div>
+      )}
 
       {/* ── Over-budget alert ── */}
-      {overBudget.length > 0 && (
+      {breakdownMode === 'expense' && overBudget.length > 0 && (
         <div className="mt-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.07] px-2.5 py-2 sm:mt-4 sm:px-3 sm:py-2.5">
           <div className="mb-1 flex items-center gap-1.5 sm:mb-1.5">
             <span className="material-symbols-outlined text-[15px] leading-none text-rose-400 sm:text-sm">warning</span>
